@@ -182,7 +182,8 @@ def get_model_intonfb(simfile,preint,gridtype,fbname,varn,yrint,lonlims,date_fb,
             lat = lat_FMD[ysl, xsl]
             lon = lon_FMD[ysl, xsl]
             var = var_FMD[:, ysl, xsl]
-            var[var.mask]=np.nan #transform the masked values to nan
+            if np.ma.is_masked(var):
+                var[var.mask]=np.nan #transform the masked values to nan
 
             # del lon_FMD,lat_FMD,var_FMD #needed later for contourplot as the background for fb track plot
 
