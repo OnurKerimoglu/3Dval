@@ -10,15 +10,15 @@ Control of structre, call reading obs. model and plot.
 """
 import os,sys
 import datetime
-import stations_readobs
+import stations_readobs as SRO
 
 #to reload modules
 import importlib
-importlib.reload(stations_readobs)
+importlib.reload(SRO)
 
 def main():
     
-    rootpath='/home/ivan/'
+    rootpath='./'
     simpaths={'sim1':'some_path'}
     simnames={'sim1':'some_run_with_some_model'}
     stats2include=['s1','s2']
@@ -31,7 +31,7 @@ def main():
     timeint=[datetime.date(2011,1,1),datetime.date(2013,12,31)]
     
     #read the observations
-    obs=readobs(timeint,pickledobsfile,depthints)
+    obs=SRO.readobs(timeint,pickledobsfile,depthints)
     print(obs)
     
     #read the simulations
@@ -39,6 +39,7 @@ def main():
     for simno, modid in enumerate(sims2plot):
         print ('reading simulation:%s'%modid)
         #sim=stations_readobs(simpaths[modid],timeint,obs)
+        sim=0        
         simset[modid]=sim
     
     #do the time series plots
