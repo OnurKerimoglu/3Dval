@@ -749,9 +749,10 @@ if __name__=='__main__':
         simfile = sys.argv[1]
     else:
         #simfile = '/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117-P161118/sns144-M161117-P161118-mergedextract_phys_zSB_2009-2010.nc'
-        simfile = '/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117n-P161118-bdyi3/sns144-M161117n-P161118-bdyi3-mergedextract_phys.nc'
+        #simfile = '/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117n-P161118-bdyi3/sns144-M161117n-P161118-bdyi3-mergedextract_phys.nc'
         #simfile='/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117n-P161118-bdyi3-z01mm/sns144-M161117n-P161118-bdyi3-z01mm-mergedextract_phys.nc'
-        #simfile= '/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117n-P161118-bdyi3/sns144-M161117n-P161118-bdyi3-mergedextract_phys_FB_yoana-buhel_salt_2012-2013.nc'
+        #simfile= '/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117n-P161118-bdyi3/sns144-M161117n-P161118-bdyi3-mergedextract_phys_FB_yoana-buhel_salt_2012-2012.nc'
+        simfile= '/workm/sns/validation/ferrybox/model/fesom.nc'
 
     if len(sys.argv) > 2:
         varn = sys.argv[2]
@@ -761,7 +762,8 @@ if __name__=='__main__':
     if len(sys.argv) > 3:
         fbrootpath = sys.argv[3]
     else:
-        fbrootpath = '/home/onur/WORK/projects/GB/data/ferrybox'
+        #fbrootpath = '/home/onur/WORK/projects/GB/data/ferrybox'
+	fbrootpath = '/workm/sns/validation/ferrybox/data'
 
     if len(sys.argv) > 4:
         fbname = sys.argv[4]
@@ -780,7 +782,7 @@ if __name__=='__main__':
     if len(sys.argv) > 6:
         preint = True if int(sys.argv[6])==1 else False
     else:
-        preint = False
+        preint = True
 
     if len(sys.argv) > 7:
         gridtype = sys.argv[7]
