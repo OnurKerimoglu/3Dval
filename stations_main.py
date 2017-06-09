@@ -33,7 +33,7 @@ def main():
     rootpath='./'
     depthints={'surface':[0,5]} # 'bottom':[5,0] #for bottom, depthint is relative to bottom depth
     #timeint = [datetime.datetime(2010, 1, 1,0,0,0), datetime.datetime(2010, 12, 31,23,59,59)]
-    timeint = [datetime.datetime(2011, 1, 1, 0, 0, 0), datetime.datetime(2014, 12, 31, 23, 59, 59)]
+    timeint = [datetime.datetime(2000, 1, 1, 0, 0, 0), datetime.datetime(2010, 12, 31, 23, 59, 59)]
     # regarding observations
     statsets = ['cosyna'] #,'marnet'
     stations = []

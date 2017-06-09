@@ -14,11 +14,10 @@ def readobs(paths,statsets,pickledobsfile,stations,timeint,depthints):
     print ('reading ovservations:')
 
     #check if the pickledobs exist
-    #return obs
-    #if os.path.exists(pickledobsfile):
-    #    print('opening pickled obs file')
-    #    (obs,) = np.load(pickledobsfile)
-    #    return obs
+    if os.path.exists(pickledobsfile):
+       print('opening pickled obs file')
+       (obs,) = np.load(pickledobsfile)
+       return obs
 
     # if pickledfile does not exist:
     obs={}
@@ -84,7 +83,7 @@ def fill_stationdata(file,statset,timeint,depthints):
     # check if depths are in
     depthintmin=np.min([dint[0] for dint in depthints.values()]) #find the minimum lower lim of depthints
     depthintmax = np.max([dint[1] for dint in depthints.values()]) #find the maximum upper lim of depthints
-    zind=np.where(depth>=depthintmin and depth<=depthintmax)[0]
+    zind=np.where((depth>=depthintmin) * (depth<=depthintmax))[0]
 
     # check if variables are in, decide if anything relevant found
     if len(tind)>0 and len(zind)>0 and vlib['temp'] in ncf.variables: tempfound = True
