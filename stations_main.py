@@ -11,16 +11,19 @@ Control of structre, call reading obs. model and plot.
 import os,sys
 import datetime
 import stations_readobs as SRO
+import stations_readsim as SRS
 
 #to reload modules
 import importlib
 importlib.reload(SRO)
+importlib.reload(SRS)
 
-pathreg = {'onur': {'simroot': '',
+pathreg = {'onur': {'GETM-SNS': '/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117n-P161118-bdyi3-z01mm-wAtmN/sns144-M161117n-P161118-bdyi3-z01mm-wAtmN-mergedextract_phys_2006-2010_zSB.nc',
+                    'rootpath': './',
                     'emodnet': '?',
                     'cosyna': '/home/onur/WORK/projects/GB/data/stations/stations_COSYNA',
                     'marnet': '/home/onur/WORK/projects/GB/data/stations/stations_MARNET'},
-           'ivan': {'simroot': '',
+           'ivan': {'rootpath': './',
                     'emodnet': '/workm/data/INSITU_NWS_NRT_OBSERVATIONS_013_036/history/mooring/',
                     'cosyna': '?',
                     'marnet': '?',}
@@ -28,38 +31,28 @@ pathreg = {'onur': {'simroot': '',
 
 def main():
     #PARAMETERS:
-    # common
+    # general
     user='onur' #ivan,onur
-    rootpath='./'
-    depthints={'surface':[0,5]} # 'bottom':[5,0] #for bottom, depthint is relative to bottom depth
-    #timeint = [datetime.datetime(2010, 1, 1,0,0,0), datetime.datetime(2010, 12, 31,23,59,59)]
-    timeint = [datetime.datetime(2000, 1, 1, 0, 0, 0), datetime.datetime(2010, 12, 31, 23, 59, 59)]
+    depthints={'surface':[0,5],'bottom':[5,0]} #for bottom, depthint is relative to bottom depth
+    timeint = [datetime.datetime(2010, 1, 1,0,0,0), datetime.datetime(2014, 12, 31,23,59,59)]
+    ##timeint = [datetime.datetime(2000, 1, 1, 0, 0, 0), datetime.datetime(2010, 12, 31, 23, 59, 59)]
     # regarding observations
-    statsets = ['cosyna'] #,'marnet'
+    statsets = ['marnet'] #,'marnet'
     stations = []
     # regarding simulations
-    simpaths = {'sim1': 'some_path'}
-    simnames = {'sim1': 'some_run_with_some_model'}
-    # regarding plotting parameters
-    sims2plot = ['sim1']
-    # derived:
-    pickledobsfile=os.path.join(rootpath,'obs_%s_%s_%s-%s.pickle'%('-'.join(statsets),'-'.join(depthints.keys()),timeint[0].year,timeint[1].year))
-    pickledsimfile='bla'
+    sims2plot = ['GETM-SNS']
 
     #READ OBSERVATIONS
-    obs=SRO.readobs(pathreg[user],statsets,pickledobsfile,stations,timeint,depthints)
-    print(obs)
-    print(len(obs))
+    obs=SRO.readobs(pathreg[user],statsets,stations,timeint,depthints)
     return
-
     #READ SIMULATIONS
     simset={}    
-    for simno, modid in enumerate(sims2plot):
-        print ('reading simulation:%s'%modid)
-        #sim=stations_readobs(simpaths[modid],timeint,obs)
-        sim=0        
-        simset[modid]=sim
-    
+    for simno, simname in enumerate(sims2plot):
+        print ('reading simulation:%s'%simname)
+        sim=SRS.readsim(pathreg[user],simname,statsets,timeint,depthints,obs)
+        simset[simname]=sim
+
+    return
     #PLOTS
     print ('doing the ts plots')    
     #stations_tsplots(obs,simset,depths)

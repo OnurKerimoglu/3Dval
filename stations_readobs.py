@@ -8,31 +8,38 @@ import os
 import pickle
 import numpy as np
 from netCDF4 import num2date
-from   netCDF4 import Dataset as open_ncfile
+from netCDF4 import Dataset as open_ncfile
 
-def readobs(paths,statsets,pickledobsfile,stations,timeint,depthints):
-    print ('reading ovservations:')
+def readobs(paths,statsets,stations,timeint,depthints):
+    print ('Reading observations:')
+
+    picklecode = '_%s_%s_%s-%s' % ('-'.join(statsets), '-'.join(depthints.keys()), timeint[0].year, timeint[1].year)
+    pickledobsfile = os.path.join(paths['rootpath'], 'obs' + picklecode + '.pickle')
 
     #check if the pickledobs exist
     if os.path.exists(pickledobsfile):
-       print('opening pickled obs file')
+       print('Opening pickled obs file')
        (obs,) = np.load(pickledobsfile)
+       # filter requested stations?
        return obs
 
     # if pickledfile does not exist:
     obs={}
     for statset in statsets:
         print('Filling obs. dataset:%s'%statset)
-        obs=looppath_fill_stationdata(obs,paths,statset,stations,timeint,depthints)
+        obs=looppath_fill_stationdata_obs(obs,paths,statset,stations,timeint,depthints)
     
     #pickle the obs file
     f=open(pickledobsfile,'wb')
     pickle.dump((obs,),f) #,protocol=-1
+    print('Pickled obs file for later use:' + pickledobsfile)
     f.close()
-    
+
     return obs
 
-def looppath_fill_stationdata(obs,paths,statset,stations,timeint,depthints):
+def looppath_fill_stationdata_obs(obs,paths,statset,stations,timeint,depthints):
+
+    #TODO: pickle/unpickle each station set?
 
     obspath = paths[statset]
 
@@ -44,13 +51,12 @@ def looppath_fill_stationdata(obs,paths,statset,stations,timeint,depthints):
 
     for station in stations:
         print('  '+station)
-        sdata = fill_stationdata(os.path.join(obspath,station),statset,timeint,depthints)
+        sdata = fill_stationdata_obs(os.path.join(obspath,station),statset,timeint,depthints)
         obs[station] = sdata
 
     return obs
 
-def fill_stationdata(file,statset,timeint,depthints):
-    tempdata={}; saltdata={}; sshdata={}
+def fill_stationdata_obs(file,statset,timeint,depthints):
 
     tempfound = False
     saltfound = False
@@ -69,7 +75,7 @@ def fill_stationdata(file,statset,timeint,depthints):
     lat = ncf.variables[vlib['y']][:][0]
     depth = ncf.variables[vlib['z']][:][0]
     time_num = ncf.variables[vlib['t']][:]
-    time = num2date(time_num, ncf.variables['TIME'].getncattr('units'))
+    time = num2date(time_num, ncf.variables[vlib['t']].getncattr('units'))
 
     # find the max_depth, if necessary
     if 'bottom' in depthints.keys():
@@ -119,6 +125,9 @@ def fill_stationdata(file,statset,timeint,depthints):
     #                       if dd.count():
     #                           dset={'fname':item,'time':ind_time,'data':dd,'z':z}
     #                           dset_list.append(dset)
+
+    # fill in the data:
+    tempdata = {}; saltdata = {}; sshdata = {}
 
     #handle temp
     if tempfound:
