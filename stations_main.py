@@ -33,22 +33,21 @@ def main():
     #PARAMETERS:
     # general
     user='onur' #ivan,onur
-    depthints={'surface':[0,5],'bottom':[5,0]} #for bottom, depthint is relative to bottom depth
-    timeint = [datetime.datetime(2010, 1, 1,0,0,0), datetime.datetime(2014, 12, 31,23,59,59)]
+    depthints={'surface':[0,5]} #,'bottom':[5,0]} #for bottom, depthint is relative to bottom depth
+    timeint = [datetime.datetime(2000, 1, 1,0,0,0), datetime.datetime(2010, 12, 31,23,59,59)]
     ##timeint = [datetime.datetime(2000, 1, 1, 0, 0, 0), datetime.datetime(2010, 12, 31, 23, 59, 59)]
     # regarding observations
-    statsets = ['marnet'] #,'marnet'
+    statsets = ['cosyna'] #,'marnet'
     stations = []
     # regarding simulations
     sims2plot = ['GETM-SNS']
 
     #READ OBSERVATIONS
     obs=SRO.readobs(pathreg[user],statsets,stations,timeint,depthints)
-    return
+
     #READ SIMULATIONS
     simset={}    
     for simno, simname in enumerate(sims2plot):
-        print ('reading simulation:%s'%simname)
         sim=SRS.readsim(pathreg[user],simname,statsets,timeint,depthints,obs)
         simset[simname]=sim
 

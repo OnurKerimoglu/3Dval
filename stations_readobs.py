@@ -79,9 +79,11 @@ def fill_stationdata_obs(file,statset,timeint,depthints):
 
     # find the max_depth, if necessary
     if 'bottom' in depthints.keys():
-        maxz=get_maxdepth_obs(lon,lat)
+        maxz = get_maxdepth_obs(lon, lat)
         #update the bottom depthint
         depthints['bottom']=[maxz-depthints['bottom'][0], maxz-depthints['bottom'][1]]
+    else:
+        maxz = np.nan
 
     # check if dates are in
     tind=np.where((time>=timeint[0]) * (time<=timeint[1]))[0]
@@ -169,7 +171,7 @@ def fill_stationdata_obs(file,statset,timeint,depthints):
     sdata ={'longname':'descriptive name of the station',
             'lon':lon,
             'lat':lat,
-            'max_depth':0.0,
+            'bottom_depth':maxz,
             'temp' : tempdata,
             'salt' : saltdata,
             'ssh': sshdata
