@@ -2,7 +2,7 @@
 """
 Created on Thu Jun  8 16:06:57 2017
 
-@author: kuznetso
+@author: ivan.kuznetsov@gmail.com, onur.kerimoglu@gmail.com
 """
 import os
 import pickle
@@ -10,11 +10,8 @@ import numpy as np
 from netCDF4 import num2date
 from   netCDF4 import Dataset as open_ncfile
 
-def readobs(timeint,pickledobsfile,depthints,path2data_emodnet,stations=[],):
+def readobs(paths,statsets,pickledobsfile,stations,timeint,depthints):
     print ('reading ovservations:')
-    
-    # paths 2 datasets
-    #path2data_emodnet   = '/workm/data/sns_ts_emodnet/'
 
     #check if the pickledobs exist
     #return obs
@@ -22,103 +19,144 @@ def readobs(timeint,pickledobsfile,depthints,path2data_emodnet,stations=[],):
     #    print('opening pickled obs file')
     #    (obs,) = np.load(pickledobsfile)
     #    return obs
-    print(path2data_emodnet)    
-    #ifnotexist:    
-    if len(stations)==0:
-        # get lists of availeble data 
-        #EMODNET
-        emodnet_files = [f for f in os.listdir(path2data_emodnet) if f.endswith('.nc')]      
-        stats2read = emodnet_files[:]
-        
+
+    # if pickledfile does not exist:
     obs={}
-    for skey in stats2read:
-        print(skey)
-        sdata = fill_stationdata(skey,depthints,path2data_emodnet)
-        obs[skey] = sdata
+    for statset in statsets:
+        print('Filling obs. dataset:%s'%statset)
+        obs=looppath_fill_stationdata(obs,paths,statset,stations,timeint,depthints)
     
     #pickle the obs file
-    #f=open(pickledobsfile,'wb')
-    #pickle.dump((obs,),f) #,protocol=-1
-    #f.close()
+    f=open(pickledobsfile,'wb')
+    pickle.dump((obs,),f) #,protocol=-1
+    f.close()
     
     return obs
 
-def fill_stationdata(skey,depthints,path2data_emodnet):
+def looppath_fill_stationdata(obs,paths,statset,stations,timeint,depthints):
+
+    obspath = paths[statset]
+
+    #if stations to include are not specified,
+    if len(stations) == 0:
+        # get lists of available data
+        files = [f for f in os.listdir(obspath) if f.endswith('.nc')]
+        stations= files[:]
+
+    for station in stations:
+        print('  '+station)
+        sdata = fill_stationdata(os.path.join(obspath,station),statset,timeint,depthints)
+        obs[station] = sdata
+
+    return obs
+
+def fill_stationdata(file,statset,timeint,depthints):
     tempdata={}; saltdata={}; sshdata={}
-    # open net cdf file from emodnet    
-    ncf = open_ncfile(path2data_emodnet+skey,'r')
-    
+
+    tempfound = False
+    saltfound = False
+    sshfound = False
+
+    if statset in ['marnet']:
+        vlib={'t':'TIME','x':'LONGITUDE','y':'LATITUDE','z':'DEPH','temp':'TEMP','salt':'PSAL', 'ssh':'?'}
+    elif statset in ['emodnet']:
+        vlib = {'t':'TIME','x': 'LONGITUDE', 'y': 'LATITUDE', 'z': 'DEPH', 'temp': 'TEMP', 'salt': 'PSAL','ssh':'SLEV'}
+    elif statset in ['cosyna']:
+        vlib = {'t': 'TIME', 'x': 'LONGITUDE', 'y': 'LATITUDE', 'z': 'DEPTH', 'temp': 'TEMP', 'salt': 'PSAL','ssh': 'SLEV'}
+    ncf = open_ncfile(file,'r')
+
     # reading metadata of station
-    lon = ncf.variables['LONGITUDE'][:][0]
-    lat = ncf.variables['LATITUDE'][:][0]
-    depth = ncf.variables['DEPH'][:][0]
-    tempfound = False; saltfound = False; sshfound = False
-    #check if dates are in 
-    #check if variables are in file
-    if 'TEMP' in ncf.variables: tempfound = True
-    if 'PSAL' in ncf.variables: saltfound = True
-    if 'SLEV' in ncf.variables: sshfound  = True
-        
-    #a = ncf.variables['TIME'].getncattr('units')
-    #time_emodnet.append([num2date(ncf.variables['TIME'][:][0],a),num2date(ncf.variables['TIME'][:][-1],a)])
-    #ncf.close()
-    
- #          if var in var_emodnet[i][:]: 
- #              if (time_emodnet[i][0] < t2 or time_emodnet[i][1] > t2):
- #                  # get data from file (first match)
- #                  ncf = open_ncfile(path2data_emodnet+item,'r')
-#                   obs_z    = ncf.variables['DEPH'][:][0]                   
-#                   obs_time = ncf.variables['TIME'][:]
-#                   a = ncf.variables['TIME'].getncattr('units')
-#                   obs_time = num2date(obs_time,a)
-#                   if np.any(obs_time > t1) and np.any(obs_time < t2):
-#                       time_ind1 = np.where(obs_time > t1)[0][0]
-#                       time_ind2 = np.where(obs_time < t2)[0][-1]
-#                   else:
-#                       continue
-#                   data = ncf.variables[v2v[var]][:][time_ind1:time_ind2,:]
-#                   ncf.close()
-#                   ind_time = obs_time[time_ind1:time_ind2]
-#                   for iz,z in enumerate(obs_z):
-#                       #check if data array is masked, if not make new masked array
-#                       if isinstance(data[:,iz],np.ma.MaskedArray):
-#                           dd = data[:,iz]
-#                       else:
-#                           dd = np.ma.array(data[:,iz])
-#                       if dd.count():
-#                           dset={'fname':item,'time':ind_time,'data':dd,'z':z}
-#                           dset_list.append(dset)
-    # get time    
-    obs_time = ncf.variables['TIME'][:]                       
-    a = ncf.variables['TIME'].getncattr('units')
-    obs_time = num2date(obs_time,a)
+    lon = ncf.variables[vlib['x']][:][0]
+    lat = ncf.variables[vlib['y']][:][0]
+    depth = ncf.variables[vlib['z']][:][0]
+    time_num = ncf.variables[vlib['t']][:]
+    time = num2date(time_num, ncf.variables['TIME'].getncattr('units'))
+
+    # find the max_depth, if necessary
+    if 'bottom' in depthints.keys():
+        maxz=get_maxdepth_obs(lon,lat)
+        #update the bottom depthint
+        depthints['bottom']=[maxz-depthints['bottom'][0], maxz-depthints['bottom'][1]]
+
+    # check if dates are in
+    tind=np.where((time>=timeint[0]) * (time<=timeint[1]))[0]
+
+    # check if depths are in
+    depthintmin=np.min([dint[0] for dint in depthints.values()]) #find the minimum lower lim of depthints
+    depthintmax = np.max([dint[1] for dint in depthints.values()]) #find the maximum upper lim of depthints
+    zind=np.where(depth>=depthintmin and depth<=depthintmax)[0]
+
+    # check if variables are in, decide if anything relevant found
+    if len(tind)>0 and len(zind)>0 and vlib['temp'] in ncf.variables: tempfound = True
+    if len(tind)>0 and len(zind)>0 and vlib['salt'] in ncf.variables: saltfound = True
+    if len(tind)>0 and len(zind)>0 and vlib['ssh'] in ncf.variables: sshfound = True
+
+    # a = ncf.variables['TIME'].getncattr('units')
+    # time_emodnet.append([num2date(ncf.variables['TIME'][:][0],a),num2date(ncf.variables['TIME'][:][-1],a)])
+    # ncf.close()
+
+    #          if var in var_emodnet[i][:]:
+    #              if (time_emodnet[i][0] < t2 or time_emodnet[i][1] > t2):
+    #                  # get data from file (first match)
+    #                  ncf = open_ncfile(path2data_emodnet+item,'r')
+    #                   obs_z    = ncf.variables['DEPH'][:][0]
+    #                   time = ncf.variables['TIME'][:]
+    #                   a = ncf.variables['TIME'].getncattr('units')
+    #                   time = num2date(time,a)
+    #                   if np.any(time > t1) and np.any(time < t2):
+    #                       time_ind1 = np.where(time > t1)[0][0]
+    #                       time_ind2 = np.where(time < t2)[0][-1]
+    #                   else:
+    #                       continue
+    #                   data = ncf.variables[v2v[var]][:][time_ind1:time_ind2,:]
+    #                   ncf.close()
+    #                   ind_time = time[time_ind1:time_ind2]
+    #                   for iz,z in enumerate(obs_z):
+    #                       #check if data array is masked, if not make new masked array
+    #                       if isinstance(data[:,iz],np.ma.MaskedArray):
+    #                           dd = data[:,iz]
+    #                       else:
+    #                           dd = np.ma.array(data[:,iz])
+    #                       if dd.count():
+    #                           dset={'fname':item,'time':ind_time,'data':dd,'z':z}
+    #                           dset_list.append(dset)
+
     #handle temp
     if tempfound:
         tempdata['presence']=True
-        for iz, z  in enumerate(depth):
-            data = ncf.variables['TEMP'][:][:,iz]    
-            tempdata[z]={'time':obs_time, 'value':data, 'depth_interval':z}
+        for layername, depthint  in depthints.items():
+            zind=np.where((depth>=depthint[1]) * (depth<=depthint[1]))[0]
+            if len(zind)>0:
+                data = ncf.variables[vlib['temp']][tind,zind]
+                tempdata[layername] = {'time': time[tind], 'value': data, 'depth_interval': depthint}
+            else:
+                tempdata[layername] = {'time': np.array([]), 'value': np.array([]), 'depth_interval': depthint}
+
+
     else:
         tempdata['presence']=False
-    
+
     #handle salt
     if saltfound:
         saltdata['presence']=True
-        for iz, z in enumerate(depth):
-            data = ncf.variables['PSAL'][:][:,iz]   
-            saltdata[z]={'time':obs_time, 'value':data, 'depth_interval':z}
+        for layername, depthint  in depthints.items():
+            zind=np.where((depth>=depthint[0]) * (depth<=depthint[1]))[0]
+            if len(zind)>0:
+                data= ncf.variables[vlib['salt']][tind,zind]
+                saltdata[layername] = {'time': time[tind], 'value': data, 'depth_interval': depthint}
+            else:
+                tempdata[layername] = {'time': np.array([]), 'value': np.array([]), 'depth_interval': depthint}
     else:
         saltdata['presence']=False
-    
-    #handle ssh 
+
+    #handle ssh
     if sshfound:
         sshdata['presence']=True
-        for iz, z in enumerate(depth):
-            data = ncf.variables['SLEV'][:][:,iz]   
-            sshdata[z]={'time':obs_time, 'value':data, 'depth_interval':z}
+        data = ncf.variables[vlib['ssh']][tind]
+        sshdata['z0']={'time':time, 'value':data, 'depth_interval':[0,0]}
     else:
         sshdata['presence']=False
-    
+
     #put all data in
     sdata ={'longname':'descriptive name of the station',
             'lon':lon,
@@ -128,7 +166,11 @@ def fill_stationdata(skey,depthints,path2data_emodnet):
             'salt' : saltdata,
             'ssh': sshdata
             }
-            
+
     ncf.close()
             
     return sdata
+
+def get_maxdepth_obs(lon,lat):
+    maxz=100 #TODO:find the depth using lon,lat
+    return maxz
