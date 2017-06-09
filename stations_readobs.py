@@ -2,7 +2,7 @@
 """
 Created on Thu Jun  8 16:06:57 2017
 
-@author: ivan.kuznetsov@gmail.com, onur.kerimoglu@gmail.com
+@author: ivan.kuznetsov@gmail.com, kerimoglu.o@gmail.com
 """
 import os
 import pickle

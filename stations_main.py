@@ -5,7 +5,7 @@ Created on Thu Jun  8 15:02:46 2017
 Main file for stations validation.
 Control of structre, call reading obs. model and plot.
 
-@author: 
+@author: kerimoglu.o@gmail.com, ivan.kuznetsov@gmail.com
 
 """
 import os,sys
