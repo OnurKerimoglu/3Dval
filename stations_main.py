@@ -26,14 +26,16 @@ def main():
     depthints={'surface':[0,5]}
     pickledobsfile=os.path.join(rootpath,'obs_all.pickle')
     pickledsimfile='bla'
-    
+    # path to observations data sets (now only EMODNET)    
+    path2data_emodnet   = '/workm/data/INSITU_NWS_NRT_OBSERVATIONS_013_036/history/mooring/'
+
     #some common parameters
     timeint=[datetime.date(2011,1,1),datetime.date(2013,12,31)]
     
     #read the observations
-    obs=SRO.readobs(timeint,pickledobsfile,depthints)
+    obs=SRO.readobs(timeint,pickledobsfile,depthints,path2data_emodnet)
     print(obs)
-    
+    print(len(obs))
     #read the simulations
     simset={}    
     for simno, modid in enumerate(sims2plot):
