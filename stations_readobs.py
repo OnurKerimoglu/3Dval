@@ -10,14 +10,14 @@ import numpy as np
 from netCDF4 import num2date
 from netCDF4 import Dataset as open_ncfile
 
-def readobs(paths,statsets,stations,timeint,depthints):
+def readobs(paths,readraw,statsets,stations,timeint,depthints):
     print ('Reading observations:')
 
     picklecode = '_%s_%s_%s-%s' % ('-'.join(statsets), '-'.join(depthints.keys()), timeint[0].year, timeint[1].year)
     pickledobsfile = os.path.join(paths['rootpath'], 'obs' + picklecode + '.pickle')
 
     #check if the pickledobs exist
-    if os.path.exists(pickledobsfile):
+    if (not readraw) and os.path.exists(pickledobsfile):
        print('Opening pickled obs file')
        (obs,) = np.load(pickledobsfile)
        # filter requested stations?
@@ -47,20 +47,17 @@ def looppath_fill_stationdata_obs(obs,paths,statset,stations,timeint,depthints):
     if len(stations) == 0:
         # get lists of available data
         files = [f for f in os.listdir(obspath) if f.endswith('.nc')]
-        stations= files[:]
+        sfiles= files[:]
 
-    for station in stations:
+    for sfile in sfiles:
+        station=sfile.split('.nc')[0]
         print('  '+station)
-        sdata = fill_stationdata_obs(os.path.join(obspath,station),statset,timeint,depthints)
+        sdata = fill_stationdata_obs(os.path.join(obspath,sfile),statset,timeint,depthints)
         obs[station] = sdata
 
     return obs
 
 def fill_stationdata_obs(file,statset,timeint,depthints):
-
-    tempfound = False
-    saltfound = False
-    sshfound = False
 
     if statset in ['marnet']:
         vlib={'t':'TIME','x':'LONGITUDE','y':'LATITUDE','z':'DEPH','temp':'TEMP','salt':'PSAL', 'ssh':'?'}
@@ -94,9 +91,9 @@ def fill_stationdata_obs(file,statset,timeint,depthints):
     zind=np.where((depth>=depthintmin) * (depth<=depthintmax))[0]
 
     # check if variables are in, decide if anything relevant found
-    if len(tind)>0 and len(zind)>0 and vlib['temp'] in ncf.variables: tempfound = True
-    if len(tind)>0 and len(zind)>0 and vlib['salt'] in ncf.variables: saltfound = True
-    if len(tind)>0 and len(zind)>0 and vlib['ssh'] in ncf.variables: sshfound = True
+    tempfound = True if len(tind)>0 and len(zind)>0 and vlib['temp'] in ncf.variables else False
+    saltfound = True if len(tind)>0 and len(zind)>0 and vlib['salt'] in ncf.variables else False
+    sshfound = True if len(tind)>0 and len(zind)>0 and vlib['ssh'] in ncf.variables else False
 
     # a = ncf.variables['TIME'].getncattr('units')
     # time_emodnet.append([num2date(ncf.variables['TIME'][:][0],a),num2date(ncf.variables['TIME'][:][-1],a)])

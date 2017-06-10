@@ -37,20 +37,25 @@ def main():
     timeint = [datetime.datetime(2000, 1, 1,0,0,0), datetime.datetime(2010, 12, 31,23,59,59)]
     ##timeint = [datetime.datetime(2000, 1, 1, 0, 0, 0), datetime.datetime(2010, 12, 31, 23, 59, 59)]
     # regarding observations
-    statsets = ['cosyna'] #,'marnet'
+    statsets = ['marnet'] #,'marnet'
     stations = []
+    readobsraw=False #i.e., if the pickle file should be ignored
     # regarding simulations
     sims2plot = ['GETM-SNS']
+    readsimraw=False #i.e., if the pickle file should be ignored
+    simdomain=''
+    meth2D='int_tree'
 
     #READ OBSERVATIONS
-    obs=SRO.readobs(pathreg[user],statsets,stations,timeint,depthints)
+    obs=SRO.readobs(pathreg[user],readobsraw,statsets,stations,timeint,depthints)
 
     #READ SIMULATIONS
     simset={}    
     for simno, simname in enumerate(sims2plot):
-        sim=SRS.readsim(pathreg[user],simname,statsets,timeint,depthints,obs)
+        sim=SRS.readsim(pathreg[user],simname,readsimraw,simdomain,meth2D,statsets,timeint,depthints,obs)
         simset[simname]=sim
 
+    print(sim)
     return
     #PLOTS
     print ('doing the ts plots')    
@@ -59,4 +64,3 @@ def main():
 
 if __name__=='__main__':
     main()
-    
