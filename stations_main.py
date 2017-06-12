@@ -38,19 +38,19 @@ def main():
     # general
     user='onur' #ivan,onur
     depthints={'surface':[0,5]} #,'bottom':[5,0]} #for bottom, depthint is relative to bottom depth
-    timeint = [datetime.datetime(2009, 1, 1,0,0,0), datetime.datetime(2010, 12, 31,23,59,59)]
+    timeint = [datetime.datetime(2006, 1, 1,0,0,0), datetime.datetime(2010, 12, 31,23,59,59)]
     ##timeint = [datetime.datetime(2000, 1, 1, 0, 0, 0), datetime.datetime(2010, 12, 31, 23, 59, 59)]
-    # regarding observations
-    statsets = ['marnet'] #,'marnet'
+    # regarding observations. todo: place in a dictionary, specify variables to extract
+    statsets = ['cosyna'] #,'marnet'
     stations = []
     readobsraw=False #i.e., if the pickle file should be ignored
-    # regarding simulations
+    # regarding simulations. todo: place in a dictionary, specify variables to extract
     sims2plot = ['GETM-SNS-new','GETM-SNS-old']
     readsimraw=False #i.e., if the pickle file should be ignored
     simdomain=''
     meth2D='int_tree'
     #regarding plots:
-    plotopts={'TS':True,'TSstyle':'TSdefault'}
+    plotopts={'TS':True,'TSstyle':'TSdefault','varns':['temp','salt']}
 
     #READ OBSERVATIONS
     obs=SRO.readobs(pathreg[user],readobsraw,statsets,stations,timeint,depthints)
@@ -62,7 +62,7 @@ def main():
         simset[simname]=sim
 
     #PLOTS
-    SP.stations_plots(plotopts, obs, sim, pathreg[user]['plotrootpath'], stations, timeint, depthints)
+    SP.stations_plots(plotopts, obs, simset, pathreg[user]['plotrootpath'], stations, timeint, depthints)
 
 if __name__=='__main__':
     main()

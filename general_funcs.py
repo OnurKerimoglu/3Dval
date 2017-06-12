@@ -6,6 +6,7 @@ provides general functions useful for multiple modules
 
 import os,sys
 import numpy as np
+import datetime
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -30,6 +31,45 @@ def interp_2d_tree(vals,domaintree,lon,lat,k=4):
     wLi = 1.0 / dLi ** 2
     intval = np.sum(wLi * vals[:, :].flatten()[gridindsLi]) / np.sum(wLi)
     return intval
+
+def format_date_axis(ax,tspan):
+    #ax.set_xlim(datetime.date(tspan[0].year,1,1), datetime.date(tspan[1].year,tspan[1].12,31))
+    ax.set_xlim(datetime.date(tspan[0].year,1,1), tspan[1])
+    if np.diff(tspan)[0].days<63:
+        ax.xaxis.set_major_locator(mpl.dates.WeekdayLocator(byweekday=mpl.dates.MO) )
+        ax.xaxis.set_major_formatter(mpl.dates.DateFormatter('%b\n%d'))
+    elif np.diff(tspan)[0].days<367:
+        ax.xaxis.set_major_locator(mpl.dates.MonthLocator(bymonthday=1, interval=3) )
+        ax.xaxis.set_major_formatter(mpl.dates.DateFormatter('%b'))
+        ax.xaxis.set_minor_locator(mpl.dates.MonthLocator(bymonthday=1, interval=1))
+        #ax.xaxis.set_minor_formatter(mpl.dates.DateFormatter('%b'))
+        #ax.xaxis.set_tick_params(which='major', pad=10)
+    elif np.diff(tspan)[0].days<732:
+        ax.xaxis.set_major_locator(mpl.dates.MonthLocator(bymonthday=1, interval=6) )
+        ax.xaxis.set_major_formatter(mpl.dates.DateFormatter('%b\n%Y'))
+    elif np.diff(tspan)[0].days<1466:
+        ax.xaxis.set_major_locator(mpl.dates.MonthLocator(bymonth=1,bymonthday=1, interval=1) )
+        ax.xaxis.set_minor_locator(mpl.dates.MonthLocator(bymonth=7,bymonthday=1, interval=1))
+        ax.xaxis.set_minor_formatter(mpl.dates.DateFormatter('%Y'))
+    elif np.diff(tspan)[0].days<3655:
+        ax.xaxis.set_major_locator(mpl.dates.MonthLocator(bymonth=1,bymonthday=1, interval=1) )
+        ax.xaxis.set_minor_locator(mpl.dates.MonthLocator(bymonth=7,bymonthday=1, interval=1))
+        ax.xaxis.set_minor_formatter(mpl.dates.DateFormatter('%Y'))
+    elif np.diff(tspan)[0].days<9130: #25*365=9125
+        ax.xaxis.set_major_locator(mpl.dates.MonthLocator(bymonth=1,bymonthday=1, interval=1) )
+        ax.xaxis.set_minor_locator(mpl.dates.MonthLocator(bymonth=7,bymonthday=1, interval=1))
+        ax.xaxis.set_minor_formatter(mpl.dates.DateFormatter('%Y'))
+    else:
+        ax.xaxis.set_major_locator(mpl.dates.MonthLocator(bymonthday=1, interval=1))
+        ax.xaxis.set_minor_locator(mpl.dates.MonthLocator(bymonthday=1, interval=1))
+        ax.xaxis.set_minor_formatter(mpl.dates.DateFormatter('%y'))
+
+    if np.diff(tspan)[0].days<732:
+        ax.tick_params(axis='x', which='major', direction='out',labelsize=9)
+        ax.tick_params(axis='x', which='minor', direction='out')
+    else:
+        ax.tick_params(axis='x', which='major',direction='out',labelbottom='off')
+        ax.tick_params(axis='x', which='minor', length=0, labelsize=9)
 
 def discrete_cmap_tuner(clim,vallims,Nlev,colmap,nancol='white'):
 
@@ -123,6 +163,15 @@ def getproj(setup,projpath):
                        llcrnrlat=51.0, #51.2,
                        urcrnrlon=9.5,
                        urcrnrlat=56.0, #55.8,
+                       lat_0=52.0,
+                       lon_0=5.)
+        elif setup=='SNSext':
+            proj=Basemap(projection='lcc',
+                       resolution='i',
+                       llcrnrlon=0.0,
+                       llcrnrlat=51.0, #51.2,
+                       urcrnrlon=9.5,
+                       urcrnrlat=58.0, #55.8,
                        lat_0=52.0,
                        lon_0=5.)
         elif setup=='CuxBusHel':
