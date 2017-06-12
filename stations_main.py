@@ -12,13 +12,16 @@ import os,sys
 import datetime
 import stations_readobs as SRO
 import stations_readsim as SRS
+import stations_plots as SP
 
 #to reload modules
 import importlib
 importlib.reload(SRO)
 importlib.reload(SRS)
+importlib.reload(SP)
 
 pathreg = {'onur': {'GETM-SNS': '/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117n-P161118-bdyi3-z01mm-wAtmN/sns144-M161117n-P161118-bdyi3-z01mm-wAtmN-mergedextract_phys_2006-2010_zSB.nc',
+                    'plotrootpath':'/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117n-P161118-bdyi3-z01mm-wAtmN',
                     'rootpath': './',
                     'emodnet': '?',
                     'cosyna': '/home/onur/WORK/projects/GB/data/stations/stations_COSYNA',
@@ -45,6 +48,8 @@ def main():
     readsimraw=False #i.e., if the pickle file should be ignored
     simdomain=''
     meth2D='int_tree'
+    #regarding plots:
+    plotopts={'TS':True}
 
     #READ OBSERVATIONS
     obs=SRO.readobs(pathreg[user],readobsraw,statsets,stations,timeint,depthints)
@@ -55,12 +60,8 @@ def main():
         sim=SRS.readsim(pathreg[user],simname,readsimraw,simdomain,meth2D,statsets,timeint,depthints,obs)
         simset[simname]=sim
 
-    print(sim)
-    return
     #PLOTS
-    print ('doing the ts plots')    
-    #stations_tsplots(obs,simset,depths)
-    #stations_scatterplots()
+    SP.stations_plots(plotopts, obs, sim, pathreg[user]['plotrootpath'], stations, timeint, depthints)
 
 if __name__=='__main__':
     main()
