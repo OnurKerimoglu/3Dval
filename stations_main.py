@@ -20,7 +20,8 @@ importlib.reload(SRO)
 importlib.reload(SRS)
 importlib.reload(SP)
 
-pathreg = {'onur': {'GETM-SNS': '/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117n-P161118-bdyi3-z01mm-wAtmN/sns144-M161117n-P161118-bdyi3-z01mm-wAtmN-mergedextract_phys_2006-2010_zSB.nc',
+pathreg = {'onur': {'GETM-SNS-new': '/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117n-P161118-bdyi3-z01mm-wAtmN/sns144-M161117n-P161118-bdyi3-z01mm-wAtmN-mergedextract_phys_2006-2010_zSB.nc',
+                    'GETM-SNS-old': '/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117-P161118/sns144-M161117-P161118-mergedextract_phys_zSB_2006-2010.nc',
                     'plotrootpath':'/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117n-P161118-bdyi3-z01mm-wAtmN',
                     'rootpath': './',
                     'emodnet': '?',
@@ -37,19 +38,19 @@ def main():
     # general
     user='onur' #ivan,onur
     depthints={'surface':[0,5]} #,'bottom':[5,0]} #for bottom, depthint is relative to bottom depth
-    timeint = [datetime.datetime(2000, 1, 1,0,0,0), datetime.datetime(2010, 12, 31,23,59,59)]
+    timeint = [datetime.datetime(2009, 1, 1,0,0,0), datetime.datetime(2010, 12, 31,23,59,59)]
     ##timeint = [datetime.datetime(2000, 1, 1, 0, 0, 0), datetime.datetime(2010, 12, 31, 23, 59, 59)]
     # regarding observations
     statsets = ['marnet'] #,'marnet'
     stations = []
     readobsraw=False #i.e., if the pickle file should be ignored
     # regarding simulations
-    sims2plot = ['GETM-SNS']
+    sims2plot = ['GETM-SNS-new','GETM-SNS-old']
     readsimraw=False #i.e., if the pickle file should be ignored
     simdomain=''
     meth2D='int_tree'
     #regarding plots:
-    plotopts={'TS':True}
+    plotopts={'TS':True,'TSstyle':'TSdefault'}
 
     #READ OBSERVATIONS
     obs=SRO.readobs(pathreg[user],readobsraw,statsets,stations,timeint,depthints)

@@ -117,7 +117,7 @@ def get_station_data_getm_inttree(station,simdata,time,domaintree,bat,lon,lat,ti
     sdata = {  # 'longname': '',
         'lon': lon,
         'lat': lat,
-        'max_depth': maxz,
+        'bottom_depth': maxz,
     }
 
     for varn in varns.keys():
