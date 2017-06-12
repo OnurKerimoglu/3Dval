@@ -69,7 +69,7 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
 
             for varno,varname in enumerate(plotopts['varns']): #in each panel
 
-               #create a panel
+                #create a panel
                 #ax = plt.subplot(rownum, colnum, (varno+1)*colnum + varno+1)
                 ax=plt.subplot2grid((rownum,colnum),(varno+1,layerno))
                 anyplotinax=False
@@ -82,15 +82,11 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
                 hset = []; idset = []  #list of handles (needed for legend)
                 #plot obs
                 if obs[station][varname]['presence']:
-                    hset,idset,plotdone=plot_ts_panel(hset,idset,'obs',ax,obs[station][varname][layer]['time'],obs[station][varname][layer]['value'],timeint,S,'obs')
-                    if plotdone:
-                        anyplotinax = True; anyplotinfig = True
+                    hset,idset,anyplotinax,anyplotinfig = plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,'obs',ax,obs[station][varname][layer]['time'],obs[station][varname][layer]['value'],timeint,S,'obs')
                 # plot each sim
                 for simno,simname in enumerate(simset.keys()):
                     if simset[simname][station][varname]['presence']:
-                        hset,idset,plotdone= plot_ts_panel(hset,idset,simname,ax,simset[sim][station][varname][layer]['time'], obs[station][varname][layer]['value'],timeint, S, 'sims',simno)
-                        if plotdone:
-                            anyplotinax = True; anyplotinfig = True
+                        hset,idset,anyplotinax,anyplotinfig = plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,simname,ax,simset[sim][station][varname][layer]['time'], obs[station][varname][layer]['value'],timeint, S, 'sims',simno)
 
                 #ylabel:varname, unit
                 plt.ylabel(varlongnames[varname]+' ['+varunits[varname]+']',size=9)
@@ -114,23 +110,24 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
             #return
     return
 
-def plot_ts_panel(hset,idset,id,ax,times,values,timeint,S,seriestype,sno=-1):
+def plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,id,ax,times,values,timeint,S,seriestype,sno=-1):
     tind =np.where((times>=timeint[0]) * (times<=timeint[1]))[0]
-    if len(tind)>0:
-        if seriestype=='obs':
-            h, = ax.plot(times[tind], values[tind], linestyle=S.line['obs'], marker=S.marker['obs'], lw=S.lw['obs'], color=S.col['obs'], mfc=S.col['obs'], mec=S.col['obs'], markersize=1, label=id)
-        else:
-            if sno==-1:
-                raise(Exception('Simulation # must be provided (sno)'))
-            h, = ax.plot(times[tind], values[tind], linestyle=S.line['sim'][sno], marker=S.marker['sim'][sno], lw=S.lw['sim'][sno], color=S.col['sim'][sno], mfc=S.col['sim'][sno], mec=S.col['sim'][sno], markersize=1,label=id)
-        hset.append(h)
-        idset.append(id)
-        plotdone=True
-        # calculate and annotate statistics?
-    else:
-        plotdone=False
+    if len(tind)==0:
+        return (hset,idset,anyplotinax,anyplotinfig)
 
-    return (hset,idset,plotdone)
+    if seriestype=='obs':
+        h, = ax.plot(times[tind], values[tind], linestyle=S.line['obs'], marker=S.marker['obs'], lw=S.lw['obs'], color=S.col['obs'], mfc=S.col['obs'], mec=S.col['obs'], markersize=1, label=id)
+    else:
+        if sno==-1:
+            raise(Exception('Simulation # must be provided (sno)'))
+        h, = ax.plot(times[tind], values[tind], linestyle=S.line['sim'][sno], marker=S.marker['sim'][sno], lw=S.lw['sim'][sno], color=S.col['sim'][sno], mfc=S.col['sim'][sno], mec=S.col['sim'][sno], markersize=1,label=id)
+    hset.append(h)
+    idset.append(id)
+    anyplotinax = True
+    anyplotinfig = True
+    # calculate and annotate statistics?
+
+    return (hset, idset, anyplotinax, anyplotinfig)
 
 def markstatonmap(ax, proj, station, lon,lat,maxz):
     tx, ty = proj(lon, lat)
