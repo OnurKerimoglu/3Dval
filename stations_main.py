@@ -41,7 +41,7 @@ def main():
     timeint = [datetime.datetime(2006, 1, 1,0,0,0), datetime.datetime(2010, 12, 31,23,59,59)]
     ##timeint = [datetime.datetime(2000, 1, 1, 0, 0, 0), datetime.datetime(2010, 12, 31, 23, 59, 59)]
     # regarding observations. todo: place in a dictionary, specify variables to extract
-    statsets = ['cosyna'] #,'marnet'
+    statsets = ['cosyna'] #,'marnet','cosyna'
     stations = []
     readobsraw=False #i.e., if the pickle file should be ignored
     # regarding simulations. todo: place in a dictionary, specify variables to extract
@@ -60,6 +60,8 @@ def main():
     for simno, simname in enumerate(sims2plot):
         sim=SRS.readsim(pathreg[user],simname,readsimraw,simdomain,meth2D,statsets,timeint,depthints,obs)
         simset[simname]=sim
+
+    #print(simset)
 
     #PLOTS
     SP.stations_plots(plotopts, obs, simset, pathreg[user]['plotrootpath'], stations, timeint, depthints)
