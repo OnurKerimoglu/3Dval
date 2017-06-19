@@ -86,8 +86,8 @@ def fill_stationdata_obs(file,statset,timeint,depthints):
     tind=np.where((time>=timeint[0]) * (time<=timeint[1]))[0]
 
     # check if depths are in
-    depthintmin=np.min([dint[0] for dint in depthints.values()]) #find the minimum lower lim of depthints
-    depthintmax = np.max([dint[1] for dint in depthints.values()]) #find the maximum upper lim of depthints
+    depthintmin=np.nanmin([dint[0] for dint in depthints.values()]) #find the minimum lower lim of depthints
+    depthintmax = np.nanmax([dint[1] for dint in depthints.values()]) #find the maximum upper lim of depthints
     zind=np.where((depth>=depthintmin) * (depth<=depthintmax))[0]
 
     # check if variables are in, decide if anything relevant found
@@ -132,14 +132,12 @@ def fill_stationdata_obs(file,statset,timeint,depthints):
     if tempfound:
         tempdata['presence']=True
         for layername, depthint  in depthints.items():
-            zind=np.where((depth>=depthint[1]) * (depth<=depthint[1]))[0]
+            zind=np.where((depth>=depthint[0]) * (depth<=depthint[1]))[0]
             if len(zind)>0:
                 data = ncf.variables[vlib['temp']][tind,zind]
                 tempdata[layername] = {'time': time[tind], 'value': data, 'depth_interval': depthint}
             else:
                 tempdata[layername] = {'time': np.array([]), 'value': np.array([]), 'depth_interval': depthint}
-
-
     else:
         tempdata['presence']=False
 
@@ -152,7 +150,7 @@ def fill_stationdata_obs(file,statset,timeint,depthints):
                 data= ncf.variables[vlib['salt']][tind,zind]
                 saltdata[layername] = {'time': time[tind], 'value': data, 'depth_interval': depthint}
             else:
-                tempdata[layername] = {'time': np.array([]), 'value': np.array([]), 'depth_interval': depthint}
+                saltdata[layername] = {'time': np.array([]), 'value': np.array([]), 'depth_interval': depthint}
     else:
         saltdata['presence']=False
 
@@ -179,5 +177,5 @@ def fill_stationdata_obs(file,statset,timeint,depthints):
     return sdata
 
 def get_maxdepth_obs(lon,lat):
-    maxz=100 #TODO:find the depth using lon,lat
+    maxz=np.nan #TODO:find the depth using lon,lat
     return maxz
