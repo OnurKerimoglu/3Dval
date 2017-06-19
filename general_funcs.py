@@ -29,11 +29,15 @@ def interp_2d_tree(vals,domaintree,lon,lat,k=4,kmin=1):
 
     dLi, gridindsLi = domaintree.query((lon, lat), k)
     wLi = 1.0 / dLi ** 2
-    vals2int=vals[:, :].flatten()[gridindsLi]
-    #find the nan-indices and remove them (by nullifying their weights)
-    nani=np.where(np.isnan(vals2int))
-    wLi[nani]=0
-    intval = np.sum(wLi * vals2int) / np.sum(wLi)
+    if len(vals.shape)==2:
+        vals2int=vals[:, :].flatten()[gridindsLi]
+        #find the nan-indices and remove them (by nullifying their weights)
+        nani=np.where(np.isnan(vals2int))
+        wLi[nani]=0
+        vals2int[nani]=0
+        intval = np.sum(wLi * vals2int) / np.sum(wLi)
+    else:
+        raise(ValueError('shape of the data to be interpolated is more than 2-dimensional'))
     return intval
 
 def format_date_axis(ax,tspan):
