@@ -36,7 +36,8 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
     varunits={'temp':'$^\circ$C', 'salt':'psal'}
 
     #figure parameters:
-    colnum= len(depthints.keys())
+    #colnum= len(depthints.keys())
+    colnum=1
     rownum=len(plotopts['varns'])
     S = Style(opt=plotopts['TSstyle'])
 
@@ -54,16 +55,17 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
     for stationno,station in enumerate(stations):
         print ('  '+station)
 
-        # genereate a new figure, size of which is a function of number of variables (rows) and layers (columns) to be show
-        fig = prepfig(S.res, S.figwh, colnum, rownum)
-        fig.subplots_adjust(hspace=.2, wspace=.15, left=0.15, right=0.85, top=0.7, bottom=0.03)
-        #name of the station
-        fig.text(0.4,0.98,station+'\n$Z_{max}$=%s'%obs[station]['bottom_depth'],verticalalignment='top',horizontalalignment='left',size=10)
-        # show the location of the station on a map in one panel
-        ax = plt.axes([0.15, 0.75, 0.23, 0.23])
-        markstatonmap(ax, proj, station, obs[station]['lon'], obs[station]['lat'], obs[station]['bottom_depth'])
-
         for layerno,layer in enumerate(depthints.keys()):
+
+            # genereate a new figure, size of which is a function of number of variables (rows) and layers (columns) to be show
+            fig = prepfig(S.res, S.figwh, colnum, rownum)
+            fig.subplots_adjust(hspace=.2, wspace=.15, left=0.15, right=0.85, top=0.7, bottom=0.03)
+            # name of the station
+            fig.text(0.4, 0.98, station + '\n$Z_{max}$=%s' % obs[station]['bottom_depth'], verticalalignment='top',
+                     horizontalalignment='left', size=10)
+            # show the location of the station on a map in one panel
+            ax = plt.axes([0.15, 0.75, 0.23, 0.23])
+            markstatonmap(ax, proj, station, obs[station]['lon'], obs[station]['lat'], obs[station]['bottom_depth'])
 
             # if no plot is made, don't save an empty figure, so track whether any plot is made in the figure
             anyplotinfig = False
@@ -71,8 +73,8 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
             for varno,varname in enumerate(plotopts['varns']): #in each panel
 
                 #create a panel
-                #ax = plt.subplot(rownum, colnum, (varno+1)*colnum + varno+1)
-                ax=plt.subplot2grid((rownum,colnum),(varno,layerno))
+                #ax=plt.subplot2grid((rownum,colnum),(varno,layerno))
+                ax = plt.subplot2grid((rownum, colnum), (varno, 0))
                 #if no series are available in the panel, legending and etc will be problamatic, so track it
                 anyplotinax=False
 
@@ -105,15 +107,15 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
                     #ax = plt.axes([0.6, 0.75, 0.4, 0.15],visible=False) #todo: place the legend in a dedicated axis within the top margin
                     lgd = ax.legend(handles=hset, labels=idset, loc='lower right',fontsize=9, numpoints=1, bbox_to_anchor=(1.1, 0.5))
 
-        #save&close the figure
-        if not anyplotinfig:
-            plt.close()
-        else:
-            fname = os.path.join(plotpath,'TSplots_%s_%s.png' % (fnamecode, station))
-            fig.savefig(fname,dpi=S.res, bbox_extra_artists=(lgd,), bbox_inches='tight')
-            plt.close()
-            print ('figure saved:%s'%fname)
-            #return
+            #save&close the figure
+            if not anyplotinfig:
+                plt.close()
+            else:
+                fname = os.path.join(plotpath,'TSplots_%s_%s_%s.png' % (fnamecode, station, layer))
+                fig.savefig(fname,dpi=S.res, bbox_extra_artists=(lgd,), bbox_inches='tight')
+                plt.close()
+                print ('figure saved:%s'%fname)
+                #return
     return
 
 def plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,id,ax,times,values,timeint,S,seriestype,sno=-1):
