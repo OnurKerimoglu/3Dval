@@ -15,7 +15,7 @@ class Style:
         if opt=='TSdefault':
             self.res = 150
             self.figwh=[0, 0]
-            self.col={'obs':'0.3','sim':['b','r','g','k']}
+            self.col={'obs':'0.3','sim':['r','b','g','k']}
             self.line={'obs':'None','sim':['-','-','-','-']}
             self.marker={'obs':'o','sim':['None','None','None','None']}
             self.lw={'obs':1,'sim':[1,1,1,1]}
@@ -88,19 +88,22 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
                 # plot each sim
                 for simno,simname in enumerate(simset.keys()):
                     if simset[simname][station][varname]['presence']:
-                        hset,idset,anyplotinax,anyplotinfig = plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,simname,ax,simset[sim][station][varname][layer]['time'], obs[station][varname][layer]['value'],timeint, S, 'sims',simno)
+                        hset,idset,anyplotinax,anyplotinfig = plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,simname,ax,simset[simname][station][varname][layer]['time'],simset[simname][station][varname][layer]['value'],timeint, S, 'sim',simno)
 
                 #ylabel:varname, unit
                 plt.ylabel(varlongnames[varname]+' ['+varunits[varname]+']',size=9)
                 ax.tick_params(axis='y', which='major', direction='out', labelsize=9)
 
                 #format date axes
-                format_date_axis(ax, timeint)
+                if varno==len(plotopts['varns'])-1:
+                    format_date_axis(ax, timeint)
+                else:
+                    ax.set_xticklabels([])
 
                 #add legend
                 if anyplotinax:
                     #ax = plt.axes([0.6, 0.75, 0.4, 0.15],visible=False) #todo: place the legend in a dedicated axis within the top margin
-                    lgd = ax.legend(handles=hset, labels=idset, loc='center right',fontsize=9, numpoints=1, bbox_to_anchor=(1.1, 0.5))
+                    lgd = ax.legend(handles=hset, labels=idset, loc='lower right',fontsize=9, numpoints=1, bbox_to_anchor=(1.1, 0.5))
 
         #save&close the figure
         if not anyplotinfig:

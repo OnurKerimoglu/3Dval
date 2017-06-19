@@ -137,17 +137,19 @@ def get_station_data_getm_inttree(station,simdata,time,domaintree,bat,lon,lat,ti
                     zsimstat=np.zeros(numz)
                     for zi in range(numz):
                         zsimstat[zi]=interp_2d_tree(simdata['z'][tind,zi,:,:],domaintree,lon,lat,k=4)
-                    zind = np.where((zsimstat >= depthint[1]) * (zsimstat <= depthint[1]))[0]
+                    zind = np.where((zsimstat >= depthint[0]) * (zsimstat <= depthint[1]))[0]
 
                     if len(zind)>0:
                         #interpolate all values from the layers in the correct depth interval, and calculate the average
-                        vsimstat=np.zeros(len(zind))
-                        for zi in zind:
-                            # value from a single cell
-                            # data = ncf.variables[simdata[varn][tind, zind,loni,lati]
-                            # values interpolated from nearest 4 cells
-                            vsimstat[zi] = interp_2d_tree(simdata[varn][tind, zind, :, :], domaintree, lon, lat, k=4)
-                        data=np.mean(vsimstat)
+                        data=np.zeros(len(tind))*np.nan
+                        for tii,ti in enumerate(tind):
+                            vsimstat = np.zeros(len(zind))*np.nan
+                            for zi in zind:
+                                # value from a single cell
+                                # data = ncf.variables[simdata[varn][tind, zind,loni,lati]
+                                # values interpolated from nearest 4 cells
+                                vsimstat[zi] = interp_2d_tree(simdata[varn][ti, zi, :, :], domaintree, lon, lat, k=4)
+                            data[tii]=np.mean(vsimstat)
                         vdata[layername] = {'time': time[tind], 'value': data, 'depth_interval': depthint}
                     else:
                         vdata['presence'] = False

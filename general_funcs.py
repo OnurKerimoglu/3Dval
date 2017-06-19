@@ -21,7 +21,7 @@ def get_2Dtree_p3(lons,lats):
     domaintree = cKDTree(lonlatpairs)
     return domaintree
 
-def interp_2d_tree(vals,domaintree,lon,lat,k=4):
+def interp_2d_tree(vals,domaintree,lon,lat,k=4,kmin=1):
     #vals: 2d field of values to be interpolated
     #domaintree: query tree generated with scipy.spatial.cKDTree
     #lon,lat:  coordinates to be used for interpolation
@@ -29,7 +29,11 @@ def interp_2d_tree(vals,domaintree,lon,lat,k=4):
 
     dLi, gridindsLi = domaintree.query((lon, lat), k)
     wLi = 1.0 / dLi ** 2
-    intval = np.sum(wLi * vals[:, :].flatten()[gridindsLi]) / np.sum(wLi)
+    vals2int=vals[:, :].flatten()[gridindsLi]
+    #find the nan-indices and remove them (by nullifying their weights)
+    nani=np.where(np.isnan(vals2int))
+    wLi[nani]=0
+    intval = np.sum(wLi * vals2int) / np.sum(wLi)
     return intval
 
 def format_date_axis(ax,tspan):
