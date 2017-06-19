@@ -31,7 +31,7 @@ def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,ob
 
     # if pickledsim does not exist:
     #collect all info that's needed to extract data from each station in the loop
-    if simname[0:4] == 'GETM':
+    if simname[0:2] == 'GF':
         print('Accessing getm data')
         lons,lats,bat,ysl,xsl=get_getm_dom_vars(simdomain)
         if meth2D == 'int_tree':
@@ -48,7 +48,7 @@ def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,ob
         lon = obs[station]['lon']
         lat = obs[station]['lat']
         maxz_obs= obs[station]['bottom_depth']
-        if (simname[0:4] == 'GETM') and (meth2D == 'int_tree'):
+        if (simname[0:2] == 'GF') and (meth2D == 'int_tree'):
             sdata = get_station_data_getm_inttree(station,simdata,simtime,domaintree,bat,lon,lat,timeint,depthints,maxz_obs)
         elif simname[0:5] == 'FVCOM':
             #sdata =get_station_data_fvcom() #TODO:IVAN

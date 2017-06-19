@@ -20,8 +20,8 @@ importlib.reload(SRO)
 importlib.reload(SRS)
 importlib.reload(SP)
 
-pathreg = {'onur': {'GETM-SNS-new': '/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117n-P161118-bdyi3-z01mm-wAtmN/sns144-M161117n-P161118-bdyi3-z01mm-wAtmN-mergedextract_phys_2006-2010_zSB.nc',
-                    'GETM-SNS-old': '/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117-P161118/sns144-M161117-P161118-mergedextract_phys_zSB_2006-2010.nc',
+pathreg = {'onur': {'GF-new': '/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117n-P161118-bdyi3-z01mm-wAtmN/sns144-M161117n-P161118-bdyi3-z01mm-wAtmN-mergedextract_phys_2006-2010_zSB.nc',
+                    'GF-old': '/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117-P161118/sns144-M161117-P161118-mergedextract_phys_zSB_2006-2010.nc',
                     'plotrootpath':'/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117n-P161118-bdyi3-z01mm-wAtmN',
                     'rootpath': './',
                     'emodnet': '?',
@@ -43,14 +43,14 @@ def main():
     # regarding observations. todo: place in a dictionary, specify variables to extract
     statsets = ['cosyna'] #,'marnet','cosyna'
     stations = []
-    readobsraw=False #i.e., if the pickle file should be ignored
+    readobsraw=True #i.e., if the pickle file should be ignored
     # regarding simulations. todo: place in a dictionary, specify variables to extract
-    sims2plot = ['GETM-SNS-new','GETM-SNS-old']
-    readsimraw=False #i.e., if the pickle file should be ignored
+    sims2plot = ['GF-old','GF-new']
+    readsimraw=True #i.e., if the pickle file should be ignored
     simdomain=''
     meth2D='int_tree'
     #regarding plots:
-    plotopts={'TS':True,'TSstyle':'TSdefault','varns':['temp','salt']}
+    plotopts={'TS':True,'TSstyle':'TSdefault','varns':['temp','salt'],'sims2plot':sims2plot}
 
     #READ OBSERVATIONS
     obs=SRO.readobs(pathreg[user],readobsraw,statsets,stations,timeint,depthints)

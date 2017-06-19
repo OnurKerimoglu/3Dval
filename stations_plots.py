@@ -86,7 +86,7 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
                 if obs[station][varname]['presence']:
                     hset,idset,anyplotinax,anyplotinfig = plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,'obs',ax,obs[station][varname][layer]['time'],obs[station][varname][layer]['value'],timeint,S,'obs')
                 # plot each sim
-                for simno,simname in enumerate(simset.keys()):
+                for simno,simname in enumerate(plotopts['sims2plot']): #enumerate(simset.keys()):
                     if simset[simname][station][varname]['presence']:
                         hset,idset,anyplotinax,anyplotinfig = plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,simname,ax,simset[simname][station][varname][layer]['time'],simset[simname][station][varname][layer]['value'],timeint, S, 'sim',simno)
 
