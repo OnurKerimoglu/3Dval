@@ -28,6 +28,10 @@ def main(simfile,preint,gridtype,varn,fbrootpath,fbname,yrint):
     #Get the ferrybox(fb) data
     date_fb, lon_fb, lat_fb, data_fb=get_ferrybox(fbrootpath,fbname,lonlims,varn,yrint)
 
+    #Write the fb data on a fixed grid (although this won't be used in the remainder of this script)
+    store_interpfb(fbrootpath, fbname, varn, date_fb, lon_fb, lat_fb, data_fb, lonlims, yrint)
+    return
+
     # Get model data, interpolated on a grid across fb track
     date_mt, lon_mt, lat_mt, data_mt, bg_contour, lon_FMD, lat_FMD, var_FMD= get_model_intonfb(simfile,preint,gridtype,fbname,varn,yrint,lonlims,date_fb, lat_fb, lon_fb)
 
@@ -134,6 +138,84 @@ def main(simfile,preint,gridtype,varn,fbrootpath,fbname,yrint):
     # show()
     print 'figure saved:%s' % fname
 
+def store_interpfb(fbrootpath,fbname,varn,date_fb,lon_fb,lat_fb,data_fb,lonlims,yrint=[2012,2013]):
+    unitdict={'salt':'psu'}
+    if fbname in ['cosyna-tordania', 'richard-cuximm']:
+        pnum = 300  # number of grid points to which the model will be interpolated
+    elif fbname in ['cosyna-funnygirl']:
+        pnum = 100  # number of grid points along the transect to which the model will be interpolated
+    elif fbname in ['yoana-buhel']:
+        pnum = 100  # number of grid points along the transect to which the model will be interpolated
+
+    # define an average transect grid based on longitudes
+    lon_at = np.linspace(lonlims[0], lonlims[1], pnum)
+    dlonlat = float(np.diff(lon_at[:2]))  # this is the bin size (of both lon and lat
+
+    # average lat within the lon bin
+    #lat_at = np.ones(len(lon_at)) * -99
+    #for i, ll in enumerate(lon_at):
+    #    binlats = lat_fb[np.where(abs(lon_fb - ll) < dlonlat)]
+    #    if len(binlats) > 0:
+    #        lat_at[i] = binlats.mean()
+
+    #dates to fill:
+    delta=datetime(yrint[1],12,31,0,0,0)-datetime(yrint[0], 1, 1, 0, 0, 0)
+    delta_sec = 1 * 24 * 60 * 60*delta.days+delta.seconds
+    dates_at = np.array([date(yrint[0], 1, 1) + timedelta(0, t) for t in range(0, delta_sec, 86400)])
+    tnum= len(dates_at)
+
+    #bin the data on the grid
+    data_at = -99. * np.ones((tnum, pnum))
+    lat_at = -99. * np.ones((tnum,pnum))
+    for di,d in enumerate(dates_at):
+        if d in date_fb:
+            # reduce the data to the relevant date
+            ti = np.where(date_fb == d)[0]
+            lon_fb_t = lon_fb[ti]
+            lat_fb_t = lat_fb[ti]
+            data_fb_t = data_fb[ti]
+            #search relevant data for each lon bin
+            for i in range(len(lon_at)):
+                loni=np.where(lon_fb_t>=(lon_at[i]-dlonlat/2)) * (lon_fb_t<=(lon_at[i]+dlonlat/2.))[0]
+                if len(loni)>0:
+                    try:
+                        data_at[di,i]=data_fb_t[loni].mean()
+                        lat_at[di,i]=lat_fb_t[loni].mean()
+                    except:
+                        print('?')
+
+    fname = fbname+'_binned_%s_%s-%s.nc' %(varn,yrint[0],yrint[1])
+    write_fbint2nc(os.path.join(fbrootpath,fbname,fname), dates_at, lon_at, lat_at, data_at, unitdict[varn])
+
+def write_fbint2nc(fname,dates,lons,lats,data,varunit):
+    import time
+    refdate=datetime(2000, 1, 1,0,0,0)
+    nc = netCDF4.Dataset(fname, 'w', format="NETCDF4")
+    nc.history = 'Created ' + time.ctime(time.time())
+    nc.source = fname.split('/')[-1]
+
+    # define time dimension and variables
+    dim_time = nc.createDimension('time', dates.size)
+    dim_lon   = nc.createDimension('longitude', lons.size)
+    var_time = nc.createVariable('time', 'd', ('time'))
+    var_time.units = 'seconds since ' + str(refdate)
+    var_lon = nc.createVariable('longitude', 'd', ('longitude'))
+    var_lat = nc.createVariable('latitude', 'd', ('time','longitude'))
+    var_data = nc.createVariable('data', 'd', ('time','longitude'))
+    var_data.units = varunit
+
+    #write variables
+    var_lon[:] = lons
+    var_lat[:] = lats
+    var_data[:] = data
+    #time: convert dates to seconds
+    dts = [datetime(d.year, d.month, d.day, 12, 0, 0) for d in dates] # first dates to datetimes, assuming 12:00 as H:M
+    deldt_vec = [date - refdate for date in dts]
+    var_time[:] = [deldt.seconds + 86400 * deldt.days for deldt in deldt_vec];
+
+    nc.sync()
+    nc.close()
+    print('For the model data interpolated on ferry transect, NC file created:%s'%fname)
 
 def get_model_intonfb(simfile,preint,gridtype,fbname,varn,yrint,lonlims,date_fb, lat_fb, lon_fb):
     if preint:
@@ -214,7 +296,7 @@ def get_model_intonfb(simfile,preint,gridtype,fbname,varn,yrint,lonlims,date_fb,
 
             data_mt = -99. * np.ones((tnum, pnum))
             for tidx in range(tnum):
-                if date_mt[tidx] in date_fb:
+                if True: #date_mt[tidx] in date_fb:
                     # all at once: probably fastest
                     # data_mt[tidx,:] = np.sum(wL * var[tidx,:,:].flatten()[gridindsL], axis=1) / np.sum(wL, axis=1)
                     for pi in range(pnum):
@@ -233,11 +315,11 @@ def get_model_intonfb(simfile,preint,gridtype,fbname,varn,yrint,lonlims,date_fb,
 
             #write as a nc file:
             fname=simfile.replace('.nc', '_FB_%s_%s_%s-%s.nc'%(fbname,varn,yrint[0],yrint[1]))
-            write_modintnc(fname,date_mt,lon_mt,lat_mt,data_mt,varunit)
+            write_modint2nc(fname,date_mt,lon_mt,lat_mt,data_mt,varunit)
             bg_contour=True
     return (date_mt, lon_mt, lat_mt, data_mt, bg_contour, lon_FMD, lat_FMD, var_FMD)
 
-def write_modintnc(fname,dates,lons,lats,data,varunit):
+def write_modint2nc(fname,dates,lons,lats,data,varunit):
     import time
     refdate=datetime(2000, 1, 1,0,0,0)
     nc = netCDF4.Dataset(fname, 'w', format="NETCDF4")
@@ -296,6 +378,7 @@ def get_ferrybox(fbrootpath, fbname, lonlims,varn, yrint):
             date_fb, lon_fb, lat_fb, data_fb = append_yearlydata(fname, fbname, y, lonlims, date_fb, lon_fb, lat_fb, data_fb)
     else:
         raise (ValueError('Unregistered file type:%s' % fbname))
+
     return (date_fb, lon_fb, lat_fb, data_fb)
 
 def append_yearlydata(fname, fbname, y, lonlims,dates, lons, lats, values):
