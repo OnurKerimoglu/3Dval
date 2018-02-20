@@ -20,8 +20,8 @@ importlib.reload(SRO)
 importlib.reload(SRS)
 importlib.reload(SP)
 
-pathreg = {'onur': {'GF-new': '/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117n-P161118-bdyi3-z01mm-wAtmN/sns144-M161117n-P161118-bdyi3-z01mm-wAtmN-mergedextract_phys_2006-2010_zSB.nc',
-                    'GF-old': '/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117-P161118/sns144-M161117-P161118-mergedextract_phys_zSB_2006-2010.nc',
+pathreg = {'onur': {'GF': '/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117n-P161118-bdyi3-z01mm-wAtmN/sns144-M161117n-P161118-bdyi3-z01mm-wAtmN-mergedextract_phys_2010-2014_zSB.nc',
+                    #'GF-old': '/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117-P161118/sns144-M161117-P161118-mergedextract_phys_zSB_2006-2010.nc',
                     'plotrootpath':'/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117n-P161118-bdyi3-z01mm-wAtmN',
                     'rootpath': './',
                     'emodnet': '?',
@@ -37,16 +37,16 @@ def main():
     #PARAMETERS:
     # general
     user='onur' #ivan,onur
-    depthints={'surface':[0,5]} #,'bottom':[5,0]} #for bottom, depthint is relative to bottom depth
-    timeint = [datetime.datetime(2006, 1, 1,0,0,0), datetime.datetime(2010, 12, 31,23,59,59)]
+    depthints={'surface':[0,5]} #,'bottom':[5,0]} #,'bottom':[5,0]} #for bottom, depthint is relative to bottom depth
+    timeint = [datetime.datetime(2010, 1, 1,0,0,0), datetime.datetime(2014, 12, 31,23,59,59)]
     ##timeint = [datetime.datetime(2000, 1, 1, 0, 0, 0), datetime.datetime(2010, 12, 31, 23, 59, 59)]
     # regarding observations. todo: place in a dictionary, specify variables to extract
     statsets = ['cosyna'] #,'marnet','cosyna'
     stations = []
-    readobsraw=True #i.e., if the pickle file should be ignored
+    readobsraw=False #i.e., if the pickle file should be ignored
     # regarding simulations. todo: place in a dictionary, specify variables to extract
-    sims2plot = ['GF-old','GF-new']
-    readsimraw=True #i.e., if the pickle file should be ignored
+    sims2plot = ['GF']
+    readsimraw=False #i.e., if the pickle file should be ignored
     simdomain=''
     meth2D='int_tree'
     #regarding plots:
