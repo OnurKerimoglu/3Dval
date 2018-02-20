@@ -40,6 +40,61 @@ def interp_2d_tree(vals,domaintree,lon,lat,k=4,kmin=1):
         raise(ValueError('shape of the data to be interpolated is more than 2-dimensional'))
     return intval
 
+def get_skills_atstations(obs,sim,vars,layer):
+    #do the matchups and combine the obs&sim in a single structure:
+    #V[var] = { 'ref', 'model'} and optionally {'dates', 'lats', 'lons',}
+    V={}
+    for var in vars:
+        if obs[var]['presence']:
+            V[var]=date_matchup(obs[var][layer],sim[var][layer])
+        else:
+            print ('%s not found'%var)
+            V[var]={'dates':[np.nan],'ref':[np.nan],'model':[np.nan]}
+    stats=get_stats(V)
+    return(stats)
+
+def date_matchup(obs0,sim0):
+    # get rid of invalid entries
+    ovali=np.isfinite(obs0['value'])
+    svali=np.isfinite(sim0['value'])
+    obs= {'value':obs0['value'][ovali], 'time':obs0['time'][ovali]}
+    sim = {'value': sim0['value'][svali], 'time': sim0['time'][svali]}
+    #datetime to date
+    obsd = [dt.date() for dt in obs['time']]
+    simd = [dt.date() for dt in sim['time']]
+    # find the common dates
+    comd = np.sort(list(set(obsd).intersection(simd)))
+    # find the indices
+    oi = [obsd.index(d) for d in comd]
+    si = [simd.index(d) for d in comd]
+    #return the (unique) dates, and corresponding obs & sim pairs as a dict
+    return({'dates':obs['time'][oi],'ref':obs['value'][oi], 'model':sim['value'][si]})
+
+def get_stats(V):
+    #copied from 'do_3dstats'
+    #expected structure: V[var]={'dates','lats','lons','ref','model'}
+    Vstats={}
+    for v in V.keys():
+        ref=V[v]['ref']
+        model=V[v]['model']
+        if len(ref)!=1:
+            stats = {}
+            stats['Rstd'] = np.std(ref)
+            stats['Mstd'] = np.std(model)
+            stats['n'] = len(ref)
+            stats['rho']=np.corrcoef([ref,model])[0,1]
+            if np.mean(ref)>-0.0001 and np.mean(ref)<0.0001: #eg, because the values are anomolies
+                stats['B']=np.nan
+                stats['B*']=np.nan
+            else:
+                stats['B'] = np.mean(model) - np.mean(ref)
+                stats['B*'] = (np.mean(model) - np.mean(ref))/(np.mean(ref))
+            #todo: other statistics?
+        else:
+            stats={'Rstd':np.nan,'Mstd':np.nan,'n':0, 'rho':np.nan, 'B':np.nan,'B*':np.nan}
+        Vstats[v]=stats
+    return Vstats
+
 def format_date_axis(ax,tspan):
     #ax.set_xlim(datetime.date(tspan[0].year,1,1), datetime.date(tspan[1].year,tspan[1].12,31))
     ax.set_xlim(datetime.date(tspan[0].year,1,1), tspan[1])
