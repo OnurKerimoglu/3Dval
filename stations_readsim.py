@@ -49,7 +49,7 @@ def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,ob
         lat = obs[station]['lat']
         maxz_obs= obs[station]['bottom_depth']
         if (simname[0:2] == 'GF') and (meth2D == 'int_tree'):
-            sdata = get_station_data_getm_inttree(station,simdata,simtime,domaintree,bat,lon,lat,timeint,depthints,maxz_obs)
+            sdata = get_station_data_getm_inttree(station,simdata,simtime,domaintree,bat,lon,lat,maxz_obs,timeint,depthints)
         elif simname[0:5] == 'FVCOM':
             #sdata =get_station_data_fvcom() #TODO:IVAN
             raise(Exception('not yet implemented'))
@@ -65,10 +65,9 @@ def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,ob
 
     return sim
 
-def get_station_data_getm_inttree(station,simdata,time,domaintree,bat,lon,lat,timeint,depthints,maxz_obs):
+def get_station_data_getm_inttree(station,simdata,time,domaintree,bat,lon,lat,maxz_obs,timeint,depthints):
     quickzfind=True
-    varns={'temp':'3D','salt':'3D','ssh':'2D'}
-    vlib = {'t': 'time', 'z': 'depth', 'temp': 'temp', 'salt': 'salt', 'ssh': 'elev'}
+    varns={'temp':'3D','salt':'3D','ssh':'2D','DIN':'3D','DIP':'3D','Chl':'3D'}
 
     # maybe no need to check if other conditions are not satisfied
     XY_in=False

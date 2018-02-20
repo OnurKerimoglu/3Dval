@@ -8,7 +8,9 @@ import netCDF4
 import numpy as np
 
 def get_getm_dataF(simf,varns,ysl,xsl):
-    vlib = {'t': 'time', 'z': 'depth', 'temp': 'temp', 'salt': 'salt', 'ssh': 'elev'}
+    vlib = {'t': 'time', 'z': 'depth',
+            'temp': 'temp', 'salt': 'salt', 'ssh': 'elev',
+            'DIN': 'hzg_maecs_nutN', 'DIP': 'hzg_maecs_nutP', 'Chl': 'hzg_maecs_chl'}
     ncf = netCDF4.Dataset(simf)
     simdata={}
     #add depth to the varlist
@@ -25,9 +27,9 @@ def get_getm_dataF(simf,varns,ysl,xsl):
             if np.ma.is_masked(var):
                 var[var.mask] = np.nan  # transform the masked values to nan, such that intp will result in nan if any cell is nan
             simdata[varn] = var
-        #multiply depth with -1
-        if varn=='z':
-            simdata[varn]=-1*simdata[varn]
+            #multiply depth with -1
+            if varn=='z':
+                simdata[varn]=-1*simdata[varn]
     #add time
     time_num = ncf.variables[vlib['t']][:]
     simtime = netCDF4.num2date(time_num, ncf.variables[vlib['t']].getncattr('units'))

@@ -57,6 +57,67 @@ def looppath_fill_stationdata_obs(obs,paths,statset,stations,timeint,depthints):
 
     return obs
 
+def fill_stationdata_obs_frommergedset(file,station,vars,timeint,depthints=-9):
+    ncf = open_ncfile(file, 'r')
+    vlib = {'t': 'time', 'Chl':'chl','DIN':'DIN','DIP':'DIP','z':'depth'}
+
+    # reading metadata of station
+    lon = ncf.variables[station+'-'+vlib['DIN']].getncattr('lon')
+    lat = ncf.variables[station+'-'+vlib['DIN']].getncattr('lat')
+    if vlib['z'] in ncf.variables.keys():
+        depth = ncf.variables[vlib['z']][:][0]
+    else:
+        depth=np.array([-9999])
+    time_num = ncf.variables[vlib['t']][:]
+    time = num2date(time_num, ncf.variables[vlib['t']].getncattr('units'))
+
+    # find the max_depth, if necessary
+    if 'bottom' in depthints.keys():
+        maxz = get_maxdepth_obs(lon, lat)
+        # update the bottom depthint
+        depthints['bottom'] = [maxz - depthints['bottom'][0], maxz - depthints['bottom'][1]]
+    else:
+        maxz = np.nan
+
+    # put all data in
+    sdata = {'longname': 'descriptive name of the station',
+             'lon': lon,
+             'lat': lat,
+             'bottom_depth': maxz,
+             }
+
+    # check if dates are in
+    tind = np.where((time >= timeint[0]) * (time <= timeint[1]))[0]
+
+    if list(depth)!=[-9999]:
+        # check if depths are in
+        depthintmin = np.nanmin([dint[0] for dint in depthints.values()])  # find the minimum lower lim of depthints
+        depthintmax = np.nanmax([dint[1] for dint in depthints.values()])  # find the maximum upper lim of depthints
+        zind = np.where((depth >= depthintmin) * (depth <= depthintmax))[0]
+
+    #for each variable, fill in the data
+    for var in vars:
+        vdata = {};
+        if station+'-'+vlib[var] in ncf.variables:
+            vdata['presence'] = True
+            for layername, depthint in depthints.items():
+                if list(depth)!=[-9999]:
+                    if len(zind) > 0:
+                        data = ncf.variables[vlib[var]][tind, zind]
+                        vdata[layername] = {'time': time[tind], 'value': data, 'depth_interval': depthint}
+                    else:
+                        vdata[layername] = {'time': np.array([]), 'value': np.array([]), 'depth_interval': depthint}
+                else:
+                    data = ncf.variables[station+'-'+vlib[var]][tind]
+                    vdata[layername] = {'time': time[tind], 'value': data, 'depth_interval': depthint}
+        else:
+            vdata['presence'] = False
+        sdata[var] = vdata
+
+    ncf.close()
+
+    return sdata
+
 def fill_stationdata_obs(file,statset,timeint,depthints):
 
     if statset in ['marnet']:
