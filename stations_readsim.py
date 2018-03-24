@@ -8,13 +8,12 @@ Created on Fri Jun  9 18:55:00 2017
 import os
 import pickle
 import numpy as np
-from netCDF4 import num2date
-from netCDF4 import Dataset
+import warnings
 
 from getm_funcs import get_getm_dom_vars,get_getm_dataF
-from general_funcs import interp_2d_tree,get_2Dtree_p3
+from general_funcs import interpval2D,get_2Dtree,getproj
 
-def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,obs):
+def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,obs,vars):
     print('Reading simulation:'+simname)
 
     simf=paths[simname]
@@ -34,11 +33,13 @@ def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,ob
     if simname[0:2] == 'GF':
         print('Accessing getm data')
         lons,lats,bat,ysl,xsl=get_getm_dom_vars(simdomain)
-        if meth2D == 'int_tree':
-            domaintree = get_2Dtree_p3(lons,lats)
+        if meth2D == 'pretree':
+            proj = getproj(setup = 'SNSfull', projpath = os.path.dirname(os.path.realpath(__file__)))
+            # proj = getproj(setup = 'NS', projpath = os.path.dirname(os.path.realpath(__file__)))
+            domaintree = get_2Dtree(lons,lats,proj)
         else:
             raise (Exception('unknown spatial method for extracting values from GETM'))
-        simdata,simtime = get_getm_dataF(simf, ['temp','salt','ssh'],ysl,xsl)
+        simdata,simtime = get_getm_dataF(simf,vars,ysl,xsl)
 
     #fill the data in correct structure
     sim = {}
@@ -48,10 +49,13 @@ def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,ob
         lon = obs[station]['lon']
         lat = obs[station]['lat']
         maxz_obs= obs[station]['bottom_depth']
-        if (simname[0:2] == 'GF') and (meth2D == 'int_tree'):
-            sdata = get_station_data_getm_inttree(station,simdata,simtime,domaintree,bat,lon,lat,maxz_obs,timeint,depthints)
+        if (simname[0:2] == 'GF') and (meth2D == 'pretree'):
+            sdata = interp_simdata_on_station(station,simdata,simtime,proj,domaintree,bat,lon,lat,maxz_obs,timeint,depthints,vars)
         elif simname[0:5] == 'FVCOM':
-            #sdata =get_station_data_fvcom() #TODO:IVAN
+            #sdata =get_station_data_fvcom() #TODO: IVAN
+            raise(Exception('not yet implemented'))
+        elif simname[0:5] == 'SCHISM':
+            #sdata =get_station_data_fvcom() #TODO: RICHARD
             raise(Exception('not yet implemented'))
         else:
             raise (Exception('unknown spatial method for extracting values from simulation'))
@@ -65,10 +69,9 @@ def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,ob
 
     return sim
 
-def get_station_data_getm_inttree(station,simdata,time,domaintree,bat,lon,lat,maxz_obs,timeint,depthints):
+def interp_simdata_on_station(station,simdata,time,proj,domaintree,bat,lon,lat,maxz_obs,timeint,depthints,vars):
     quickzfind=True
-    varns={'temp':'3D','salt':'3D','ssh':'2D','DIN':'3D','DIP':'3D','Chl':'3D'}
-
+    vardims={'temp':'3D','salt':'3D','DOs':'3D','ssh':'2D','DIN':'3D','DIP':'3D','Chl':'3D'}
     # maybe no need to check if other conditions are not satisfied
     XY_in=False
     z_in=True #assume z_in is ok by default
@@ -76,17 +79,18 @@ def get_station_data_getm_inttree(station,simdata,time,domaintree,bat,lon,lat,ma
 
     #first check if the data is available at all in the sim file
     varfound={}
-    for varn in varns.keys():
+    for varn in vars:
         varfound[varn] = True if varn in simdata.keys() else False
 
     # get zmax, see if it's a finite value (np.nan) means it's outside the domain, or interpolation can't be done
     if any(varfound.values()):
-        maxz = interp_2d_tree(bat, domaintree, lon, lat)
+        #maxz = interp_2d_tree(bat, domaintree, lon, lat)
+        maxz = interpval2D(0, 0, bat, lat, lon, 'pretree', proj, domaintree)
         if not np.isnan(maxz): XY_in = True
-        # If the diff between  maxz with maxz_obs too large (=?), throw a warning and skip the station
-        if (not np.isnan(maxz_obs)) and (abs(maxz - maxz_obs) > 5):
-            raise (Warning('For station %s, abs(maxz(sim=%s)-maxz(obs=%s))>5' %(station, maxz, maxz_obs)))
-            XY_in = False
+        # If the diff between  maxz with maxz_obs too large (=?), throw a warning
+        if (not np.isnan(maxz_obs)) and (abs(maxz - maxz_obs) > 10):
+            warnings.warn('For station %s, abs(maxz(sim=%s)-maxz(obs=%s))>5' %(station, maxz, maxz_obs))
+            #XY_in = False
 
     # quick scan if relevant depths are definitely not available
     if XY_in:
@@ -104,7 +108,7 @@ def get_station_data_getm_inttree(station,simdata,time,domaintree,bat,lon,lat,ma
         if len(tind) > 0: t_in = True
 
     # whether the data is available relevant for the station, depthinterval and time interval
-    for varn in varns.keys():
+    for varn in vars:
         varfound[varn] = True if varfound[varn] and t_in else False #t_in implies XY_in=z_in=True
 
     # update the bottom depth interval if necessary
@@ -118,19 +122,19 @@ def get_station_data_getm_inttree(station,simdata,time,domaintree,bat,lon,lat,ma
         'bottom_depth': maxz,
     }
 
-    for varn in varns.keys():
+    for varn in vars:
         vdata = {}
         if varfound[varn]:
-            if varns[varn] == '2D':
+            if vardims[varn] == '2D':
                 vdata['presence'] = True
                 # value from a single cell:
                 # data = ncf.variables[simdata[varn][tind,loni,lati]
                 # values interpolated from nearest 4 cells
                 data = np.zeros(len(tind)) * np.nan
                 for tii, ti in enumerate(tind):
-                    data[tii] = interp_2d_tree(simdata[varn][ti, :, :], domaintree, lon, lat, k=4)
+                    data[tii]= interpval2D(0, 0, simdata[varn][ti, :, :], lat, lon, 'pretree', proj, domaintree)
                 vdata['z0'] = {'time': time, 'value': data, 'depth_interval': [0, 0]}
-            elif varns[varn]=='3D': #handle 3-D (t,z,x,y) vars
+            elif vardims[varn]=='3D': #handle 3-D (t,z,x,y) vars
                 vdata['presence'] = True
                 for layername, depthint in depthints.items():
                     if quickzfind and simdata['z'].shape[1]==2:
@@ -145,14 +149,15 @@ def get_station_data_getm_inttree(station,simdata,time,domaintree,bat,lon,lat,ma
                             # value from a single cell
                             # data = ncf.variables[simdata[varn][tind, zind,loni,lati]
                             # values interpolated from nearest 4 cells
-                            data[tii] = interp_2d_tree(simdata[varn][ti, zi, :, :], domaintree, lon, lat, k=4)
+                            data[tii] = interpval2D(0, 0, simdata[varn][ti, zi, :], lat, lon, 'pretree', proj, domaintree)
                         vdata[layername] = {'time': time[tind], 'value': data, 'depth_interval': depthint}
                     else: #exact search
                         # for all layers in sim file, calculate average depth and find the one in the correct interval
                         #doesn't work somehow?
                         zsimstat=np.zeros(numz)
                         for zi in range(numz):
-                            zsimstat[zi]=interp_2d_tree(simdata['z'][0,zi,:,:],domaintree,lon,lat,k=4)
+                            #zsimstat[zi]=interp_2d_tree(simdata['z'][0,zi,:,:],domaintree,lon,lat,k=4)
+                            zsimstat[zi] = interpval2D(0, 0, simdata['z'][0,zi,:,:], lat, lon, 'pretree', proj, domaintree)
                         zind = np.where((zsimstat >= depthint[0]) * (zsimstat <= depthint[1]))[0]
 
                         if len(zind)>0:
@@ -164,7 +169,7 @@ def get_station_data_getm_inttree(station,simdata,time,domaintree,bat,lon,lat,ma
                                     # value from a single cell
                                     # data = ncf.variables[simdata[varn][tind, zind,loni,lati]
                                     # values interpolated from nearest 4 cells
-                                    vsimstat[zi] = interp_2d_tree(simdata[varn][ti, zi, :, :], domaintree, lon, lat, k=4)
+                                    zsimstat[zi] = interpval2D(0, 0, simdata['z'][ti, zi, :, :], lat, lon, 'pretree', proj, domaintree)
                                 data[tii]=np.mean(vsimstat)
                             vdata[layername] = {'time': time[tind], 'value': data, 'depth_interval': depthint}
                         else:
