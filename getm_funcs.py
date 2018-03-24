@@ -10,12 +10,13 @@ import numpy as np
 def get_getm_dataF(simf,varns,ysl,xsl):
     vlib = {'t': 'time', 'z': 'depth',
             'temp': 'temp', 'salt': 'salt', 'ssh': 'elev',
-            'DIN': 'hzg_maecs_nutN', 'DIP': 'hzg_maecs_nutP', 'Chl': 'hzg_maecs_chl'}
+            'DOs': 'hzg_maecs_O2_percSat','DIN': 'hzg_maecs_nutN', 'DIP': 'hzg_maecs_nutP', 'Chl': 'hzg_maecs_chl'}
     ncf = netCDF4.Dataset(simf)
     simdata={}
     #add depth to the varlist
-    varns.append('z')
-    for varn in varns:
+    #varns.append('z')
+    varnsnew=varns+['z']
+    for varn in varnsnew:
         if vlib[varn] in ncf.variables:
             varF=ncf.variables[vlib[varn]][:]
             if len(varF.shape)==2:
@@ -52,8 +53,7 @@ def get_getm_dom_vars(simdomain):
     lats=topo['latc'][ysl, xsl]
     bat=topo['H'][ysl, xsl]
     if np.ma.is_masked(bat):
-        bat[bat.mask] = np.nan  # transform the masked values to nan
-
+        bat=bat.filled(np.nan) # transform the masked values to nan
     return (lons,lats,bat,ysl,xsl)
 
 def get_getm_bathymetry_cropped(fname='/home/onur/WORK/projects/GB/data/topo/topo_area_sns.nc'):
@@ -65,7 +65,10 @@ def get_getm_bathymetry_cropped(fname='/home/onur/WORK/projects/GB/data/topo/top
     lonc=0.25*(lonx[:-1,:-1]+lonx[:-1,1:]+lonx[1:,:-1]+lonx[1:,1:]) #this should be [94,137]
     latc=0.25*(latx[:-1,:-1]+latx[:-1,1:]+latx[1:,:-1]+latx[1:,1:])
     H = ncBv['bathymetry'][4:-1,1:-1] #this should be [94,137])
-    A= ncBv['A'][3:-1,1:-2] #this should be [94,137])
+    if 'A' in ncBv:
+        A= ncBv['A'][3:-1,1:-2] #this should be [94,137])
+    else:
+        A=np.nan
     topo={'H':H,'latc':latc, 'lonc':lonc,'latx':latx, 'lonx':lonx,'Hunit':ncBv['bathymetry'].units,'A':A}
     ncB.close()
     return(topo)
