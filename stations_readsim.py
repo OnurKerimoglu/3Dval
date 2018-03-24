@@ -91,6 +91,8 @@ def interp_simdata_on_station(station,simdata,time,proj,domaintree,bat,lon,lat,m
         if (not np.isnan(maxz_obs)) and (abs(maxz - maxz_obs) > 10):
             warnings.warn('For station %s, abs(maxz(sim=%s)-maxz(obs=%s))>5' %(station, maxz, maxz_obs))
             #XY_in = False
+    else:
+        raise(Exception('Requested variables were not found in the simulation file'))
 
     # quick scan if relevant depths are definitely not available
     if XY_in:
