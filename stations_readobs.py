@@ -2,82 +2,108 @@
 """
 Created on Thu Jun  8 16:06:57 2017
 
-@author: ivan.kuznetsov@gmail.com, kerimoglu.o@gmail.com
+@author: kerimoglu.o@gmail.com
 """
 import os
 import pickle
 import numpy as np
-from netCDF4 import num2date
-from netCDF4 import Dataset as open_ncfile
+import netCDF4
+from general_funcs import get_botdepth
 
-def readobs(paths,readraw,statsets,stations,timeint,depthints):
+def readobs(paths,readraw,statsets,stations,timeint,depthints,vars=[]):
     print ('Reading observations:')
 
-    picklecode = '_%s_%s_%s-%s' % ('-'.join(statsets), '-'.join(depthints.keys()), timeint[0].year, timeint[1].year)
-    pickledobsfile = os.path.join(paths['rootpath'], 'obs' + picklecode + '.pickle')
+    pickleobs=True
+    if pickleobs:
+        picklecode = '_%s_%s_%s-%s' % ('-'.join(statsets), '-'.join(depthints.keys()), timeint[0].year, timeint[1].year)
+        pickledobsfile = os.path.join(paths['pickledobspath'], 'obs' + picklecode + '.pickle')
+        #pickledobsfile = os.path.join(paths[statset], 'obs' + picklecode + '.pickle')
 
-    #check if the pickledobs exist
-    if (not readraw) and os.path.exists(pickledobsfile):
-       print('Opening pickled obs file')
-       (obs,) = np.load(pickledobsfile)
-       # filter requested stations?
-       return obs
+        #check if the pickledobs exist
+        if (not readraw) and os.path.exists(pickledobsfile):
+           print('Opening pickled obs file')
+           (obs,) = np.load(pickledobsfile)
+           # filter requested stations?
+           return obs
 
-    # if pickledfile does not exist:
-    obs={}
-    for statset in statsets:
-        print('Filling obs. dataset:%s'%statset)
-        obs=looppath_fill_stationdata_obs(obs,paths,statset,stations,timeint,depthints)
-    
-    #pickle the obs file
-    f=open(pickledobsfile,'wb')
-    pickle.dump((obs,),f) #,protocol=-1
-    print('Pickled obs file for later use:' + pickledobsfile)
-    f.close()
+        # if pickledfile does not exist:
+        obs={}
+        for statset in statsets:
+            print('Filling obs. dataset:%s'%statset)
+            obs=looppath_fill_stationdata_obs(obs,paths,statset,stations,timeint,depthints,vars)
+
+        #pickle the obs file
+        f=open(pickledobsfile,'wb')
+        pickle.dump((obs,),f) #,protocol=-1
+        print('Pickled obs file for later use:' + pickledobsfile)
+        f.close()
+    else:
+        for statset in statsets:
+            print('Filling obs. dataset:%s' % statset)
+            obs = looppath_fill_stationdata_obs({}, paths, statset, stations, timeint, depthints,vars)
 
     return obs
 
-def looppath_fill_stationdata_obs(obs,paths,statset,stations,timeint,depthints):
-
-    #TODO: pickle/unpickle each station set?
+def looppath_fill_stationdata_obs(obs,paths,statset,stations,timeint,depthints,vars):
 
     obspath = paths[statset]
 
-    #if stations to include are not specified,
+    # if stations to include are not specified,
     if len(stations) == 0:
         # get lists of available data
         files = [f for f in os.listdir(obspath) if f.endswith('.nc')]
-        sfiles= files[:]
+        sfiles = files[:]
+    else:
+        #TODO: check the station attribute of each file, return the needed file names
+        raise(Exception('sfile generation based on stations not yet implemented. leave the station list empty'))
 
     for sfile in sfiles:
-        station=sfile.split('.nc')[0]
-        print('  '+station)
-        sdata = fill_stationdata_obs(os.path.join(obspath,sfile),statset,timeint,depthints)
+        # station=sfile.split('.nc')[0]
+        print('  ' + sfile)
+        if len(vars)==0:
+            vars = ['temp', 'salt', 'DOs', 'ssh']
+        sdata,station = fill_stationdata_obs(os.path.join(obspath,sfile),statset,vars,timeint,depthints)
         obs[station] = sdata
 
     return obs
 
-def fill_stationdata_obs_frommergedset(file,station,vars,timeint,depthints=-9):
-    ncf = open_ncfile(file, 'r')
-    vlib = {'t': 'time', 'Chl':'chl','DIN':'DIN','DIP':'DIP','z':'depth'}
+def fill_stationdata_obs(file,statset,vars,timeint,depthints0):
+
+    if statset in ['cosyna']:
+        vlib = {'t': 'time', 'x': 'lon', 'y': 'lat', 'z': 'depth', 'temp': 'temp', 'salt': 'salt','DOs': 'DOsat', 'ssh':'ssh'}
+    elif statset in ['BSH']:
+        vlib = {'t': 'time', 'x': 'lon', 'y': 'lat', 'z': 'depth', 'temp': 'temp', 'salt': 'sal','DOs': 'DOsat'}
+    elif statset in ['BGC']:
+        vlib = {'t': 'time', 'x': 'lon', 'y': 'lat', 'z': 'depth', 'Chl': 'chl', 'DIN': 'DIN', 'DIP': 'DIP'}
+
+    #variables without depth dimension
+    noZDvars = ['ssh']
+
+    #open the data set
+    ncf = netCDF4.Dataset(file,'r')
+    station=ncf.station
 
     # reading metadata of station
-    lon = ncf.variables[station+'-'+vlib['DIN']].getncattr('lon')
-    lat = ncf.variables[station+'-'+vlib['DIN']].getncattr('lat')
-    if vlib['z'] in ncf.variables.keys():
-        depth = ncf.variables[vlib['z']][:][0]
-    else:
-        depth=np.array([-9999])
+    lon = ncf.variables[vlib['x']][:][0]
+    lat = ncf.variables[vlib['y']][:][0]
+    if vlib['z'] in ncf.variables: #if a depth dimension exists, extract it
+        depth = ncf.variables[vlib['z']][:]
+    else: #assume that all are surface depths
+        depth=-9999*np.ones(1)
     time_num = ncf.variables[vlib['t']][:]
-    time = num2date(time_num, ncf.variables[vlib['t']].getncattr('units'))
+    time = netCDF4.num2date(time_num, ncf.variables[vlib['t']].getncattr('units'))
 
     # find the max_depth, if necessary
-    if 'bottom' in depthints.keys():
-        maxz = get_maxdepth_obs(lon, lat)
-        # update the bottom depthint
-        depthints['bottom'] = [maxz - depthints['bottom'][0], maxz - depthints['bottom'][1]]
-    else:
-        maxz = np.nan
+    try:
+        maxz=ncf.bottom_depth
+    except:
+        maxz = get_botdepth(lon, lat)
+
+    # update the bottom depthint
+    depthints = depthints0.copy()
+    if 'bottom' in depthints.keys() and not np.isnan(maxz):
+        depthints['bottom']=[maxz-depthints0['bottom'][0], maxz-depthints0['bottom'][1]]
+        print ('updated depthints for bottom: %s-%s'%(depthints['bottom'][0],depthints['bottom'][1]))
 
     # put all data in
     sdata = {'longname': 'descriptive name of the station',
@@ -87,156 +113,35 @@ def fill_stationdata_obs_frommergedset(file,station,vars,timeint,depthints=-9):
              }
 
     # check if dates are in
-    tind = np.where((time >= timeint[0]) * (time <= timeint[1]))[0]
-
-    if list(depth)!=[-9999]:
-        # check if depths are in
-        depthintmin = np.nanmin([dint[0] for dint in depthints.values()])  # find the minimum lower lim of depthints
-        depthintmax = np.nanmax([dint[1] for dint in depthints.values()])  # find the maximum upper lim of depthints
-        zind = np.where((depth >= depthintmin) * (depth <= depthintmax))[0]
-
-    #for each variable, fill in the data
-    for var in vars:
-        vdata = {};
-        if station+'-'+vlib[var] in ncf.variables:
-            vdata['presence'] = True
-            for layername, depthint in depthints.items():
-                if list(depth)!=[-9999]:
-                    if len(zind) > 0:
-                        data = ncf.variables[vlib[var]][tind, zind]
-                        vdata[layername] = {'time': time[tind], 'value': data, 'depth_interval': depthint}
-                    else:
-                        vdata[layername] = {'time': np.array([]), 'value': np.array([]), 'depth_interval': depthint}
-                else:
-                    data = ncf.variables[station+'-'+vlib[var]][tind]
-                    vdata[layername] = {'time': time[tind], 'value': data, 'depth_interval': depthint}
-        else:
-            vdata['presence'] = False
-        sdata[var] = vdata
-
-    ncf.close()
-
-    return sdata
-
-def fill_stationdata_obs(file,statset,timeint,depthints):
-
-    if statset in ['marnet']:
-        vlib={'t':'TIME','x':'LONGITUDE','y':'LATITUDE','z':'DEPH','temp':'TEMP','salt':'PSAL', 'ssh':'?'}
-    elif statset in ['emodnet']:
-        vlib = {'t':'TIME','x': 'LONGITUDE', 'y': 'LATITUDE', 'z': 'DEPH', 'temp': 'TEMP', 'salt': 'PSAL','ssh':'SLEV'}
-    elif statset in ['cosyna']:
-        vlib = {'t': 'TIME', 'x': 'LONGITUDE', 'y': 'LATITUDE', 'z': 'DEPTH', 'temp': 'TEMP', 'salt': 'PSAL','ssh': 'SLEV'}
-    ncf = open_ncfile(file,'r')
-
-    # reading metadata of station
-    lon = ncf.variables[vlib['x']][:][0]
-    lat = ncf.variables[vlib['y']][:][0]
-    depth = ncf.variables[vlib['z']][:][0]
-    time_num = ncf.variables[vlib['t']][:]
-    time = num2date(time_num, ncf.variables[vlib['t']].getncattr('units'))
-
-    # find the max_depth, if necessary
-    if 'bottom' in depthints.keys():
-        maxz = get_maxdepth_obs(lon, lat)
-        #update the bottom depthint
-        depthints['bottom']=[maxz-depthints['bottom'][0], maxz-depthints['bottom'][1]]
-    else:
-        maxz = np.nan
-
-    # check if dates are in
     tind=np.where((time>=timeint[0]) * (time<=timeint[1]))[0]
 
     # check if depths are in
-    depthintmin=np.nanmin([dint[0] for dint in depthints.values()]) #find the minimum lower lim of depthints
-    depthintmax = np.nanmax([dint[1] for dint in depthints.values()]) #find the maximum upper lim of depthints
-    zind=np.where((depth>=depthintmin) * (depth<=depthintmax))[0]
-
-    # check if variables are in, decide if anything relevant found
-    tempfound = True if len(tind)>0 and len(zind)>0 and vlib['temp'] in ncf.variables else False
-    saltfound = True if len(tind)>0 and len(zind)>0 and vlib['salt'] in ncf.variables else False
-    sshfound = True if len(tind)>0 and len(zind)>0 and vlib['ssh'] in ncf.variables else False
-
-    # a = ncf.variables['TIME'].getncattr('units')
-    # time_emodnet.append([num2date(ncf.variables['TIME'][:][0],a),num2date(ncf.variables['TIME'][:][-1],a)])
-    # ncf.close()
-
-    #          if var in var_emodnet[i][:]:
-    #              if (time_emodnet[i][0] < t2 or time_emodnet[i][1] > t2):
-    #                  # get data from file (first match)
-    #                  ncf = open_ncfile(path2data_emodnet+item,'r')
-    #                   obs_z    = ncf.variables['DEPH'][:][0]
-    #                   time = ncf.variables['TIME'][:]
-    #                   a = ncf.variables['TIME'].getncattr('units')
-    #                   time = num2date(time,a)
-    #                   if np.any(time > t1) and np.any(time < t2):
-    #                       time_ind1 = np.where(time > t1)[0][0]
-    #                       time_ind2 = np.where(time < t2)[0][-1]
-    #                   else:
-    #                       continue
-    #                   data = ncf.variables[v2v[var]][:][time_ind1:time_ind2,:]
-    #                   ncf.close()
-    #                   ind_time = time[time_ind1:time_ind2]
-    #                   for iz,z in enumerate(obs_z):
-    #                       #check if data array is masked, if not make new masked array
-    #                       if isinstance(data[:,iz],np.ma.MaskedArray):
-    #                           dd = data[:,iz]
-    #                       else:
-    #                           dd = np.ma.array(data[:,iz])
-    #                       if dd.count():
-    #                           dset={'fname':item,'time':ind_time,'data':dd,'z':z}
-    #                           dset_list.append(dset)
-
-    # fill in the data:
-    tempdata = {}; saltdata = {}; sshdata = {}
-
-    #handle temp
-    if tempfound:
-        tempdata['presence']=True
-        for layername, depthint  in depthints.items():
-            zind=np.where((depth>=depthint[0]) * (depth<=depthint[1]))[0]
-            if len(zind)>0:
-                data = ncf.variables[vlib['temp']][tind,zind]
-                tempdata[layername] = {'time': time[tind], 'value': data, 'depth_interval': depthint}
-            else:
-                tempdata[layername] = {'time': np.array([]), 'value': np.array([]), 'depth_interval': depthint}
+    if list(depth) != [-9999]:
+        depthintmin=np.nanmin([dint[0] for dint in depthints.values()]) #find the minimum lower lim of depthints
+        depthintmax = np.nanmax([dint[1] for dint in depthints.values()]) #find the maximum upper lim of depthints
+        zind=np.where((depth>=depthintmin) * (depth<=depthintmax))[0]
     else:
-        tempdata['presence']=False
+        zind=-1*np.ones(1)
 
-    #handle salt
-    if saltfound:
-        saltdata['presence']=True
-        for layername, depthint  in depthints.items():
-            zind=np.where((depth>=depthint[0]) * (depth<=depthint[1]))[0]
-            if len(zind)>0:
-                data= ncf.variables[vlib['salt']][tind,zind]
-                saltdata[layername] = {'time': time[tind], 'value': data, 'depth_interval': depthint}
-            else:
-                saltdata[layername] = {'time': np.array([]), 'value': np.array([]), 'depth_interval': depthint}
-    else:
-        saltdata['presence']=False
-
-    #handle ssh
-    if sshfound:
-        sshdata['presence']=True
-        data = ncf.variables[vlib['ssh']][tind]
-        sshdata['z0']={'time':time, 'value':data, 'depth_interval':[0,0]}
-    else:
-        sshdata['presence']=False
-
-    #put all data in
-    sdata ={'longname':'descriptive name of the station',
-            'lon':lon,
-            'lat':lat,
-            'bottom_depth':maxz,
-            'temp' : tempdata,
-            'salt' : saltdata,
-            'ssh': sshdata
-            }
+    # for each variable, fill in the data, if exists
+    for var in vars:
+        sdata[var]={}
+        if len(tind)>0 and len(zind)>0 and vlib[var] in ncf.variables:
+            sdata[var]['presence'] = True
+            if (var in noZDvars) or (list(zind) == [-1]): #if a variable with no vertical dimension:
+                sdata[var]['surface']={'time':time, 'value':ncf.variables[vlib[var]][tind,0,0], 'depth_interval':[0,0]}
+            else: #if vertical dimension (may) exist
+                for layername, depthint in depthints.items():
+                    zind = np.where((depth >= depthint[0]) * (depth <= depthint[1]))[0]
+                    if len(zind) > 0:
+                        #calculate average over zind
+                        vals=np.nanmean(ncf.variables[vlib[var]][tind,zind,0,0],axis=1)
+                        sdata[var][layername] = {'time': time[tind], 'value': vals, 'depth_interval': depthint}
+                    else:
+                        sdata[var][layername] = {'time': np.array([]), 'value': np.array([]), 'depth_interval': depthint}
+        else:
+            sdata[var]['presence']=False
 
     ncf.close()
-            
-    return sdata
 
-def get_maxdepth_obs(lon,lat):
-    maxz=np.nan #TODO:find the depth using lon,lat
-    return maxz
+    return sdata,station
