@@ -20,20 +20,20 @@ class Style:
             self.marker={'obs':'o','sim':['None','None','None','None']}
             self.lw={'obs':1,'sim':[1,1,1,1]}
 
-def stations_plots(plotopts,obs,sim,plotrootpath,stations,timeint,depthints):
+def stations_plots(plotopts,obs,sim,plotrootpath,statsets,stations,timeint,depthints):
     fnamecode= '_%s-%s' %(timeint[0].year, timeint[1].year)
 
     if plotopts['TS']==True:
-        plotpath=os.path.join(plotrootpath,'3Dval_stations'+fnamecode)
-        stations_plots_ts(plotopts, obs, sim, plotpath, stations, timeint, depthints, fnamecode)
-
+        for statset in statsets:
+            plotpath=os.path.join(plotrootpath,'3Dval_stations'+fnamecode,statset)
+            stations_plots_ts(plotopts, obs, sim, plotpath, stations, timeint, depthints, fnamecode)
 
 def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fnamecode):
     print('Doing the time series plots for stations:')
 
     #variables to plot, definitions
-    varlongnames={'temp':'Temperature', 'salt':'Salinity'}
-    varunits={'temp':'$^\circ$C', 'salt':'psal'}
+    varlongnames={'temp':'Temperature', 'salt':'Salinity', 'DOs':'O2 sat.', 'DIN':'DIN', 'DIP':'DIP', 'Chl':'Chl'}
+    varunits={'temp':'$^\circ$C', 'salt':'psal', 'DOs':'%', 'DIN':'$\mu$M', 'DIP':'$\mu$M', 'Chl':'mg/m$^3$'}
 
     #figure parameters:
     #colnum= len(depthints.keys())
@@ -58,10 +58,10 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
         for layerno,layer in enumerate(depthints.keys()):
 
             # genereate a new figure, size of which is a function of number of variables (rows) and layers (columns) to be show
-            fig = prepfig(S.res, S.figwh, colnum, rownum)
-            fig.subplots_adjust(hspace=.2, wspace=.15, left=0.15, right=0.85, top=0.7, bottom=0.03)
+            fig = prepfig(S.res, S.figwh, colnum, rownum, timeint)
+            fig.subplots_adjust(hspace=.2, wspace=.15, left=0.15, right=0.7, top=0.7, bottom=0.03)
             # name of the station
-            fig.text(0.4, 0.98, station + '\n$Z_{max}$=%s' % obs[station]['bottom_depth'], verticalalignment='top',
+            fig.text(0.4, 0.9, station + '\n$Z_{max}$=%.1f m' % obs[station]['bottom_depth'], verticalalignment='top',
                      horizontalalignment='left', size=10)
             # show the location of the station on a map in one panel
             ax = plt.axes([0.15, 0.75, 0.23, 0.23])
@@ -96,22 +96,21 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
                 plt.ylabel(varlongnames[varname]+' ['+varunits[varname]+']',size=9)
                 ax.tick_params(axis='y', which='major', direction='out', labelsize=9)
 
-                #format date axes
-                if varno==len(plotopts['varns'])-1:
-                    format_date_axis(ax, timeint)
-                else:
+                #format date axes# convert to 1-d, assuming that all measurements are from surface
+                format_date_axis(ax, timeint)
+                if not varno==len(plotopts['varns'])-1:
                     ax.set_xticklabels([])
 
                 #add legend
                 if anyplotinax:
                     #ax = plt.axes([0.6, 0.75, 0.4, 0.15],visible=False) #todo: place the legend in a dedicated axis within the top margin
-                    lgd = ax.legend(handles=hset, labels=idset, loc='lower right',fontsize=9, numpoints=1, bbox_to_anchor=(1.1, 0.5))
+                    lgd = ax.legend(handles=hset, labels=idset, loc='center left',fontsize=9, numpoints=1, bbox_to_anchor=(1.05, 0.5))
 
             #save&close the figure
             if not anyplotinfig:
                 plt.close()
             else:
-                fname = os.path.join(plotpath,'TSplots_%s_%s_%s.png' % (fnamecode, station, layer))
+                fname = os.path.join(plotpath,'TSplots%s_%s_%s.png' % (fnamecode, station, layer))
                 fig.savefig(fname,dpi=S.res, bbox_extra_artists=(lgd,), bbox_inches='tight')
                 plt.close()
                 print ('figure saved:%s'%fname)
@@ -124,7 +123,7 @@ def plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,id,ax,times,values,timeint
         return (hset,idset,anyplotinax,anyplotinfig)
 
     if seriestype=='obs':
-        h, = ax.plot(times[tind], values[tind], linestyle=S.line['obs'], marker=S.marker['obs'], lw=S.lw['obs'], color=S.col['obs'], mfc=S.col['obs'], mec=S.col['obs'], markersize=1, label=id)
+        h, = ax.plot(times[tind], values[tind], linestyle=S.line['obs'], marker=S.marker['obs'], lw=S.lw['obs'], color=S.col['obs'], mfc=S.col['obs'], mec=S.col['obs'], markersize=2, label=id)
     else:
         if sno==-1:
             raise(Exception('Simulation # must be provided (sno)'))
@@ -147,10 +146,13 @@ def markstatonmap(ax, proj, station, lon,lat,maxz):
     proj.drawcoastlines(color=(0.3, 0.3, 0.3), linewidth=0.5)
     proj.fillcontinents((.8, .8, .8), lake_color=(0.6, 0.6, 1.0))
 
-def prepfig(res,figwh,colno,rowno):
+def prepfig(res,figwh,colno,rowno,timeint):
     # start a figure
+    #years:
+    numy=timeint[1].year-timeint[0].year+1
     if (figwh[0] == 0):
-        figwh = cm2inch(12 * colno + 2, 4 * rowno)
+        #figwh = cm2inch(12 * colno + 2, 4 * rowno)
+        figwh = cm2inch(2.5*numy * colno + 2, 4 * rowno)
     else:
         figwh = cm2inch(figwh[0], figwh[1])
     fig = plt.figure(figsize=figwh, dpi=res)
