@@ -7,18 +7,82 @@ provides general functions useful for multiple modules
 import os,sys
 import numpy as np
 import datetime
+import netCDF4
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from scipy.spatial import cKDTree
+from scipy import interpolate
+#import time
 
-
-def get_2Dtree_p3(lons,lats):
-    # create the query tree needed for 2-D interpolation
-    from scipy.spatial import cKDTree
-    if len(lons.shape)>1:
-        lonlatpairs = list(zip(lons.flatten(), lats.flatten()))[:]  # (python3 zip)
+def get_botdepth(lon,lat,method='tree'):
+    proj = getproj(setup='SNSfull', projpath=os.path.dirname(os.path.realpath(__file__)))
+    # proj = getproj(setup = 'NS', projpath = os.path.dirname(os.path.realpath(__file__)))
+    topofile = '/home/onur/WORK/projects/GB/data/topo/topo_HR2.nc'
+    #topofile='/home/onur/WORK/projects/GB/data/topo/topo_GreaterNorthSea.nc'
+    if os.path.exists(topofile):
+        nc=netCDF4.Dataset(topofile)
+        # depths=nc.variables['depth_average'][:]
+        # lats = nc.variables['lat'][:]
+        # lons = nc.variables['lon'][:]
+        depths = nc.variables['bathymetry'][:]
+        lats = nc.variables['latx'][:-1,:-1]
+        lons = nc.variables['lonx'][:-1,:-1]
+        nc.close()
+        depth = interpval2D(lats, lons, depths, lat, lon, method,proj)
     else:
-        lonlatpairs=list(zip(lons, lats))[:]
-    domaintree = cKDTree(lonlatpairs)
+        warnings.warn('Topo file not found in the provided location (%s). Filling nan for station depth:'%topofile)
+        depth=np.nan
+    return depth
+
+def interpval2D(lats,lons,vals,lat,lon,method,proj,domaintree=0):
+
+    # convert lat-lons to cartesian coordinates
+    x2,y2 = proj(lon,lat)
+
+    if method=='pretree':
+        if not isinstance(domaintree,int):  #p2: istype(domaintree,'integer'):
+            domaintree=domaintree
+        else:
+            warnings.WarningMessage('no pre-generated tree provided. Generating a new one')
+            method='tree'
+    else:
+        # meshscipy.spatial.ckdtree.cKDTree.query
+        if len(lons.shape) == 2:
+            lonsM, latsM = lons, lats
+        else:
+            lonsM, latsM = np.meshgrid(lons, lats)
+        x1, y1 = proj(lonsM, latsM)
+
+    if method == 'tree':
+        xypairs = list(zip(x1.flat, y1.flat)) #p3: must be placed in list
+        # ts=time.time()
+        domaintree = cKDTree(xypairs)
+        # print 'tree generated in:%.1f' %(time.time() - ts)
+
+    if method in ['NN','linear']:
+        coords = np.asarray(zip(np.reshape(x1,x1.size),np.reshape(y1,y1.size)))
+        if method=='NN':
+            f = interpolate.NearestNDInterpolator(coords, np.reshape(vals, vals.size))
+        elif method=='linear':
+            f = interpolate.LinearNDInterpolator(coords, np.reshape(vals,vals.size), fill_value=np.nan)
+        val = f(x2, y2)
+    elif method in ['tree','pretree']:
+        val=interp_2d_tree(vals, domaintree, x2, y2, k=4, kmin=1)
+
+    return val
+
+def get_2Dtree(lons,lats,proj,Vpy=3):
+    if len(lons.shape) == 2:
+        lonsM, latsM = lons, lats
+    else:
+        lonsM, latsM = np.meshgrid(lons, lats)
+    x1, y1 = proj(lonsM, latsM)
+    if Vpy==2:
+        xypairs = zip(x1.flat, y1.flat)
+    else:
+        xypairs = list(zip(x1.flat, y1.flat))  # p3: must be placed in list
+
+    domaintree = cKDTree(xypairs)
     return domaintree
 
 def interp_2d_tree(vals,domaintree,lon,lat,k=4,kmin=1):
@@ -29,6 +93,13 @@ def interp_2d_tree(vals,domaintree,lon,lat,k=4,kmin=1):
 
     dLi, gridindsLi = domaintree.query((lon, lat), k)
     wLi = 1.0 / dLi ** 2
+
+    #remove the mask, if necessary
+    if isinstance(vals,np.ma.MaskedArray):
+        #vals[vals.mask] = np.nan
+        #vals.Mask=False
+        vals = vals.filled(np.nan)
+
     if len(vals.shape)==2:
         vals2int=vals[:, :].flatten()[gridindsLi]
         #find the nan-indices and remove them (by nullifying their weights)
