@@ -16,7 +16,7 @@ from datetime import date,datetime,timedelta
 from getm_funcs import get_getm_bathymetry_cropped
 from general_funcs import discrete_cmap_tuner,getproj
 
-def main(simfile,preint,gridtype,varn,fbrootpath,fbname,yrint):
+def main(simfile,preint,gridtype,varn,fbrootpath,fbname,yrint,fname_topo):
 
     if fbname in ['cosyna-tordania', 'richard-cuximm']:
         lonlims = [0.1, 8.65]
@@ -29,11 +29,11 @@ def main(simfile,preint,gridtype,varn,fbrootpath,fbname,yrint):
     date_fb, lon_fb, lat_fb, data_fb=get_ferrybox(fbrootpath,fbname,lonlims,varn,yrint)
 
     #Write the fb data on a fixed grid (although this won't be used in the remainder of this script)
-    store_interpfb(fbrootpath, fbname, varn, date_fb, lon_fb, lat_fb, data_fb, lonlims, yrint)
-    return
+    #store_interpfb(fbrootpath, fbname, varn, date_fb, lon_fb, lat_fb, data_fb, lonlims, yrint)
+    #return
 
     # Get model data, interpolated on a grid across fb track
-    date_mt, lon_mt, lat_mt, data_mt, bg_contour, lon_FMD, lat_FMD, var_FMD= get_model_intonfb(simfile,preint,gridtype,fbname,varn,yrint,lonlims,date_fb, lat_fb, lon_fb)
+    date_mt, lon_mt, lat_mt, data_mt, bg_contour, lon_FMD, lat_FMD, var_FMD= get_model_intonfb(simfile,preint,gridtype,fbname,varn,yrint,lonlims,date_fb, lat_fb, lon_fb,fname_topo)
 
     # Do the Plots
     colmap='viridis_r'
@@ -118,8 +118,10 @@ def main(simfile,preint,gridtype,varn,fbrootpath,fbname,yrint):
     if bg_contour==True:
         lonx,laty = proj(lon_FMD,lat_FMD)
         cmap.set_bad(str(.8))
-        varavg=var_FMD[:, :-1, :-1].mean(axis=0)
-        mpc=proj.pcolormesh(lonx,laty,varavg,cmap=cmap)
+        #var2plot=var_FMD[:, :-1, :-1].mean(axis=0) #average
+        var2plot = var_FMD[-1, :-1, :-1].squeeze() #surface
+        var2plot=np.ma.masked_array(var2plot,mask=np.isnan(var2plot)) #mask
+        mpc=proj.pcolormesh(lonx,laty,var2plot,cmap=cmap)
         mpc.set_clim(clims[0],clims[1])
         #xlabel('longitude [degrees east]')
         #ylabel('latitude [degrees north]')
@@ -217,7 +219,7 @@ def write_fbint2nc(fname,dates,lons,lats,data,varunit):
     nc.close()
     print('For the model data interpolated on ferry transect, NC file created:%s'%fname)
 
-def get_model_intonfb(simfile,preint,gridtype,fbname,varn,yrint,lonlims,date_fb, lat_fb, lon_fb):
+def get_model_intonfb(simfile,preint,gridtype,fbname,varn,yrint,lonlims,date_fb, lat_fb, lon_fb,fname_topo):
     if preint:
         nc = netCDF4.Dataset(simfile)
         ncv = nc.variables
@@ -230,20 +232,30 @@ def get_model_intonfb(simfile,preint,gridtype,fbname,varn,yrint,lonlims,date_fb,
         nc.close()
         bg_contour=False;lon_FMD=0;lat_FMD=0;var_FMD=0
     else:
-        if gridtype == 'getm-sns':
+        if 'getm' in gridtype:
             from scipy.spatial import cKDTree
-            if fbname in ['cosyna-tordania', 'richard-cuximm']:
-                pnum = 300  # number of grid points to which the model will be interpolated
-                xsl = slice(5, 135)  # getm-sns slice
-                ysl = slice(26, 90)  # getm-sns slice
-            elif fbname in ['cosyna-funnygirl']:
-                pnum = 100  # number of grid points along the transect to which the model will be interpolated
-                xsl = slice(98, 137)  # getm-sns slice
-                ysl = slice(26, 49)  # getm-sns slice
-            elif fbname in ['yoana-buhel']:
-                pnum = 100  # number of grid points along the transect to which the model will be interpolated
-                xsl = slice(98, 137)  # getm-sns slice
-                ysl = slice(26, 49)  # getm-sns slice
+            if 'sns' in gridtype:
+                Tsetup='SNS'
+                if fbname in ['cosyna-tordania', 'richard-cuximm']:
+                    pnum = 300  # number of grid points to which the model will be interpolated
+                    xsl = slice(5, 135)  # getm-sns slice
+                    ysl = slice(26, 90)  # getm-sns slice
+                elif fbname in ['cosyna-funnygirl','yoana-buhel']:
+                    pnum = 100  # number of grid points along the transect to which the model will be interpolated
+                    xsl = slice(98, 137)  # getm-sns slice
+                    ysl = slice(26, 49)  # getm-sns slice
+                else:
+                    raise (ValueError('unknown grid type'))
+            elif 'gb300' in gridtype:
+                Tsetup='GB300'
+                if fbname in ['cosyna-funnygirl','yoana-buhel']:
+                    pnum = 100  # number of grid points along the transect to which the model will be interpolated
+                    xsl = slice(185, 400)  # getm-sns slice
+                    ysl = slice(350, 410)  # getm-sns slice
+                else:
+                    raise (ValueError('unknown grid type'))
+            else:
+                raise(ValueError('unknown grid type'))
 
             nc = netCDF4.Dataset(simfile)
             ncv = nc.variables
@@ -255,11 +267,17 @@ def get_model_intonfb(simfile,preint,gridtype,fbname,varn,yrint,lonlims,date_fb,
             # days = (time - time[0])/86400. + 0.5
             date_mt = date_mt_all[tind]
             var_FMD = ncv[varn][tind, -1, :, :].squeeze()  # FMD=full model domain
+            if np.ma.is_masked(var_FMD): #transform the masked values to nan
+                var_FMD = var_FMD.filled(np.nan)
+                #var_FMD[var_FMD.mask]=np.nan
+            else:
+                var_FMD[var_FMD < -98.]=np.nan
+
             varunit=ncv[varn].units
             nc.close()
 
             # read coordinates
-            topo = get_getm_bathymetry_cropped()
+            topo = get_getm_bathymetry_cropped(fname=fname_topo,setup=Tsetup)
             lat_FMD = topo['latc']
             lon_FMD = topo['lonc']
 
@@ -267,8 +285,7 @@ def get_model_intonfb(simfile,preint,gridtype,fbname,varn,yrint,lonlims,date_fb,
             lat = lat_FMD[ysl, xsl]
             lon = lon_FMD[ysl, xsl]
             var = var_FMD[:, ysl, xsl]
-            if np.ma.is_masked(var):
-                var[var.mask]=np.nan #transform the masked values to nan
+
 
             # del lon_FMD,lat_FMD,var_FMD #needed later for contourplot as the background for fb track plot
 
@@ -387,7 +404,8 @@ def append_yearlydata(fname, fbname, y, lonlims,dates, lons, lats, values):
         nct = nc['time']
         utime = netcdftime.utime(nct.units)
         datesC = np.array([t.date() for t in utime.num2date(nct[:])])
-        dataC = np.hstack(nc['latitude'][:], nc['longitude'][:], nc['data'][:])
+        #dataC = np.vstack((nc['latitude'][:], nc['longitude'][:], nc['data'][:]))
+        dataC = np.column_stack((nc['latitude'][:], nc['longitude'][:], nc['data'][:]))
         nc.close()
     elif fbname[0:5] == 'yoana':
         hl = 1  # number of header lines
@@ -427,11 +445,14 @@ if __name__=='__main__':
     if len(sys.argv) > 1:
         simfile = sys.argv[1]
     else:
-        #simfile = '/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117-P161118/sns144-M161117-P161118-mergedextract_phys_zSB_2009-2010.nc'
-        #simfile = '/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117n-P161118-bdyi3/sns144-M161117n-P161118-bdyi3-mergedextract_phys.nc'
-        simfile='/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117n-P161118-bdyi3-z01mm/sns144-M161117n-P161118-bdyi3-z01mm-mergedextract_phys.nc'
-        #simfile= '/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117n-P161118-bdyi3/sns144-M161117n-P161118-bdyi3-mergedextract_phys_FB_yoana-buhel_salt_2012-2012.nc'
-        #simfile= '/workm/sns/validation/ferrybox/model/fesom.nc'
+        # simfile = '/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117-P161118/sns144-M161117-P161118-mergedextract_phys_zSB_2009-2010.nc'
+        #simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nBF-Pbg2017-B180106-vsdetp4b1/sns144-M180109-nBF-Pbg2017-B180106-vsdetp4b1-1113_phys_zSB.nc'
+        simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1/sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1-1114_phys_zSB.nc'
+        simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1/extract_phys_sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1.2013-0608_zSB.nc'
+        #simfile = '/home/onur/WORK/projects/GB/gb300/GB300_2013-0608_dmean.nc'
+
+    #fname_topo = '/home/onur/WORK/projects/GB/gb300/topo_german_bight_300m_v06.0_curv.nc'
+    fname_topo='/home/onur/WORK/projects/GB/data/topo/topo_area_sns.nc'
 
     if len(sys.argv) > 2:
         varn = sys.argv[2]
@@ -442,21 +463,18 @@ if __name__=='__main__':
         fbrootpath = sys.argv[3]
     else:
         fbrootpath = '/home/onur/WORK/projects/GB/data/ferrybox'
-	    #fbrootpath = '/workm/sns/validation/ferrybox/data'
 
     if len(sys.argv) > 4:
         fbname = sys.argv[4]
     else:
-        #fbname = 'richard-cuximm'  # 'tordania' #funnygirl 'richard-cuximm'
-        fbname = 'yoana-buhel'
-        #fbname= 'cosyna-funnygirl'
+        fbname = 'yoana-buhel' #for 2013
 
     if len(sys.argv) > 5:
         yrint = [int(y) for y in sys.argv[5].split(',')]
         print yrint
     else:
-        #yrint = [2010, 2010]
-        yrint=[2012,2013]
+        #yrint = [2012, 2013]
+        yrint=[2013,2013]
 
     if len(sys.argv) > 6:
         preint = True if int(sys.argv[6])==1 else False
@@ -466,6 +484,6 @@ if __name__=='__main__':
     if len(sys.argv) > 7:
         gridtype = sys.argv[7]
     else:
-        gridtype = 'getm-sns'
+        gridtype = 'getm-sns' #'getm-gb300' #'getm-sns'
 
-    main(simfile,preint,gridtype,varn,fbrootpath,fbname,yrint)
+    main(simfile,preint,gridtype,varn,fbrootpath,fbname,yrint,fname_topo)

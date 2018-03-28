@@ -56,19 +56,21 @@ def get_getm_dom_vars(simdomain):
         bat=bat.filled(np.nan) # transform the masked values to nan
     return (lons,lats,bat,ysl,xsl)
 
-def get_getm_bathymetry_cropped(fname='/home/onur/WORK/projects/GB/data/topo/topo_area_sns.nc'):
+def get_getm_bathymetry_cropped(fname='/home/onur/WORK/projects/GB/data/topo/topo_area_sns.nc',setup='SNS'):
     ncB=netCDF4.Dataset(fname)
     ncBv=ncB.variables
-    #bathymetry from topo_sns.nc.
-    lonx=ncBv['lonx'][4:-1,1:-1] #this should be [95,138]
-    latx=ncBv['latx'][4:-1,1:-1] #this should be [95,138]
-    lonc=0.25*(lonx[:-1,:-1]+lonx[:-1,1:]+lonx[1:,:-1]+lonx[1:,1:]) #this should be [94,137]
-    latc=0.25*(latx[:-1,:-1]+latx[:-1,1:]+latx[1:,:-1]+latx[1:,1:])
-    H = ncBv['bathymetry'][4:-1,1:-1] #this should be [94,137])
-    if 'A' in ncBv:
-        A= ncBv['A'][3:-1,1:-2] #this should be [94,137])
-    else:
-        A=np.nan
-    topo={'H':H,'latc':latc, 'lonc':lonc,'latx':latx, 'lonx':lonx,'Hunit':ncBv['bathymetry'].units,'A':A}
+    #bathymetry from a topo file
+    if setup=='SNS':
+        lonx=ncBv['lonx'][4:-1,1:-1] #this should be [95,138]
+        latx=ncBv['latx'][4:-1,1:-1] #this should be [95,138]
+        H = ncBv['bathymetry'][4:-1,1:-1] #this should be [94,137])
+    elif setup=='GB300':
+        lonx = ncBv['lonx'][:, :]  # this should be [732,562]
+        latx = ncBv['latx'][:, :]  # this should be [732,562]
+        H = ncBv['bathymetry'][:, :]  # this should be [731,561])
+
+    lonc = 0.25 * (lonx[:-1, :-1] + lonx[:-1, 1:] + lonx[1:, :-1] + lonx[1:, 1:])
+    latc = 0.25 * (latx[:-1, :-1] + latx[:-1, 1:] + latx[1:, :-1] + latx[1:, 1:])
+    topo={'H':H,'latc':latc, 'lonc':lonc,'latx':latx, 'lonx':lonx,'Hunit':ncBv['bathymetry'].units} #,'A':A}
     ncB.close()
     return(topo)
