@@ -11,6 +11,7 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import netCDF4, netcdftime
+from scipy.spatial import cKDTree
 from datetime import date,datetime,timedelta
 
 from getm_funcs import get_getm_bathymetry_cropped
@@ -29,7 +30,7 @@ def main(simfile,preint,gridtype,varn,fbrootpath,fbname,yrint,fname_topo):
     date_fb, lon_fb, lat_fb, data_fb=get_ferrybox(fbrootpath,fbname,lonlims,varn,yrint)
 
     #Write the fb data on a fixed grid (although this won't be used in the remainder of this script)
-    #store_interpfb(fbrootpath, fbname, varn, date_fb, lon_fb, lat_fb, data_fb, lonlims, yrint)
+    store_interpfb(fbrootpath, fbname, varn, date_fb, lon_fb, lat_fb, data_fb, lonlims, yrint)
     #return
 
     # Get model data, interpolated on a grid across fb track
@@ -118,10 +119,10 @@ def main(simfile,preint,gridtype,varn,fbrootpath,fbname,yrint,fname_topo):
     if bg_contour==True:
         lonx,laty = proj(lon_FMD,lat_FMD)
         cmap.set_bad(str(.8))
-        #var2plot=var_FMD[:, :-1, :-1].mean(axis=0) #average
-        var2plot = var_FMD[-1, :-1, :-1].squeeze() #surface
-        var2plot=np.ma.masked_array(var2plot,mask=np.isnan(var2plot)) #mask
-        mpc=proj.pcolormesh(lonx,laty,var2plot,cmap=cmap)
+        # var2plot=var_FMD[:, :-1, :-1].mean(axis=0) # average
+        var2plot = var_FMD[-1, :-1, :-1].squeeze() # surface
+        var2plot = np.ma.masked_array(var2plot, mask=np.isnan(var2plot)) #mask
+        mpc = proj.pcolormesh(lonx, laty, var2plot, cmap=cmap)
         mpc.set_clim(clims[0],clims[1])
         #xlabel('longitude [degrees east]')
         #ylabel('latitude [degrees north]')
@@ -141,7 +142,7 @@ def main(simfile,preint,gridtype,varn,fbrootpath,fbname,yrint,fname_topo):
     print 'figure saved:%s' % fname
 
 def store_interpfb(fbrootpath,fbname,varn,date_fb,lon_fb,lat_fb,data_fb,lonlims,yrint=[2012,2013]):
-    unitdict={'salt':'psu'}
+    unitdict={'salt':'psu', 'temp':'$^o$ C'}
     if fbname in ['cosyna-tordania', 'richard-cuximm']:
         pnum = 300  # number of grid points to which the model will be interpolated
     elif fbname in ['cosyna-funnygirl']:
@@ -219,21 +220,28 @@ def write_fbint2nc(fname,dates,lons,lats,data,varunit):
     nc.close()
     print('For the model data interpolated on ferry transect, NC file created:%s'%fname)
 
-def get_model_intonfb(simfile,preint,gridtype,fbname,varn,yrint,lonlims,date_fb, lat_fb, lon_fb,fname_topo):
+def get_model_intonfb(simfile,preint,gridtype,fbname,varn,yrint,lonlims,date_fb, lat_fb, lon_fb,fname_topo,Y=-1,M=-1):
+    fnamepreint = simfile.replace('.nc', '_FB_%s_%s_%s-%s.nc' % (fbname, varn, yrint[0], yrint[1]))
     if preint:
-        nc = netCDF4.Dataset(simfile)
+        nc = netCDF4.Dataset(fnamepreint)
         ncv = nc.variables
         nct = ncv['time']
         utime = netcdftime.utime(nct.units)
         date_mt = np.array([t.date() for t in utime.num2date(nct[:])])
-        lon_mt=ncv['longitude'][:]
-        lat_mt=ncv['latitude'][:]
-        data_mt=ncv['data'][:]
+        if Y!=-1:
+            mons = np.array([d.month for d in date_mt])
+            years = np.array([d.year for d in date_mt])
+            tind = (mons == M) * (years == Y)
+            date_mt=date_mt[tind]
+        else:
+            tind=np.arange(len(date_mt))
+        data_mt=ncv['data'][tind,:]
+        lon_mt = ncv['longitude'][:]
+        lat_mt = ncv['latitude'][:]
         nc.close()
         bg_contour=False;lon_FMD=0;lat_FMD=0;var_FMD=0
     else:
         if 'getm' in gridtype:
-            from scipy.spatial import cKDTree
             if 'sns' in gridtype:
                 Tsetup='SNS'
                 if fbname in ['cosyna-tordania', 'richard-cuximm']:
@@ -263,7 +271,15 @@ def get_model_intonfb(simfile,preint,gridtype,fbname,varn,yrint,lonlims,date_fb,
             utime = netcdftime.utime(nct.units)
             # reduce to a daily resolution
             date_mt_all = np.array([t.date() for t in utime.num2date(nct[:])])
-            tind = np.where((date_mt_all >= date(yrint[0], 1, 1)) * (date_mt_all <= date(yrint[1], 12, 31)))[0]
+	    
+            #reduce time	
+            if Y != -1:
+                mons = np.array([d.month for d in date_mt_all])
+                years = np.array([d.year for d in date_mt_all])
+                tind = (mons == M) * (years == Y)
+            else:
+                tind = np.where((date_mt_all >= date(yrint[0], 1, 1)) * (date_mt_all <= date(yrint[1], 12, 31)))[0]
+
             # days = (time - time[0])/86400. + 0.5
             date_mt = date_mt_all[tind]
             var_FMD = ncv[varn][tind, -1, :, :].squeeze()  # FMD=full model domain
@@ -286,7 +302,6 @@ def get_model_intonfb(simfile,preint,gridtype,fbname,varn,yrint,lonlims,date_fb,
             lon = lon_FMD[ysl, xsl]
             var = var_FMD[:, ysl, xsl]
 
-
             # del lon_FMD,lat_FMD,var_FMD #needed later for contourplot as the background for fb track plot
 
             # define a transect grid based on longitudes
@@ -303,7 +318,6 @@ def get_model_intonfb(simfile,preint,gridtype,fbname,varn,yrint,lonlims,date_fb,
 
             # interpolate model data to transect grid
             # choose the dates from the model and do the spatial interpolation along a grid across the transect
-            tnum, ynum, xnum = var.shape
             lonlatpairs=zip(lon.flat, lat.flat) #(python2 zip)
             tree = cKDTree(lonlatpairs)
 
@@ -311,6 +325,7 @@ def get_model_intonfb(simfile,preint,gridtype,fbname,varn,yrint,lonlims,date_fb,
             #dL, gridindsL = tree.query(zip(lon_mt, lat_mt), k=4)
             #wL = 1.0 / dL ** 2
 
+            tnum, ynum, xnum = var.shape
             data_mt = -99. * np.ones((tnum, pnum))
             for tidx in range(tnum):
                 if True: #date_mt[tidx] in date_fb:
@@ -320,7 +335,7 @@ def get_model_intonfb(simfile,preint,gridtype,fbname,varn,yrint,lonlims,date_fb,
                         #use the pre-calculated weights: probably faster but debugging is difficult
                         #intval = np.sum(wL[pi] * var[tidx, :, :].flatten()[gridindsL[pi]]) / np.sum(wL[pi])
                         #calculate the weights here: probably slow, but
-                        dLi, gridindsLi = tree.query((lon_mt[pi],lat_mt[pi]))
+                        dLi, gridindsLi = tree.query((lon_mt[pi],lat_mt[pi]), k=4)
                         wLi = 1.0 / dLi ** 2
                         intvali=np.sum(wLi * var[tidx, :, :].flatten()[gridindsLi]) / np.sum(wLi)
                         data_mt[tidx, pi] = intvali
@@ -330,9 +345,9 @@ def get_model_intonfb(simfile,preint,gridtype,fbname,varn,yrint,lonlims,date_fb,
             data_mt = np.ma.masked_equal(data_mt, -99.)
             lat_mt = np.ma.masked_equal(lat_mt, -99.)
 
-            #write as a nc file:
-            fname=simfile.replace('.nc', '_FB_%s_%s_%s-%s.nc'%(fbname,varn,yrint[0],yrint[1]))
-            write_modint2nc(fname,date_mt,lon_mt,lat_mt,data_mt,varunit)
+            #write as a nc file (if not a limited time filtering was applied
+            if Y == -1:
+                write_modint2nc(fnamepreint,date_mt,lon_mt,lat_mt,data_mt,varunit)
             bg_contour=True
     return (date_mt, lon_mt, lat_mt, data_mt, bg_contour, lon_FMD, lat_FMD, var_FMD)
 
@@ -447,8 +462,10 @@ if __name__=='__main__':
     else:
         # simfile = '/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117-P161118/sns144-M161117-P161118-mergedextract_phys_zSB_2009-2010.nc'
         #simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nBF-Pbg2017-B180106-vsdetp4b1/sns144-M180109-nBF-Pbg2017-B180106-vsdetp4b1-1113_phys_zSB.nc'
-        simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1/sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1-1114_phys_zSB.nc'
         simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1/extract_phys_sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1.2013-0608_zSB.nc'
+        #simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1/sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1-1114_phys_zSB.nc'
+        #simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1/extract_phys_sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1.2013_zSB.nc'
+        #simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1-M13R12/extract_phys_sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1-M13R12.2013_zSB.nc'
         #simfile = '/home/onur/WORK/projects/GB/gb300/GB300_2013-0608_dmean.nc'
 
     #fname_topo = '/home/onur/WORK/projects/GB/gb300/topo_german_bight_300m_v06.0_curv.nc'
