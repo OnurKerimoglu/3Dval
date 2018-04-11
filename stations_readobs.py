@@ -120,13 +120,15 @@ def fill_stationdata_obs(file,statset,vars,timeint,depthints0):
         depthintmin=np.nanmin([dint[0] for dint in depthints.values()]) #find the minimum lower lim of depthints
         depthintmax = np.nanmax([dint[1] for dint in depthints.values()]) #find the maximum upper lim of depthints
         zind=np.where((depth>=depthintmin) * (depth<=depthintmax))[0]
+        depthsin=True
     else:
-        zind=-1*np.ones(1)
+        depthsin = False
+        #zind=-1*np.ones(1)
 
     # for each variable, fill in the data, if exists
     for var in vars:
         sdata[var]={}
-        if len(tind)>0 and len(zind)>0 and vlib[var] in ncf.variables:
+        if len(tind)>0 and depthsin and vlib[var] in ncf.variables:
             sdata[var]['presence'] = True
             if (var in noZDvars) or (list(zind) == [-1]): #if a variable with no vertical dimension:
                 sdata[var]['surface']={'time':time, 'value':ncf.variables[vlib[var]][tind,0,0], 'depth_interval':[0,0]}

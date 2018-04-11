@@ -59,12 +59,12 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
 
             # genereate a new figure, size of which is a function of number of variables (rows) and layers (columns) to be show
             fig = prepfig(S.res, S.figwh, colnum, rownum, timeint)
-            fig.subplots_adjust(hspace=.2, wspace=.15, left=0.15, right=0.7, top=0.7, bottom=0.03)
+            fig.subplots_adjust(hspace=.22, wspace=.2, left=0.15, right=0.7, top=0.75, bottom=0.05)
             # name of the station
             fig.text(0.4, 0.9, station + '\n$Z_{max}$=%.1f m' % obs[station]['bottom_depth'], verticalalignment='top',
                      horizontalalignment='left', size=10)
             # show the location of the station on a map in one panel
-            ax = plt.axes([0.15, 0.75, 0.23, 0.23])
+            ax = plt.axes([0.15, 0.77, 0.22, 0.22])
             markstatonmap(ax, proj, station, obs[station]['lon'], obs[station]['lat'], obs[station]['bottom_depth'])
 
             # if no plot is made, don't save an empty figure, so track whether any plot is made in the figure
@@ -94,7 +94,8 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
 
                 #ylabel:varname, unit
                 plt.ylabel(varlongnames[varname]+' ['+varunits[varname]+']',size=9)
-                ax.tick_params(axis='y', which='major', direction='out', labelsize=9)
+                ax.get_yaxis().set_label_coords(-0.17, 0.5)
+                ax.tick_params(axis='y', which='major', direction='in', labelsize=9)
 
                 #format date axes# convert to 1-d, assuming that all measurements are from surface
                 format_date_axis(ax, timeint)
@@ -111,7 +112,7 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
                 plt.close()
             else:
                 fname = os.path.join(plotpath,'TSplots%s_%s_%s.png' % (fnamecode, station, layer))
-                fig.savefig(fname,dpi=S.res, bbox_extra_artists=(lgd,), bbox_inches='tight')
+                fig.savefig(fname,dpi=S.res, bbox_extra_artists=(lgd,)) #, bbox_inches='tight')
                 plt.close()
                 print ('figure saved:%s'%fname)
                 #return
@@ -123,7 +124,7 @@ def plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,id,ax,times,values,timeint
         return (hset,idset,anyplotinax,anyplotinfig)
 
     if seriestype=='obs':
-        h, = ax.plot(times[tind], values[tind], linestyle=S.line['obs'], marker=S.marker['obs'], lw=S.lw['obs'], color=S.col['obs'], mfc=S.col['obs'], mec=S.col['obs'], markersize=2, label=id)
+        h, = ax.plot(times[tind], values[tind], linestyle=S.line['obs'], marker=S.marker['obs'], lw=S.lw['obs'], color=S.col['obs'], mfc=S.col['obs'], mec=S.col['obs'], markersize=3, label=id)
     else:
         if sno==-1:
             raise(Exception('Simulation # must be provided (sno)'))
@@ -138,7 +139,7 @@ def plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,id,ax,times,values,timeint
 
 def markstatonmap(ax, proj, station, lon,lat,maxz):
     tx, ty = proj(lon, lat)
-    proj.plot(tx, ty, 'k.', markersize=3, marker='d')
+    proj.plot(tx, ty, 'r.', markersize=5, marker='d')
     #plt.text(tx, ty + 8000, ' ($z_{max}$=%s)'%maxz, size=10.0, horizontalalignment='center', verticalalignment='bottom', color='black',backgroundcolor='white')
     ax.set_yticklabels([])
     ax.set_xticklabels([])
@@ -152,7 +153,8 @@ def prepfig(res,figwh,colno,rowno,timeint):
     numy=timeint[1].year-timeint[0].year+1
     if (figwh[0] == 0):
         #figwh = cm2inch(12 * colno + 2, 4 * rowno)
-        figwh = cm2inch(2.5*numy * colno + 2, 4 * rowno)
+        #figwh = cm2inch(2.5*numy * colno + 2, 4 * rowno)
+        figwh = cm2inch(3.75 * numy * colno + 2, 4 * rowno)
     else:
         figwh = cm2inch(figwh[0], figwh[1])
     fig = plt.figure(figsize=figwh, dpi=res)
