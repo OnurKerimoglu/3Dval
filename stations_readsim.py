@@ -69,8 +69,8 @@ def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,ob
 
     return sim
 
-def interp_simdata_on_station(station,simdata,time,proj,domaintree,bat,lon,lat,maxz_obs,timeint,depthints,vars):
-    quickzfind=True
+def interp_simdata_on_station(station,simdata,time,proj,domaintree,bat,lon,lat,maxz_obs,timeint,depthints,vars,quickzfind=True):
+
     vardims={'temp':'3D','salt':'3D','DOs':'3D','ssh':'2D','DIN':'3D','DIP':'3D','Chl':'3D'}
     # maybe no need to check if other conditions are not satisfied
     XY_in=False
@@ -139,13 +139,27 @@ def interp_simdata_on_station(station,simdata,time,proj,domaintree,bat,lon,lat,m
             elif vardims[varn]=='3D': #handle 3-D (t,z,x,y) vars
                 vdata['presence'] = True
                 for layername, depthint in depthints.items():
-                    if quickzfind and simdata['z'].shape[1]==2:
-                        if layername=='surface':
-                            zi=1
-                        elif layername=='bottom':
-                            zi=0
+                    if quickzfind:
+                        if ('z' not in simdata) and simdata[varn].shape[1]==1:
+                            if layername=='surface':
+                                zi=0 #assume that the only provided layer is the surface
+                            elif layername=='bottom':
+                                Warning('Skipping the bottom layer, as only 1 layer is found in the data set which is assumed to be surface')
+                                continue
+                        elif simdata['z'].shape[1]==2:
+                            if layername=='surface':
+                                zi=1
+                            elif layername=='bottom':
+                                zi=0
+                            else:
+                                #raise(Exception('simdata has 2 z levels and quickzfind was requested, but the layer to search (%s) is neither surface notr bottom'%layername))
+                                # if other layers are requested, recurse, but disable the quickzfind
+                                interp_simdata_on_station(station, simdata, time, proj, domaintree, bat, lon, lat,
+                                                          maxz_obs,timeint, depthints, vars, quickzfind=False)
                         else:
-                            raise(Exception('simdata has 2 z levels and quickzfind was requested, but the layer to search (%s) is neither surface notr bottom'%layername))
+                            #if more levels are available, recurse, but disable the quickzfind
+                            interp_simdata_on_station(station, simdata, time, proj, domaintree, bat, lon, lat, maxz_obs,
+                                                      timeint, depthints, vars, quickzfind=False)
                         data = np.zeros(len(tind)) * np.nan
                         for tii, ti in enumerate(tind):
                             # value from a single cell
