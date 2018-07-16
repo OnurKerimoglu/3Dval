@@ -9,7 +9,8 @@ import numpy as np
 
 def get_getm_dataF(simf,varns,ysl,xsl):
     vlib = {'t': 'time', 'z': 'depth',
-            'temp': 'temp', 'salt': 'salt', 'ssh': 'elev',
+            'temp': 'tempmean', 'salt': 'saltmean', 'ssh': 'elevmean',
+            #'temp': 'temp', 'salt': 'salt', 'ssh': 'elev',
             'DOs': 'hzg_maecs_O2_percSat','DIN': 'hzg_maecs_nutN', 'DIP': 'hzg_maecs_nutP', 'Chl': 'hzg_maecs_chl'}
     ncf = netCDF4.Dataset(simf)
     simdata={}

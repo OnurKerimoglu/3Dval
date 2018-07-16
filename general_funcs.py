@@ -307,6 +307,15 @@ def getproj(setup,projpath):
                        urcrnrlat=58.0, #55.8,
                        lat_0=52.0,
                        lon_0=5.)
+        elif setup == 'WadSea':
+            proj = Basemap(projection='lcc',
+                           resolution='i',
+                           llcrnrlon=6.2,
+                           llcrnrlat=53.2,  # 51
+                           urcrnrlon=9.3,
+                           urcrnrlat=55.1,
+                           lat_0=52.0,
+                           lon_0=5.)
         elif setup=='CuxBusHel':
             proj=Basemap(projection='lcc',
                        resolution='i',

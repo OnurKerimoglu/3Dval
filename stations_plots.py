@@ -15,7 +15,7 @@ class Style:
         if opt=='TSdefault':
             self.res = 150
             self.figwh=[0, 0]
-            self.col={'obs':'0.3','sim':['r','b','g','k']}
+            self.col={'obs':'0.3','sim':['b','g','r','k']}
             self.line={'obs':'None','sim':['-','-','-','-']}
             self.marker={'obs':'o','sim':['None','None','None','None']}
             self.lw={'obs':1,'sim':[1,1,1,1]}
@@ -46,7 +46,8 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
         os.makedirs(plotpath)
 
     #projection (for showing stations on maps)
-    proj=getproj(setup='SNSfull',projpath=os.path.dirname(os.path.realpath(__file__)))
+    #proj=getproj(setup='SNSfull',projpath=os.path.dirname(os.path.realpath(__file__)))
+    proj = getproj(setup='WadSea', projpath=os.path.dirname(os.path.realpath(__file__)))
 
     #extract the station list if not provided
     if len(stations)==0:
@@ -64,7 +65,7 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
             fig.text(0.4, 0.9, station + '\n$Z_{max}$=%.1f m' % obs[station]['bottom_depth'], verticalalignment='top',
                      horizontalalignment='left', size=10)
             # show the location of the station on a map in one panel
-            ax = plt.axes([0.15, 0.77, 0.22, 0.22])
+            ax = plt.axes([0.15, 0.79, 0.2, 0.2])
             markstatonmap(ax, proj, station, obs[station]['lon'], obs[station]['lat'], obs[station]['bottom_depth'])
 
             # if no plot is made, don't save an empty figure, so track whether any plot is made in the figure
