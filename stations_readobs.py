@@ -10,12 +10,15 @@ import numpy as np
 import netCDF4
 from general_funcs import get_botdepth
 
-def readobs(paths,readraw,statsets,stations,timeint,depthints,vars=[]):
+def readobs(paths,readraw,statsets,stations,timeint,depthints,vars,olf):
+    # olf: factor of standard deviation around the mean  within which the values will be kept
     print ('Reading observations:')
 
     pickleobs=True
     if pickleobs:
         picklecode = '_%s_%s_%s-%s' % ('-'.join(statsets), '-'.join(depthints.keys()), timeint[0].year, timeint[1].year)
+        if olf>0:
+            picklecode=picklecode+'_OLstd%s' %int(olf)
         pickledobsfile = os.path.join(paths['pickledobspath'], 'obs' + picklecode + '.pickle')
         #pickledobsfile = os.path.join(paths[statset], 'obs' + picklecode + '.pickle')
 
@@ -30,7 +33,7 @@ def readobs(paths,readraw,statsets,stations,timeint,depthints,vars=[]):
         obs={}
         for statset in statsets:
             print('Filling obs. dataset:%s'%statset)
-            obs=looppath_fill_stationdata_obs(obs,paths,statset,stations,timeint,depthints,vars)
+            obs=looppath_fill_stationdata_obs(obs,paths,statset,stations,timeint,depthints,vars,olf)
 
         #pickle the obs file
         f=open(pickledobsfile,'wb')
@@ -40,11 +43,12 @@ def readobs(paths,readraw,statsets,stations,timeint,depthints,vars=[]):
     else:
         for statset in statsets:
             print('Filling obs. dataset:%s' % statset)
-            obs = looppath_fill_stationdata_obs({}, paths, statset, stations, timeint, depthints,vars)
+            obs = looppath_fill_stationdata_obs({}, paths, statset, stations, timeint, depthints,vars,olf)
 
     return obs
 
-def looppath_fill_stationdata_obs(obs,paths,statset,stations,timeint,depthints,vars):
+def looppath_fill_stationdata_obs(obs,paths,statset,stations,timeint,depthints,vars,olf):
+    # olf: factor of standard deviation around the mean  within which the values will be kept
 
     obspath = paths[statset]
 
@@ -62,12 +66,13 @@ def looppath_fill_stationdata_obs(obs,paths,statset,stations,timeint,depthints,v
         print('  ' + sfile)
         if len(vars)==0:
             vars = ['temp', 'salt', 'DOs', 'ssh']
-        sdata,station = fill_stationdata_obs(os.path.join(obspath,sfile),statset,vars,timeint,depthints)
+        sdata,station = fill_stationdata_obs(os.path.join(obspath,sfile),statset,vars,timeint,depthints,olf)
         obs[station] = sdata
 
     return obs
 
-def fill_stationdata_obs(file,statset,vars,timeint,depthints0):
+def fill_stationdata_obs(file,statset,vars,timeint,depthints0,olf):
+    # olf: factor of standard deviation around the mean  within which the values will be kept
 
     if statset in ['cosyna']:
         vlib = {'t': 'time', 'x': 'lon', 'y': 'lat', 'z': 'depth', 'temp': 'temp', 'salt': 'salt','DOs': 'DOsat', 'ssh':'ssh'}
@@ -138,7 +143,9 @@ def fill_stationdata_obs(file,statset,vars,timeint,depthints0):
                     if len(zind) > 0:
                         #calculate average over zind
                         vals=np.nanmean(ncf.variables[vlib[var]][tind,zind,0,0],axis=1)
-                        sdata[var][layername] = {'time': time[tind], 'value': vals, 'depth_interval': depthint}
+                        #clean the outliers
+                        valsclean,timeclean=rem_outliers(vals,time[tind], olf)
+                        sdata[var][layername] = {'time': timeclean, 'value': valsclean, 'depth_interval': depthint}
                     else:
                         sdata[var][layername] = {'time': np.array([]), 'value': np.array([]), 'depth_interval': depthint}
         else:
@@ -147,3 +154,18 @@ def fill_stationdata_obs(file,statset,vars,timeint,depthints0):
     ncf.close()
 
     return sdata,station
+
+def rem_outliers(v,t,olf):
+    #v: values
+    #t: time
+    # olf: factor of standard deviation around the mean  within which the values will be kept
+
+    if olf==0:
+        return(v,t)
+    else:
+        M=np.nanmean(v)
+        std=np.nanstd(v)
+        #indices of the 'clean' values (non-outliers)
+        icl=(v>=M-olf*std) * (v<=M+olf*std)
+        #vcl=v[icl]
+        return(v[icl],t[icl])
