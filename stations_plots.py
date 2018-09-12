@@ -7,6 +7,7 @@ Created on Mon Jun  12 12:10 2017
 """
 import os
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from general_funcs import getproj,format_date_axis
 
@@ -33,8 +34,10 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
 
     #variables to plot, definitions
     varlongnames={'temp':'Temperature', 'salt':'Salinity', 'DOs':'O2 sat.', 'DIN':'DIN', 'DIP':'DIP', 'Chl':'Chl'}
-    varunits={'temp':'$^\circ$C', 'salt':'psal', 'DOs':'%', 'DIN':'$\mu$M', 'DIP':'$\mu$M', 'Chl':'mg/m$^3$'}
-
+    varunits={'temp':u'\N{DEGREE SIGN}C', 'salt':'PSU', 'DOs':'%', 'DIN':'$\mu$M', 'DIP':'$\mu$M', 'Chl':'mg/m$^3$'}
+    varticks_offshore={'temp':[0,5,10,15,20],'salt':[29,31,33,35]}
+    varticks_coastal = {'temp': [-1.0,0, 5, 10, 15, 20,22], 'salt': [0,10,20,30]}
+    axtune=True
     #figure parameters:
     #colnum= len(depthints.keys())
     colnum=1
@@ -55,20 +58,25 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
 
     for stationno,station in enumerate(stations):
         print ('  '+station)
+        if station in ['Cuxhaven','HPA-Elbe']:
+            varticks = varticks_coastal
+        else:
+            varticks = varticks_offshore
+
 
         for layerno,layer in enumerate(depthints.keys()):
 
             # genereate a new figure, size of which is a function of number of variables (rows) and layers (columns) to be show
             fig = prepfig(S.res, S.figwh, colnum, rownum, timeint)
-            fig.subplots_adjust(hspace=.22, wspace=.2, left=0.15, right=0.7, top=0.75, bottom=0.05)
+            fig.subplots_adjust(hspace=.22, wspace=.2, left=0.15, right=0.7, top=0.75, bottom=0.06)
             # name of the station
-            fig.text(0.4, 0.9, station + '\n$Z_{max}$=%.1f m' % obs[station]['bottom_depth'], verticalalignment='top',
-                     horizontalalignment='left', size=10)
+            fig.text(0.76, 0.99, station + '\n$Z_{max}$=%.1f m' % obs[station]['bottom_depth'], verticalalignment='top',
+                     horizontalalignment='right', size=10)
             # show the location of the station on a map in one panel
-            ax = plt.axes([0.15, 0.79, 0.2, 0.2])
+            ax = plt.axes([0.77, 0.77, 0.22, 0.22])
             markstatonmap(ax, proj, station, obs[station]['lon'], obs[station]['lat'], obs[station]['bottom_depth'])
 
-            # if no plot is made, don't save an empty figure, so track whether any plot is made in the figure
+            # if no plot is made, don't save an empty figure: to achieve this track whether any plot is made
             anyplotinfig = False
 
             for varno,varname in enumerate(plotopts['varns']): #in each panel
@@ -81,22 +89,49 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
 
                 #if first panel, indicate layer as the title
                 if varno==0: #
-                    plt.title(layer,size=9)
+                    plt.title(station + ', ' + layer + '\n',size=9)
 
                 #make the plots:
                 hset = []; idset = []  #list of handles (needed for legend)
                 #plot obs
                 if obs[station][varname]['presence']:
-                    hset,idset,anyplotinax,anyplotinfig = plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,'obs',ax,obs[station][varname][layer]['time'],obs[station][varname][layer]['value'],timeint,S,'obs')
+                    hset,idset,anyplotinax,anyplotinfig = plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,'obs',ax,
+                                                                        obs[station][varname][layer]['time'],
+                                                                        obs[station][varname][layer]['value'],
+                                                                        timeint,S,'obs')
                 # plot each sim
                 for simno,simname in enumerate(plotopts['sims2plot']): #enumerate(simset.keys()):
                     if simset[simname][station][varname]['presence']:
-                        hset,idset,anyplotinax,anyplotinfig = plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,simname,ax,simset[simname][station][varname][layer]['time'],simset[simname][station][varname][layer]['value'],timeint, S, 'sim',simno)
+                        hset,idset,anyplotinax,anyplotinfig = plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,simname,ax,
+                                                                            simset[simname][station][varname][layer]['time'],
+                                                                            simset[simname][station][varname][layer]['value'],
+                                                                            timeint, S, 'sim',simno)
+                        # annotate skill scores
+                        if (obs[station][varname]['presence']) and (simset[simname][station][varname]['presence']):
+                            skills=get_skillscores(obs[station][varname][layer],simset[simname][station][varname][layer],timeint)
+                            if skills['n'] != 0:
+                                if (len(plotopts['sims2plot']) - 1) == 1:
+                                    y = 1.08
+                                else:
+                                    y = 1.08 - 0.12 * simno
+                                plt.text(1.0, y, r'$B^*$:%3.2f, $\rho$:%3.2f, $n$:%d'
+                                        %(np.round(skills['B*'] * 100) / 100, np.round(skills['r'] * 100) / 100, skills['n']),
+                                        fontsize=9, ha='right',va='center', transform=ax.transAxes, color=S.col['sim'][simno])
 
                 #ylabel:varname, unit
                 plt.ylabel(varlongnames[varname]+' ['+varunits[varname]+']',size=9)
                 ax.get_yaxis().set_label_coords(-0.17, 0.5)
-                ax.tick_params(axis='y', which='major', direction='in', labelsize=9)
+
+                if (axtune) and (varname in varticks.keys()):
+                    yticks = varticks[varname]
+                    ax.set_ylim([yticks[0],yticks[-1]])
+                    ax.set_yticks(yticks)
+                    #ax.yaxis.set_major_locator(yticks)
+                    ax.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(1.00))
+
+                ax.tick_params(axis='y', which='minor', direction='in', labelsize=9)
+                ax.tick_params(axis='y', which='major', direction='out', labelsize=9)
+                ax.grid(axis='y', which='major', color='0.5', linestyle='-', linewidth=.5)
 
                 #format date axes# convert to 1-d, assuming that all measurements are from surface
                 format_date_axis(ax, timeint)
@@ -119,6 +154,51 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
                 #return
     return
 
+def get_skillscores(obs,sim,timeint):
+    #reduce time
+    tind = np.where((obs['time'] >= timeint[0]) * (obs['time'] <= timeint[1]))[0]
+    t,o,s=match_time(obs['time'][tind], obs['value'][tind], sim['time'],sim['value'])
+
+    # calculate statistics:
+    skills={}
+    skills['n']=len(o)
+    from scipy.stats import pearsonr
+    r, p = pearsonr(s, o)
+    if p < 0.001:
+        pstr = '***'
+    elif p < 0.01:
+        pstr = '**'
+    elif p < 0.05:
+        pstr = '*'
+    else:
+        pstr = ''
+    skills['r']=r
+    skills['p']=p
+    skills['pstr']=pstr
+    # B:
+    skills['B'] = s.mean() - o.mean()
+    skills['B*'] = (s.mean() - o.mean()) / o.mean()
+    # rmsd:
+    skills['rmsd']=np.sqrt((o-s)**2)
+    # MEF
+    oe=(o-o.mean())**2
+    se=(o-s)**2
+    skills['mef']=1-se.sum()/oe.sum()
+
+    return skills
+
+def match_time(t1,v1,t2,v2):
+    # find the common dates
+    comd = np.sort(list(set(t1).intersection(t2)))
+    # find the indices
+    lt1=list(t1)
+    lt2=list(t2)
+    i1 = [lt1.index(d) for d in comd]
+    i2 = [lt2.index(d) for d in comd]
+    if not all(t1[i1] == t2[i2]):
+        raise(Exception('Error encountered while temporal-pairing the obs and sim : obs(t)!= sim(t)'))
+    return(t1[i1],v1[i1],v2[i2])
+
 def plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,id,ax,times,values,timeint,S,seriestype,sno=-1):
     tind =np.where((times>=timeint[0]) * (times<=timeint[1]))[0]
     if len(tind)==0:
@@ -134,7 +214,6 @@ def plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,id,ax,times,values,timeint
     idset.append(id)
     anyplotinax = True
     anyplotinfig = True
-    # calculate and annotate statistics?
 
     return (hset, idset, anyplotinax, anyplotinfig)
 
