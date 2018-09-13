@@ -35,8 +35,12 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
     #variables to plot, definitions
     varlongnames={'temp':'Temperature', 'salt':'Salinity', 'DOs':'O2 sat.', 'DIN':'DIN', 'DIP':'DIP', 'Chl':'Chl'}
     varunits={'temp':u'\N{DEGREE SIGN}C', 'salt':'PSU', 'DOs':'%', 'DIN':'$\mu$M', 'DIP':'$\mu$M', 'Chl':'mg/m$^3$'}
-    varticks_offshore={'temp':[0,5,10,15,20],'salt':[29,31,33,35]}
-    varticks_coastal = {'temp': [-1.0,0, 5, 10, 15, 20,22], 'salt': [0,10,20,30]}
+    varlims_offshore={'temp':[0,20],'salt':[29,35],'DIN':[0,50],'DIP':[0,2.0],'Chl':[0,25]}
+    varticks_offshore={'temp':[0,5,10,15,20],'salt':[29,31,33,35],
+                       'DIN': [0,10,20,30,40,50], 'DIP': [0,0.5,1.0,1.5,2.0], 'Chl': [0,5,10,15,20,25]}
+    varlims_coastal = {'temp': [-1.0, 22.], 'salt': [0, 30], 'DIN': [0, 350], 'DIP': [0, 3.5], 'Chl': [0, 100]}
+    varticks_coastal = {'temp': [0, 5, 10, 15, 20], 'salt': [0,10,20,30],
+                        'DIN':[0,100,200,300],'DIP':[0,1,2,3],'Chl':[0,20,40,60,80,100]}
     axtune=True
     #figure parameters:
     #colnum= len(depthints.keys())
@@ -58,11 +62,12 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
 
     for stationno,station in enumerate(stations):
         print ('  '+station)
-        if station in ['Cuxhaven','HPA-Elbe']:
+        if station in ['Cuxhaven','HPA-Elbe', 'Norderelbe', 'Norderney','S.Amrum','Sylt']:
             varticks = varticks_coastal
+            varlims = varlims_coastal
         else:
             varticks = varticks_offshore
-
+            varlims = varlims_offshore
 
         for layerno,layer in enumerate(depthints.keys()):
 
@@ -124,11 +129,16 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
 
                 if (axtune) and (varname in varticks.keys()):
                     yticks = varticks[varname]
-                    ax.set_ylim([yticks[0],yticks[-1]])
+                    ylims = varlims[varname]
+                    ax.set_ylim([ylims[0],ylims[-1]])
                     ax.set_yticks(yticks)
                     #ax.yaxis.set_major_locator(yticks)
-                    ax.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(1.00))
-
+                    if (yticks[-1]-yticks[0])<36:
+                        ax.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(1.00))
+                    elif (yticks[-1]-yticks[0])<100:
+                        ax.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(5.00))
+                    elif (yticks[-1]-yticks[0])<500:
+                        ax.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(25.00))
                 ax.tick_params(axis='y', which='minor', direction='in', labelsize=9)
                 ax.tick_params(axis='y', which='major', direction='out', labelsize=9)
                 ax.grid(axis='y', which='major', color='0.5', linestyle='-', linewidth=.5)
@@ -187,17 +197,20 @@ def get_skillscores(obs,sim,timeint):
 
     return skills
 
-def match_time(t1,v1,t2,v2):
-    # find the common dates
-    comd = np.sort(list(set(t1).intersection(t2)))
+def match_time(t1dt,v1,t2dt,v2):
+    # find the common dates, at a daily resolution
+    #convert the datetimes to dates
+    t1d=np.array([d.date() for d in t1dt])
+    t2d=np.array([d.date() for d in t2dt])
+    comd = np.sort(list(set(t1d).intersection(t2d)))
     # find the indices
-    lt1=list(t1)
-    lt2=list(t2)
+    lt1=list(t1d)
+    lt2=list(t2d)
     i1 = [lt1.index(d) for d in comd]
     i2 = [lt2.index(d) for d in comd]
-    if not all(t1[i1] == t2[i2]):
+    if not all(t1d[i1] == t2d[i2]):
         raise(Exception('Error encountered while temporal-pairing the obs and sim : obs(t)!= sim(t)'))
-    return(t1[i1],v1[i1],v2[i2])
+    return(t1dt[i1],v1[i1],v2[i2])
 
 def plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,id,ax,times,values,timeint,S,seriestype,sno=-1):
     tind =np.where((times>=timeint[0]) * (times<=timeint[1]))[0]
