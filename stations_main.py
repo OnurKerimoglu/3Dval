@@ -24,7 +24,7 @@ importlib.reload(SP)
 pathreg = {'onur': {'GF-ref': '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1_TS_12-13_zSB.nc',
                     #'GF-M13R12': '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1-M13R12/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1-M13R12_TS_13_zSB.nc',
                     #'GF-M12R13': '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1-M12R13/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1-M12R13_TS_13_zSB.nc',
-                    #'GF-ref': '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1_BGC_12-13_S.nc',
+                    'GF-ref': '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1_BGC_12-13_S.nc',
                     'plotrootpath':'/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1/',
                     'pickledobspath': './',
                     'BGC':    '/home/onur/WORK/projects/GB/data/stations/individual/BGC/',
@@ -37,16 +37,16 @@ def main():
     #PARAMETERS:
     # general
     user='onur'
-    vars=['temp','salt']#,'DOs']
-    #vars = ['DIN','DIP','Chl']
-    depthints={'surface':[0,10],'bottom':[10,0]} #for bottom, depthint is relative to bottom depth
+    #vars=['temp','salt']#,'DOs']
+    vars = ['DIN','DIP','Chl']
+    depthints={'surface':[0,10]} #,'bottom':[10,0]} #for bottom, depthint is relative to bottom depth
     timeint = [datetime.datetime(2012, 1, 1,0,0,0), datetime.datetime(2013, 12, 31,23,59,59)]
     ##timeint = [datetime.datetime(2000, 1, 1, 0, 0, 0), datetime.datetime(2010, 12, 31, 23, 59, 59)]
     # regarding observations.
-    statsets = ['cosyna'] #'cosyna', 'BSH', 'BGC'
-    stations = ['NBII'] #['Ems', 'Deutsche Bucht']
+    statsets = ['BGC'] #'cosyna', 'BSH', 'BGC'
+    #stations = ['Ems', 'Deutsche Bucht','NBII']
     #stations = ['Cuxhaven','HPA-Elbe']
-    #stations=[]
+    stations=[]
     readobsraw=False #i.e., if the pickle file should be ignored
     # regarding simulations.
     sims2plot = ['GF-ref'] #,'GF-M13R12','GF-M12R13']

@@ -35,9 +35,9 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
     #variables to plot, definitions
     varlongnames={'temp':'Temperature', 'salt':'Salinity', 'DOs':'O2 sat.', 'DIN':'DIN', 'DIP':'DIP', 'Chl':'Chl'}
     varunits={'temp':u'\N{DEGREE SIGN}C', 'salt':'PSU', 'DOs':'%', 'DIN':'$\mu$M', 'DIP':'$\mu$M', 'Chl':'mg/m$^3$'}
-    varlims_offshore={'temp':[0,20],'salt':[29,35],'DIN':[0,50],'DIP':[0,2.0],'Chl':[0,25]}
+    varlims_offshore={'temp':[0,20],'salt':[29,35],'DIN':[0,100],'DIP':[0,2.1],'Chl':[0,75]}
     varticks_offshore={'temp':[0,5,10,15,20],'salt':[29,31,33,35],
-                       'DIN': [0,10,20,30,40,50], 'DIP': [0,0.5,1.0,1.5,2.0], 'Chl': [0,5,10,15,20,25]}
+                       'DIN': [0,20,40,60,80,100], 'DIP': [0,0.5,1.0,1.5,2.0], 'Chl': [0,15,30,45,60,75]}
     varlims_coastal = {'temp': [-1.0, 22.], 'salt': [0, 30], 'DIN': [0, 350], 'DIP': [0, 3.5], 'Chl': [0, 100]}
     varticks_coastal = {'temp': [0, 5, 10, 15, 20], 'salt': [0,10,20,30],
                         'DIN':[0,100,200,300],'DIP':[0,1,2,3],'Chl':[0,20,40,60,80,100]}
@@ -62,7 +62,7 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
 
     for stationno,station in enumerate(stations):
         print ('  '+station)
-        if station in ['Cuxhaven','HPA-Elbe', 'Norderelbe', 'Norderney','S.Amrum','Sylt']:
+        if station in ['Cuxhaven','HPA-Elbe', 'Norderelbe']:
             varticks = varticks_coastal
             varlims = varlims_coastal
         else:
@@ -133,11 +133,13 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
                     ax.set_ylim([ylims[0],ylims[-1]])
                     ax.set_yticks(yticks)
                     #ax.yaxis.set_major_locator(yticks)
-                    if (yticks[-1]-yticks[0])<36:
+                    if (yticks[-1] - yticks[0]) <= 3.0:
+                        ax.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(0.1))
+                    elif (yticks[-1]-yticks[0])<=36:
                         ax.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(1.00))
-                    elif (yticks[-1]-yticks[0])<100:
+                    elif (yticks[-1]-yticks[0])<=100:
                         ax.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(5.00))
-                    elif (yticks[-1]-yticks[0])<500:
+                    elif (yticks[-1]-yticks[0])<=500:
                         ax.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(25.00))
                 ax.tick_params(axis='y', which='minor', direction='in', labelsize=9)
                 ax.tick_params(axis='y', which='major', direction='out', labelsize=9)
