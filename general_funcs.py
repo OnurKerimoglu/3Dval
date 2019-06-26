@@ -288,11 +288,11 @@ def discrete_cmap(N, base_cmap=None):
 
 
 def getproj(setup,projpath):
-    pickledproj=os.path.join(projpath,'proj.'+setup+'.pickle')
+    pickledproj=os.path.join(projpath,'proj_'+setup+'.pickle')
     if os.path.isfile(pickledproj):
         print ('opening an existing projection: '+ pickledproj)
         #if a projection exists, just load it (fast)
-        (proj,) = np.load(pickledproj)
+        (proj,) = np.load(pickledproj, encoding='latin1')
     else:
         from mpl_toolkits.basemap import Basemap
         import pickle
