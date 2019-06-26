@@ -139,57 +139,66 @@ def interp_simdata_on_station(station,simdata,time,proj,domaintree,bat,lon,lat,m
             elif vardims[varn]=='3D': #handle 3-D (t,z,x,y) vars
                 vdata['presence'] = True
                 for layername, depthint in depthints.items():
-                    if quickzfind:
-                        if ('z' not in simdata) and simdata[varn].shape[1]==1:
-                            if layername=='surface':
-                                zi=0 #assume that the only provided layer is the surface
-                            elif layername=='bottom':
-                                Warning('Skipping the bottom layer, as only 1 layer is found in the data set which is assumed to be surface')
-                                continue
-                        elif simdata['z'].shape[1]==2:
-                            if layername=='surface':
-                                zi=1
-                            elif layername=='bottom':
-                                zi=0
-                            else:
-                                #raise(Exception('simdata has 2 z levels and quickzfind was requested, but the layer to search (%s) is neither surface notr bottom'%layername))
-                                # if other layers are requested, recurse, but disable the quickzfind
-                                interp_simdata_on_station(station, simdata, time, proj, domaintree, bat, lon, lat,
-                                                          maxz_obs,timeint, depthints, vars, quickzfind=False)
-                        else:
-                            #if more levels are available, recurse, but disable the quickzfind
-                            interp_simdata_on_station(station, simdata, time, proj, domaintree, bat, lon, lat, maxz_obs,
-                                                      timeint, depthints, vars, quickzfind=False)
+                    if len(simdata[varn].shape)==3: #no z dimension
                         data = np.zeros(len(tind)) * np.nan
                         for tii, ti in enumerate(tind):
                             # value from a single cell
                             # data = ncf.variables[simdata[varn][tind, zind,loni,lati]
                             # values interpolated from nearest 4 cells
-                            data[tii] = interpval2D(0, 0, simdata[varn][ti, zi, :], lat, lon, 'pretree', proj, domaintree)
+                            data[tii] = interpval2D(0, 0, simdata[varn][ti, :], lat, lon, 'pretree', proj, domaintree)
                         vdata[layername] = {'time': time[tind], 'value': data, 'depth_interval': depthint}
-                    else: #exact search
-                        # for all layers in sim file, calculate average depth and find the one in the correct interval
-                        #doesn't work somehow?
-                        zsimstat=np.zeros(numz)
-                        for zi in range(numz):
-                            #zsimstat[zi]=interp_2d_tree(simdata['z'][0,zi,:,:],domaintree,lon,lat,k=4)
-                            zsimstat[zi] = interpval2D(0, 0, simdata['z'][0,zi,:,:], lat, lon, 'pretree', proj, domaintree)
-                        zind = np.where((zsimstat >= depthint[0]) * (zsimstat <= depthint[1]))[0]
-
-                        if len(zind)>0:
-                            #interpolate all values from the layers in the correct depth interval, and calculate the average
-                            data=np.zeros(len(tind))*np.nan
-                            for tii,ti in enumerate(tind):
-                                vsimstat = np.zeros(len(zind))*np.nan
-                                for zi in zind:
-                                    # value from a single cell
-                                    # data = ncf.variables[simdata[varn][tind, zind,loni,lati]
-                                    # values interpolated from nearest 4 cells
-                                    zsimstat[zi] = interpval2D(0, 0, simdata['z'][ti, zi, :, :], lat, lon, 'pretree', proj, domaintree)
-                                data[tii]=np.mean(vsimstat)
+                    else:
+                        if quickzfind:
+                            if ('z' not in simdata) and simdata[varn].shape[1]==1:
+                                if layername=='surface':
+                                    zi=0 #assume that the only provided layer is the surface
+                                elif layername=='bottom':
+                                    Warning('Skipping the bottom layer, as only 1 layer is found in the data set which is assumed to be surface')
+                                    continue
+                            elif simdata['z'].shape[1]==2:
+                                if layername=='surface':
+                                    zi=1
+                                elif layername=='bottom':
+                                    zi=0
+                                else:
+                                    #raise(Exception('simdata has 2 z levels and quickzfind was requested, but the layer to search (%s) is neither surface notr bottom'%layername))
+                                    # if other layers are requested, recurse, but disable the quickzfind
+                                    interp_simdata_on_station(station, simdata, time, proj, domaintree, bat, lon, lat,
+                                                              maxz_obs,timeint, depthints, vars, quickzfind=False)
+                            else:
+                                #if more levels are available, recurse, but disable the quickzfind
+                                interp_simdata_on_station(station, simdata, time, proj, domaintree, bat, lon, lat, maxz_obs,
+                                                          timeint, depthints, vars, quickzfind=False)
+                            data = np.zeros(len(tind)) * np.nan
+                            for tii, ti in enumerate(tind):
+                                # value from a single cell
+                                # data = ncf.variables[simdata[varn][tind, zind,loni,lati]
+                                # values interpolated from nearest 4 cells
+                                data[tii] = interpval2D(0, 0, simdata[varn][ti, zi, :], lat, lon, 'pretree', proj, domaintree)
                             vdata[layername] = {'time': time[tind], 'value': data, 'depth_interval': depthint}
-                        else:
-                            vdata[layername] = {'time': np.array([]), 'value': np.array([]), 'depth_interval': depthint}
+                        else: #exact search
+                            # for all layers in sim file, calculate average depth and find the one in the correct interval
+                            #doesn't work somehow?
+                            zsimstat=np.zeros(numz)
+                            for zi in range(numz):
+                                #zsimstat[zi]=interp_2d_tree(simdata['z'][0,zi,:,:],domaintree,lon,lat,k=4)
+                                zsimstat[zi] = interpval2D(0, 0, simdata['z'][0,zi,:,:], lat, lon, 'pretree', proj, domaintree)
+                            zind = np.where((zsimstat >= depthint[0]) * (zsimstat <= depthint[1]))[0]
+
+                            if len(zind)>0:
+                                #interpolate all values from the layers in the correct depth interval, and calculate the average
+                                data=np.zeros(len(tind))*np.nan
+                                for tii,ti in enumerate(tind):
+                                    vsimstat = np.zeros(len(zind))*np.nan
+                                    for zi in zind:
+                                        # value from a single cell
+                                        # data = ncf.variables[simdata[varn][tind, zind,loni,lati]
+                                        # values interpolated from nearest 4 cells
+                                        zsimstat[zi] = interpval2D(0, 0, simdata['z'][ti, zi, :, :], lat, lon, 'pretree', proj, domaintree)
+                                    data[tii]=np.mean(vsimstat)
+                                vdata[layername] = {'time': time[tind], 'value': data, 'depth_interval': depthint}
+                            else:
+                                vdata[layername] = {'time': np.array([]), 'value': np.array([]), 'depth_interval': depthint}
         else:
             vdata['presence'] = False
 
