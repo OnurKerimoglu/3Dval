@@ -41,7 +41,7 @@ def main(simfile,preint,gridtype,varn,fbrootpath,fbname,yrint,fname_topo):
     figw,figh=(10., 5.)
 
     if varn == 'salt':
-        cbartitle = 'Salinity [psu]'
+        cbartitle = '[g/kg]'
         if fbname in ['cosyna-funnygirl', 'yoana-buhel']:
             clims=[15, 33]
             Nlev=7
@@ -64,14 +64,16 @@ def main(simfile,preint,gridtype,varn,fbrootpath,fbname,yrint,fname_topo):
 
     dsc = ax_data.scatter(lon_fb, date_fb, s=1.0, c=data_fb, edgecolor='', cmap=cmap)
     dsc.set_clim(clims[0], clims[1])
-    ax_data.set_xlabel('Longitude [degE]\nFerryBox')
+    ax_data.set_xlabel(u'Longitude [\N{DEGREE SIGN}E]') #\nFerryBox')
     # ax_data.invert_xaxis()
     ax_data.grid(axis='y', lw=0.3)
+    ax_data.set_title('Measured salinity')
 
     mpc = ax_model.pcolor(lon_mt, date_mt, data_mt, cmap=cmap)
     mpc.set_clim(clims[0], clims[1])
-    ax_model.set_xlabel('Longitude [degE]\nModel Result')
+    ax_model.set_xlabel(u'Longitude [\N{DEGREE SIGN}E]') #\nModel Result')
     ax_model.grid(axis='y', lw=0.3)
+    ax_model.set_title('Simulated salinity')
 
     #handle date axis:
     if yrint[1]-yrint[0]==0:
@@ -116,8 +118,13 @@ def main(simfile,preint,gridtype,varn,fbrootpath,fbname,yrint,fname_topo):
         proj = getproj(setup='SNSfull',projpath=os.path.dirname(os.path.realpath(__file__)))
 
     #background as a salinity contour plot
+    #bg_contour=False
     if bg_contour==True:
-        lonx,laty = proj(lon_FMD,lat_FMD)
+        if len(lon_FMD.shape)==1:
+            lon_FMD_mesh,lat_FMD_mesh = np.meshgrid(lon_FMD,lat_FMD)
+            lonx,laty=proj(lon_FMD_mesh,lat_FMD_mesh)
+        else:
+            lonx,laty = proj(lon_FMD,lat_FMD)
         cmap.set_bad(str(.8))
         # var2plot=var_FMD[:, :-1, :-1].mean(axis=0) # average
         var2plot = var_FMD[-1, :-1, :-1].squeeze() # surface
@@ -139,7 +146,7 @@ def main(simfile,preint,gridtype,varn,fbrootpath,fbname,yrint,fname_topo):
     plt.savefig(fname, dpi=300)
     plt.close()
     # show()
-    print 'figure saved:%s' % fname
+    print ('figure saved:%s' % fname)
 
 def store_interpfb(fbrootpath,fbname,varn,date_fb,lon_fb,lat_fb,data_fb,lonlims,yrint=[2012,2013]):
     unitdict={'salt':'psu', 'temp':'$^o$ C'}
@@ -241,114 +248,155 @@ def get_model_intonfb(simfile,preint,gridtype,fbname,varn,yrint,lonlims,date_fb,
         nc.close()
         bg_contour=False;lon_FMD=0;lat_FMD=0;var_FMD=0
     else:
-        if 'getm' in gridtype:
+        # read coordinates
+        if gridtype in ['sns', 'gb300']:
             if 'sns' in gridtype:
                 Tsetup='SNS'
                 if fbname in ['cosyna-tordania', 'richard-cuximm']:
                     pnum = 300  # number of grid points to which the model will be interpolated
-                    xsl = slice(5, 135)  # getm-sns slice
-                    ysl = slice(26, 90)  # getm-sns slice
+                    xsl = slice(5, 135)
+                    ysl = slice(26, 90)
                 elif fbname in ['cosyna-funnygirl','yoana-buhel']:
                     pnum = 100  # number of grid points along the transect to which the model will be interpolated
-                    xsl = slice(98, 137)  # getm-sns slice
-                    ysl = slice(26, 49)  # getm-sns slice
+                    xsl = slice(98, 137)
+                    ysl = slice(26, 49)
                 else:
-                    raise (ValueError('unknown grid type'))
+                    raise (ValueError('unknown  ferrybox name (fbname)'))
             elif 'gb300' in gridtype:
                 Tsetup='GB300'
                 if fbname in ['cosyna-funnygirl','yoana-buhel']:
                     pnum = 100  # number of grid points along the transect to which the model will be interpolated
-                    xsl = slice(185, 400)  # getm-sns slice
-                    ysl = slice(350, 410)  # getm-sns slice
+                    xsl = slice(185, 400)
+                    ysl = slice(350, 410)
                 else:
-                    raise (ValueError('unknown grid type'))
-            else:
-                raise(ValueError('unknown grid type'))
-
-            nc = netCDF4.Dataset(simfile)
-            ncv = nc.variables
-            nct = ncv['time']
-            utime = netcdftime.utime(nct.units)
-            # reduce to a daily resolution
-            date_mt_all = np.array([t.date() for t in utime.num2date(nct[:])])
-	    
-            #reduce time	
-            if Y != -1:
-                mons = np.array([d.month for d in date_mt_all])
-                years = np.array([d.year for d in date_mt_all])
-                tind = (mons == M) * (years == Y)
-            else:
-                tind = np.where((date_mt_all >= date(yrint[0], 1, 1)) * (date_mt_all <= date(yrint[1], 12, 31)))[0]
-
-            # days = (time - time[0])/86400. + 0.5
-            date_mt = date_mt_all[tind]
-            var_FMD = ncv[varn][tind, -1, :, :].squeeze()  # FMD=full model domain
-            if np.ma.is_masked(var_FMD): #transform the masked values to nan
-                var_FMD = var_FMD.filled(np.nan)
-                #var_FMD[var_FMD.mask]=np.nan
-            else:
-                var_FMD[var_FMD < -98.]=np.nan
-
-            varunit=ncv[varn].units
-            nc.close()
-
-            # read coordinates
-            topo = get_getm_bathymetry_cropped(fname=fname_topo,setup=Tsetup)
-            lat_FMD = topo['latc']
+                    raise (ValueError('unknown ferrybox name (fbname)'))
+            #get the coordinates
+            topo = get_getm_bathymetry_cropped(fname=fname_topo, setup=Tsetup)
+            lat_FMD = topo['latc'] # FMD=full model domain
             lon_FMD = topo['lonc']
 
             # extract the spatially relevant region from model data
             lat = lat_FMD[ysl, xsl]
             lon = lon_FMD[ysl, xsl]
-            var = var_FMD[:, ysl, xsl]
 
-            # del lon_FMD,lat_FMD,var_FMD #needed later for contourplot as the background for fb track plot
+            if not varn in ncv:
+                if varn + 'mean' in ncv:
+                    varnf = varn + 'mean'  # varname in file
+            else:
+                varnf = varn
 
-            # define a transect grid based on longitudes
-            lon_mt = np.linspace(lonlims[0], lonlims[1], pnum)
-            dlon = float(np.diff(lon_mt[:2]))  # this is the bin size
+        elif 'ecosmoHR' in gridtype:
+            Tsetup='ecosmoHR'
+            if fbname in ['cosyna-funnygirl','yoana-buhel']:
+                pnum = 100  # number of grid points along the transect to which the model will be interpolated
+                xsl = slice(75, 110)
+                ysl = slice(50, 110)
+            else:
+                raise (ValueError('unknown ferrybox name (fbname)'))
+            # get the coordinates
+            nc = netCDF4.Dataset(simfile)
+            lat_FMD = nc.variables['lat'][:] # FMD=full model domain
+            lon_FMD = nc.variables['lon'][:]
+            # extract the spatially relevant region from model data
+            lat = lat_FMD[ysl]
+            lon = lon_FMD[xsl]
+            nc.close()
+            ecosmovardict={'salt':'SSS', 'temp':'SST'}
+            varnf=ecosmovardict[varn]
+        else:
+            raise(ValueError('unknown grid type'))
 
-            # average lat within the lon bin
-            # lat_mt = asarray([ missmean(lat_fb[where(abs(lon_fb - ll) < dlon)]) for ll in lon_mt])
-            lat_mt = np.ones(len(lon_mt)) * -99
-            for i, ll in enumerate(lon_mt):
-                binlats = lat_fb[np.where(abs(lon_fb - ll) < dlon)]
-                if len(binlats) > 0:
-                    lat_mt[i] = binlats.mean()
+        nc = netCDF4.Dataset(simfile)
+        ncv = nc.variables
 
-            # interpolate model data to transect grid
-            # choose the dates from the model and do the spatial interpolation along a grid across the transect
-            lonlatpairs=zip(lon.flat, lat.flat) #(python2 zip)
-            tree = cKDTree(lonlatpairs)
+        # reduce time
+        nct = ncv['time']
+        utime = netcdftime.utime(nct.units)
+        # reduce to a daily resolution
+        date_mt_all = np.array([t.date() for t in utime.num2date(nct[:])])
 
-            #calculate the weights all at once: probably faster but debugging is difficult
-            #dL, gridindsL = tree.query(zip(lon_mt, lat_mt), k=4)
-            #wL = 1.0 / dL ** 2
+        if Y != -1:
+            mons = np.array([d.month for d in date_mt_all])
+            years = np.array([d.year for d in date_mt_all])
+            if type(M)==list:
+                tind = (mons>=M[0]) * (mons<=M[1]) * (years == Y)
+            else:
+                tind = (mons == M) * (years == Y)
+        else:
+            tind = np.where((date_mt_all >= date(yrint[0], 1, 1)) * (date_mt_all <= date(yrint[1], 12, 31)))[0]
 
-            tnum, ynum, xnum = var.shape
-            data_mt = -99. * np.ones((tnum, pnum))
-            for tidx in range(tnum):
-                if True: #date_mt[tidx] in date_fb:
-                    # all at once: probably fastest
-                    # data_mt[tidx,:] = np.sum(wL * var[tidx,:,:].flatten()[gridindsL], axis=1) / np.sum(wL, axis=1)
-                    for pi in range(pnum):
-                        #use the pre-calculated weights: probably faster but debugging is difficult
-                        #intval = np.sum(wL[pi] * var[tidx, :, :].flatten()[gridindsL[pi]]) / np.sum(wL[pi])
-                        #calculate the weights here: probably slow, but
-                        dLi, gridindsLi = tree.query((lon_mt[pi],lat_mt[pi]), k=4)
-                        wLi = 1.0 / dLi ** 2
-                        intvali=np.sum(wLi * var[tidx, :, :].flatten()[gridindsLi]) / np.sum(wLi)
-                        data_mt[tidx, pi] = intvali
-                    data_mt[tidx][np.isnan(data_mt[tidx])] = -99.
-                    data_mt[tidx][np.where(lat_mt == -99.)] = -99.
+        # days = (time - time[0])/86400. + 0.5
+        date_mt = date_mt_all[tind]
 
-            data_mt = np.ma.masked_equal(data_mt, -99.)
-            lat_mt = np.ma.masked_equal(lat_mt, -99.)
+        if len(ncv[varnf][:].shape)==4:
+            var_FMD = ncv[varnf][tind, -1, :, :].squeeze()  # FMD=full model domain
+        else:
+            var_FMD = ncv[varnf][tind, :, :]
 
-            #write as a nc file (if not a limited time filtering was applied
-            if Y == -1:
-                write_modint2nc(fnamepreint,date_mt,lon_mt,lat_mt,data_mt,varunit)
-            bg_contour=True
+        if np.ma.is_masked(var_FMD): #transform the masked values to nan
+            var_FMD = var_FMD.filled(np.nan)
+            #var_FMD[var_FMD.mask]=np.nan
+        else:
+            var_FMD[var_FMD < -98.]=np.nan
+
+        try:
+            varunit=ncv[varnf].units
+        except:
+            if varn=='salt':
+                varunit='g/kg'
+            elif varn=='temp':
+                varunit=u'\N{DEGREE SIGN}C'
+        nc.close()
+
+        var = var_FMD[:, ysl, xsl]
+
+        # del lon_FMD,lat_FMD,var_FMD #needed later for contourplot as the background for fb track plot
+
+        # define a transect grid based on longitudes
+        lon_mt = np.linspace(lonlims[0], lonlims[1], pnum)
+        dlon = float(np.diff(lon_mt[:2]))  # this is the bin size
+
+        # average lat within the lon bin
+        # lat_mt = asarray([ missmean(lat_fb[where(abs(lon_fb - ll) < dlon)]) for ll in lon_mt])
+        lat_mt = np.ones(len(lon_mt)) * -99
+        for i, ll in enumerate(lon_mt):
+            binlats = lat_fb[np.where(abs(lon_fb - ll) < dlon)]
+            if len(binlats) > 0:
+                lat_mt[i] = binlats.mean()
+
+        # interpolate model data to transect grid
+        # choose the dates from the model and do the spatial interpolation along a grid across the transect
+        lonlatpairs=zip(lon.flat, lat.flat) #(python2 zip)
+        tree = cKDTree(lonlatpairs)
+
+        #calculate the weights all at once: probably faster but debugging is difficult
+        #dL, gridindsL = tree.query(zip(lon_mt, lat_mt), k=4)
+        #wL = 1.0 / dL ** 2
+
+        tnum, ynum, xnum = var.shape
+        data_mt = -99. * np.ones((tnum, pnum))
+        for tidx in range(tnum):
+            if True: #date_mt[tidx] in date_fb:
+                # all at once: probably fastest
+                # data_mt[tidx,:] = np.sum(wL * var[tidx,:,:].flatten()[gridindsL], axis=1) / np.sum(wL, axis=1)
+                for pi in range(pnum):
+                    #use the pre-calculated weights: probably faster but debugging is difficult
+                    #intval = np.sum(wL[pi] * var[tidx, :, :].flatten()[gridindsL[pi]]) / np.sum(wL[pi])
+                    #calculate the weights here: probably slow, but
+                    dLi, gridindsLi = tree.query((lon_mt[pi],lat_mt[pi]), k=4)
+                    wLi = 1.0 / dLi ** 2
+                    intvali=np.sum(wLi * var[tidx, :, :].flatten()[gridindsLi]) / np.sum(wLi)
+                    data_mt[tidx, pi] = intvali
+                data_mt[tidx][np.isnan(data_mt[tidx])] = -99.
+                data_mt[tidx][np.where(lat_mt == -99.)] = -99.
+
+        data_mt = np.ma.masked_equal(data_mt, -99.)
+        lat_mt = np.ma.masked_equal(lat_mt, -99.)
+
+        #write as a nc file (if not a limited time filtering was applied
+        if Y == -1:
+            write_modint2nc(fnamepreint,date_mt,lon_mt,lat_mt,data_mt,varunit)
+        bg_contour=True
     return (date_mt, lon_mt, lat_mt, data_mt, bg_contour, lon_FMD, lat_FMD, var_FMD)
 
 def write_modint2nc(fname,dates,lons,lats,data,varunit):
@@ -462,11 +510,14 @@ if __name__=='__main__':
     else:
         # simfile = '/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117-P161118/sns144-M161117-P161118-mergedextract_phys_zSB_2009-2010.nc'
         #simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nBF-Pbg2017-B180106-vsdetp4b1/sns144-M180109-nBF-Pbg2017-B180106-vsdetp4b1-1113_phys_zSB.nc'
-        simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1/extract_phys_sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1.2013-0608_zSB.nc'
-        #simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1/sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1-1114_phys_zSB.nc'
-        #simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1/extract_phys_sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1.2013_zSB.nc'
-        #simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1-M13R12/extract_phys_sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1-M13R12.2013_zSB.nc'
-        #simfile = '/home/onur/WORK/projects/GB/gb300/GB300_2013-0608_dmean.nc'
+        #simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1/extract_phys_sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1.2013-0608_zSB.nc'
+        #simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1_TS_12-13_zSB.nc'
+        #simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1-AHm3/extract_Mphys_sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1-AHm3.2013.nc'
+        #simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1-AHm2-c06-Ec01/extract_Mphysred_sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1-AHm2-c06-Ec01.12-13_S3.nc'
+        #simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1-M12R12/sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1-M12R12-1314_phys_zSB.nc'
+        #simfile = '/home/onur/WORK/projects/2013/gb300/GB300_2013-0608_dmean.nc'
+        #simfile = '/home/onur/WORK/projects/2013/gb300/GB300_2012-06_2013-0608_dmean.nc'
+        simfile='/home/onur/WORK/projects/2013/ecosmoHR/2019-04-09/ef1ssv_12-13_GB_T.nc'
 
     #fname_topo = '/home/onur/WORK/projects/GB/gb300/topo_german_bight_300m_v06.0_curv.nc'
     fname_topo='/home/onur/WORK/projects/GB/data/topo/topo_area_sns.nc'
@@ -474,7 +525,7 @@ if __name__=='__main__':
     if len(sys.argv) > 2:
         varn = sys.argv[2]
     else:
-        varn = 'salt'
+        varn = 'salt' #'salt'
 
     if len(sys.argv) > 3:
         fbrootpath = sys.argv[3]
@@ -484,14 +535,16 @@ if __name__=='__main__':
     if len(sys.argv) > 4:
         fbname = sys.argv[4]
     else:
-        fbname = 'yoana-buhel' #for 2013
+        #fbname = 'richard-cuximm'  # 'tordania' #funnygirl 'richard-cuximm'
+        fbname = 'yoana-buhel'  # for 2013
+        #fbname= 'cosyna-funnygirl' #for 2010
 
     if len(sys.argv) > 5:
         yrint = [int(y) for y in sys.argv[5].split(',')]
-        print yrint
+        print (yrint)
     else:
-        #yrint = [2012, 2013]
-        yrint=[2013,2013]
+        #yrint = [2010,2010]
+        yrint=[2012,2013]
 
     if len(sys.argv) > 6:
         preint = True if int(sys.argv[6])==1 else False
@@ -501,6 +554,6 @@ if __name__=='__main__':
     if len(sys.argv) > 7:
         gridtype = sys.argv[7]
     else:
-        gridtype = 'getm-sns' #'getm-gb300' #'getm-sns'
+        gridtype = 'ecosmoHR' #'getm-gb300' #'getm-sns' #ecosmoHR
 
     main(simfile,preint,gridtype,varn,fbrootpath,fbname,yrint,fname_topo)

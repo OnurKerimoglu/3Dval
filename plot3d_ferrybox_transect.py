@@ -6,6 +6,7 @@ import datetime
 from scipy import interpolate
 from scipy.spatial import cKDTree
 import matplotlib.pyplot as plt
+import matplotlib
 #local python modules
 from plot3d_ferrybox import get_ferrybox,get_model_intonfb
 from getm_funcs import get_getm_bathymetry_cropped
@@ -15,10 +16,10 @@ def main(simfile, preint, gridtype, varn, fbrootpath, fbname, yrint, fname_topo,
     plotfb=False
     plotsim=True
     M = 6;
-    Yvec=[2013]
-    #Yvec=[2012,2013,2014];
+    #Yvec=[2013]
+    Yvec=range(yrint[0],yrint[1]+1);
     # Yvec=[-1]; M=-1
-    tempsuf= 'June-2012-2014' #''%s-%s'%(Y,M)
+    tempsuf= 'June-2012-2013' #''%s-%s'%(Y,M)
     labels=[str(Y) for Y in Yvec]
 
     if fbname in ['cosyna-tordania', 'richard-cuximm']:
@@ -36,7 +37,7 @@ def main(simfile, preint, gridtype, varn, fbrootpath, fbname, yrint, fname_topo,
         date_fb,lon_fb,lat_fb,data_fb=get_FB_data(fnamefb)
 
     #interpolate sim on fb transect
-    print 'interpolating'
+    print ('interpolating')
     data_mt_vec=[None]*len(Yvec)
     datafb_mt_vec = [None] * len(Yvec)
     for Yno,Y in enumerate(Yvec):
@@ -50,7 +51,7 @@ def main(simfile, preint, gridtype, varn, fbrootpath, fbname, yrint, fname_topo,
             datafb_mt_vec[Yno] = regrid_fb(date_fb, lon_fb, lat_fb, data_fb, date_mt, lon_mt, lat_mt, M, Y)
 
     # plot
-    print 'plotting'
+    print ('plotting')
     if plotsim==True:
         plotfname = simfile.replace('.nc', '_ferrybox_%s_%s_prof_%s.png' % (varn, fbname, tempsuf))
         plot_transects_loop(plotfname,lon_mt,lat_mt,data_mt_vec,varn,labels)
@@ -60,15 +61,19 @@ def main(simfile, preint, gridtype, varn, fbrootpath, fbname, yrint, fname_topo,
         plot_transects_loop(plotfname, lon_mt, lat_mt, datafb_mt_vec, varn, labels)
 
 def plot_transects_loop(plotfname,lon,lat,data_mt_vec,var,labels):
-    udict={'salt':'PSU'}
+    udict={'salt':'g/kg'}
     lims={'salt':[9, 32]}
-    lcols={'2012':'g','2013':'r','2014':'b'}
-    fcols={'2012':'yellowgreen','2013':'orange','2014':'lightskyblue'}
+    lcols={'2012':'r','2013':'b','2014':'g'}
+    fcols={'2012':'orange','2013':'lightskyblue','2014':'yellowgreen'}
+
+    fig = plt.figure(figsize=(4, 4), dpi=150)
+    fig.subplots_adjust(hspace=.4, wspace=.5, left=0.15, right=0.95)
+    ax = plt.subplot(1, 1, 1)
+    matplotlib.rcParams.update({'font.size': 10})
     for dno,data_mt in enumerate(data_mt_vec):
         data_tmean=data_mt.mean(axis=0)
         data_tstd = data_mt.std(axis=0)
         cumdist= np.flipud(lonlat_to_cumdist(np.flipud(lon),np.flipud(lat)))
-        ax=plt.subplot(1,1,1)
         ax.plot(cumdist,data_tmean, lcols[labels[dno]],lw=2,label=labels[dno])
         #data_p25 = np.percentile(data_mt.filled(np.nan),25,axis=0)
         #data_p75 = np.percentile(data_mt.filled(np.nan), 75, axis=0)
@@ -76,15 +81,30 @@ def plot_transects_loop(plotfname,lon,lat,data_mt_vec,var,labels):
         ax.fill_between(cumdist, data_tmean-data_tstd, data_tmean+data_tstd,
                         facecolor=fcols[labels[dno]], edgecolor=fcols[labels[dno]], alpha='0.5')
 
-    plt.legend(labels,loc='lower left')
+        #disti=np.where(cumdist<13)[0]
+        disti = np.where(cumdist < 30)[0]
+        y = data_tmean[disti[0]]
+        if dno==0:
+            ax.text(35, y+.5, labels[dno], color=lcols[labels[dno]], size=12, verticalalignment='bottom')
+        elif dno==1:
+            y=data_tmean[disti[0]] - 0.5
+            ax.text(35, y-.5, labels[dno], color=lcols[labels[dno]], size=12, verticalalignment='top')
+
+    #ax.set_title('Measured salinity')
+    ax.set_title('Simulated salinity')
+
+    #plt.legend(labels,loc='lower left')
     ax.invert_xaxis()
     plt.xlim(61, 4)
     plt.ylim(lims[var][0], lims[var][1])
     plt.xlabel('Distance from Coast [km]')
-    plt.ylabel('%s [%s]'%(var,udict[var]))
+    if var=='salt':
+        plt.ylabel('%s [%s]'%('Salinity',udict[var]))
+    else:
+        plt.ylabel('%s [%s]' % (var, udict[var]))
     #plt.show()
-    plt.savefig(plotfname, dpi=300)
-    print 'figure saved:%s'%plotfname
+    plt.savefig(plotfname, dpi=150)
+    print ('figure saved:%s'%plotfname)
 
 
 def regrid_fb(dates,lon,lat,data,date_mt,lon_mt,lat_mt,M,Y):
@@ -102,7 +122,7 @@ def regrid_fb(dates,lon,lat,data,date_mt,lon_mt,lat_mt,M,Y):
             try:
                 tree = cKDTree(lonlatpairs)
             except:
-                print '?'
+                print ('?')
             datad=data[ti]
 
             for pit in range(pnum):
@@ -121,10 +141,16 @@ def timesel_fb(dates,lon,lat,data,M,Y,yop='inc'):
     mons=np.array([d.month for d in dates])
     years = np.array([d.year for d in dates])
     if yop=='inc':
-        ti=(mons==M)*(years==Y)
+        if type(M)==list:
+            ti = (mons>=M[0]) * (mons<=M[1]) * (years == Y)
+        else:
+            ti=(mons==M)*(years==Y)
         tempsuf = '%s-%s' % (Y, M)
     else:
-        ti=(mons==M)*(years!=Y)
+        if type(M)==list:
+            ti = (mons>=M[0]) * (mons<=M[1]) * (years != Y)
+        else:
+            ti=(mons==M)*(years!=Y)
         tempsuf = '%s-%s' % (Ystr, M)
     #return (dates[ti],lat[ti,:],data[ti,:])
     return (dates[ti],lon[ti],lat[ti], data[ti])
@@ -181,13 +207,17 @@ if __name__=="__main__":
     if len(sys.argv) > 1:
         simfile = sys.argv[1]
     else:
+        #simfile = '/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117n-P161118-bdyi3-z01mm/sns144-M161117n-P161118-bdyi3-z01mm-mergedextract_phys.nc'
         # simfile = '/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117-P161118/sns144-M161117-P161118-mergedextract_phys_zSB_2009-2010.nc'
-        simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1/sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1-1114_phys_zSB.nc'
-        simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1-M12R13/sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1-M12R13-1314_phys_zSB.nc'
+        #simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1_TS_12-13_zSB.nc'
+        #simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1-AHm1/extract_Mphysred_sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1-AHm1.12-13_S3.nc'
+        #simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1-M12R13/sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1-M12R13-1314_phys_zSB.nc'
         #simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1/extract_phys_sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1.2013_zSB.nc'
         #simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1-M13R12/extract_phys_sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1-M13R12.2013_zSB.nc'
+        #simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1-AHm2-c06-Ec01/extract_Mphysred_sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1-AHm2-c06-Ec01.12-13_S3.nc'
         #simfile = '/home/onur/WORK/projects/2013/gb300/GB300_2013-0608_dmean.nc'
         #simfile = '/home/onur/WORK/projects/2013/gb300/GB300_2012-06_2013-0608_dmean.nc'
+        simfile = '/home/onur/WORK/projects/2013/ecosmoHR/2019-04-09/ef1ssv_12-13_GB_T.nc'
 
     #fname_topo = '/home/onur/WORK/projects/2013/gb300/topo_german_bight_300m_v06.0_curv.nc'
     fname_topo = '/home/onur/WORK/projects/GB/data/topo/topo_area_sns.nc'
@@ -209,10 +239,10 @@ if __name__=="__main__":
 
     if len(sys.argv) > 5:
         yrint = [int(y) for y in sys.argv[5].split(',')]
-        print yrint
+        print (yrint)
     else:
-        yrint = [2013, 2013]
-        #yrint = [2012, 2014]
+        #yrint = [2013, 2013]
+        yrint = [2012, 2013]
 
     if len(sys.argv) > 6:
         preint = True if int(sys.argv[6]) == 1 else False
@@ -222,6 +252,6 @@ if __name__=="__main__":
     if len(sys.argv) > 7:
         gridtype = sys.argv[7]
     else:
-        gridtype = 'getm-sns' #'getm-gb300'  # 'getm-gb300' #'getm-sns'
+        gridtype = 'ecosmoHR'   # 'ecosmoHR' 'getm-gb300' #'getm-sns'
 
-        main(simfile, preint, gridtype, varn, fbrootpath, fbname, yrint, fname_topo)
+    main(simfile, preint, gridtype, varn, fbrootpath, fbname, yrint, fname_topo)

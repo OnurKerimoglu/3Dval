@@ -153,7 +153,7 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
                 #add legend
                 if anyplotinax:
                     #ax = plt.axes([0.6, 0.75, 0.4, 0.15],visible=False) #todo: place the legend in a dedicated axis within the top margin
-                    lgd = ax.legend(handles=hset, labels=idset, loc='center left',fontsize=9, numpoints=1, bbox_to_anchor=(1.05, 0.5))
+                    lgd = ax.legend(handles=hset, labels=idset, loc='center left',fontsize=9, numpoints=1, bbox_to_anchor=(1.02, 0.5))
 
             #save&close the figure
             if not anyplotinfig:
