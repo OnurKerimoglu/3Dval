@@ -13,7 +13,7 @@ import warnings
 from getm_funcs import get_getm_dom_vars,get_getm_dataF
 from general_funcs import interpval2D,get_2Dtree,getproj
 
-def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,obs,vars):
+def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,obs,vars,getmv,fabmv):
     print('Reading simulation:'+simname)
 
     simf=paths[simname]
@@ -39,7 +39,7 @@ def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,ob
             domaintree = get_2Dtree(lons,lats,proj)
         else:
             raise (Exception('unknown spatial method for extracting values from GETM'))
-        simdata,simtime = get_getm_dataF(simf,vars,ysl,xsl)
+        simdata,simtime = get_getm_dataF(simf,vars,ysl,xsl,getmv=getmv,fabmv=fabmv)
 
     #fill the data in correct structure
     sim = {}

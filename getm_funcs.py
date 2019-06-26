@@ -7,19 +7,36 @@ provides functions relevant to getm simulations
 import netCDF4
 import numpy as np
 
-def get_getm_dataF(simf,varns,ysl,xsl):
-    vlib = {'t': 'time', 'z': 'depth',
-            'temp': 'tempmean', 'salt': 'saltmean', 'ssh': 'elevmean',
-            #'temp': 'temp', 'salt': 'salt', 'ssh': 'elev',
-            'DOs': 'hzg_maecs_O2_percSat','DIN': 'hzg_maecs_nutN', 'DIP': 'hzg_maecs_nutP', 'Chl': 'hzg_maecs_chl'}
-    ncf = netCDF4.Dataset(simf)
+def get_getm_dataF(simf,varns,ysl,xsl,getmv='mean',fabmv='GPMEH'):
+    vlib = {'t': 'time', 'z': 'depth'}
+
+    if getmv == '3d':
+        vlibgetm = {'temp': 'temp', 'salt': 'salt', 'ssh': 'elev'}
+    elif getmv == 'mean':
+        vlibgetm={'temp': 'tempmean', 'salt': 'saltmean', 'ssh': 'elevmean'}
+    vlib.update(vlibgetm)
+
+    if fabmv == 'maecs':
+        vlibfabm={'DOs': 'hzg_maecs_O2_percSat','DIN': 'hzg_maecs_nutN', 'DIP': 'hzg_maecs_nutP', 'Chl': 'hzg_maecs_chl'}
+    elif fabmv == 'GPMEH.PZ':
+        vlibfabm={'DOs':'EH_abioP_O2_percSat','DIN':'EH_abioP_DINO3+EH_abioP_DINH4','DIP':'EH_abioP_DIP','Chl':'GPM_phy_Chl'}
+    elif fabmv[:3]=='GPM':
+        vlibfabm={'DOs':'EH_abioP_O2_percSat','DIN':'EH_abioP_DINO3+EH_abioP_DINH4','DIP':'EH_abioP_DIP','Chl':'total_chlorophyll_calculator_result'}
+    vlib.update(vlibfabm)
+
+    try:
+        ncf = netCDF4.Dataset(simf)
+    except:
+        raise(Exception('File not found:%s'%simf))
     simdata={}
     #add depth to the varlist
     #varns.append('z')
     varnsnew=varns+['z']
     for varn in varnsnew:
-        if vlib[varn] in ncf.variables:
-            varF=ncf.variables[vlib[varn]][:]
+        #attempt to retrieve the variable
+        varF,success = get_var_from_ncf(vlib[varn], ncf)
+        if success:
+            #varF=ncf.variables[vlib[varn]][:]
             if len(varF.shape)==2:
                 var = varF[ysl,xsl]
             elif len(varF.shape)==3:
@@ -37,6 +54,29 @@ def get_getm_dataF(simf,varns,ysl,xsl):
     simtime = netCDF4.num2date(time_num, ncf.variables[vlib['t']].getncattr('units'))
     ncf.close()
     return (simdata,simtime)
+
+def get_var_from_ncf(varn_vl,ncf):
+    #if '+' exists (eg., DIN=DINO3+DINH4); operate
+
+    if '+' in varn_vl:
+        varn_vl_list=varn_vl.split('+')
+        varF=0
+        success = True
+        for varn_vl_i in varn_vl_list:
+            varFi,success_i=get_var_from_ncf(varn_vl_i,ncf)
+            varF=varF+varFi
+            if not success_i: #if any of the additive variables can not be retrieved, assume failure
+                success=False
+    else:
+        if varn_vl in ncf.variables:
+            varF = ncf.variables[varn_vl][:]
+            success=True
+        else:
+            varF=0
+            success = False
+            raise(Warning('requested variable not found:'+varn))
+
+    return(varF,success)
 
 def get_getm_dom_vars(simdomain):
 
