@@ -14,115 +14,6 @@ from scipy.spatial import cKDTree
 from scipy import interpolate
 #import time
 
-def get_botdepth(lon,lat,method='tree'):
-    proj = getproj(setup='SNSfull', projpath=os.path.dirname(os.path.realpath(__file__)))
-    # proj = getproj(setup = 'NS', projpath = os.path.dirname(os.path.realpath(__file__)))
-    topofile = '/home/onur/WORK/projects/GB/data/topo/topo_HR2.nc'
-    #topofile='/home/onur/WORK/projects/GB/data/topo/topo_GreaterNorthSea.nc'
-    if os.path.exists(topofile):
-        nc=netCDF4.Dataset(topofile)
-        # depths=nc.variables['depth_average'][:]
-        # lats = nc.variables['lat'][:]
-        # lons = nc.variables['lon'][:]
-        depths = nc.variables['bathymetry'][:]
-        lats = nc.variables['latx'][:-1,:-1]
-        lons = nc.variables['lonx'][:-1,:-1]
-        nc.close()
-        depth = interpval2D(lats, lons, depths, lat, lon, method,proj)
-    else:
-        warnings.warn('Topo file not found in the provided location (%s). Filling nan for station depth:'%topofile)
-        depth=np.nan
-    return depth
-
-def interpval2D(lats,lons,vals,lat,lon,method,proj,domaintree=0):
-
-    # convert lat-lons to cartesian coordinates
-    x2,y2 = proj(lon,lat)
-
-    if method=='pretree':
-        if not isinstance(domaintree,int):  #p2: istype(domaintree,'integer'):
-            domaintree=domaintree
-        else:
-            warnings.WarningMessage('no pre-generated tree provided. Generating a new one')
-            method='tree'
-    else:
-        # meshscipy.spatial.ckdtree.cKDTree.query
-        if len(lons.shape) == 2:
-            lonsM, latsM = lons, lats
-        else:
-            lonsM, latsM = np.meshgrid(lons, lats)
-        x1, y1 = proj(lonsM, latsM)
-
-    if method == 'tree':
-        xypairs = list(zip(x1.flat, y1.flat)) #p3: must be placed in list
-        # ts=time.time()
-        domaintree = cKDTree(xypairs)
-        # print 'tree generated in:%.1f' %(time.time() - ts)
-
-    if method in ['NN','linear']:
-        coords = np.asarray(zip(np.reshape(x1,x1.size),np.reshape(y1,y1.size)))
-        if method=='NN':
-            f = interpolate.NearestNDInterpolator(coords, np.reshape(vals, vals.size))
-        elif method=='linear':
-            f = interpolate.LinearNDInterpolator(coords, np.reshape(vals,vals.size), fill_value=np.nan)
-        val = f(x2, y2)
-    elif method in ['tree','pretree']:
-        val=interp_2d_tree(vals, domaintree, x2, y2, k=4, kmin=1)
-
-    return val
-
-def get_2Dtree(lons,lats,proj,Vpy=3):
-    if len(lons.shape) == 2:
-        lonsM, latsM = lons, lats
-    else:
-        lonsM, latsM = np.meshgrid(lons, lats)
-    x1, y1 = proj(lonsM, latsM)
-    if Vpy==2:
-        xypairs = zip(x1.flat, y1.flat)
-    else:
-        xypairs = list(zip(x1.flat, y1.flat))  # p3: must be placed in list
-
-    domaintree = cKDTree(xypairs)
-    return domaintree
-
-def interp_2d_tree(vals,domaintree,lon,lat,k=4,kmin=1):
-    #vals: 2d field of values to be interpolated
-    #domaintree: query tree generated with scipy.spatial.cKDTree
-    #lon,lat:  coordinates to be used for interpolation
-    #k: number of cells to use for interpolation
-
-    dLi, gridindsLi = domaintree.query((lon, lat), k)
-    wLi = 1.0 / dLi ** 2
-
-    #remove the mask, if necessary
-    if isinstance(vals,np.ma.MaskedArray):
-        #vals[vals.mask] = np.nan
-        #vals.Mask=False
-        vals = vals.filled(np.nan)
-
-    if len(vals.shape)==2:
-        vals2int=vals[:, :].flatten()[gridindsLi]
-        #find the nan-indices and remove them (by nullifying their weights)
-        nani=np.where(np.isnan(vals2int))
-        wLi[nani]=0
-        vals2int[nani]=0
-        intval = np.sum(wLi * vals2int) / np.sum(wLi)
-    else:
-        raise(ValueError('shape of the data to be interpolated is more than 2-dimensional'))
-    return intval
-
-def get_skills_atstations(obs,sim,vars,layer):
-    #do the matchups and combine the obs&sim in a single structure:
-    #V[var] = { 'ref', 'model'} and optionally {'dates', 'lats', 'lons',}
-    V={}
-    for var in vars:
-        if obs[var]['presence']:
-            V[var]=date_matchup(obs[var][layer],sim[var][layer])
-        else:
-            print ('%s not found'%var)
-            V[var]={'dates':[np.nan],'ref':[np.nan],'model':[np.nan]}
-    stats=get_stats(V)
-    return(stats)
 
 def date_matchup(obs0,sim0):
     # get rid of invalid entries
@@ -141,76 +32,28 @@ def date_matchup(obs0,sim0):
     #return the (unique) dates, and corresponding obs & sim pairs as a dict
     return({'dates':obs['time'][oi],'ref':obs['value'][oi], 'model':sim['value'][si]})
 
-def get_stats(V):
-    #copied from 'do_3dstats'
-    #expected structure: V[var]={'dates','lats','lons','ref','model'}
-    Vstats={}
-    for v in V.keys():
-        ref=V[v]['ref']
-        model=V[v]['model']
-        if len(ref)!=1:
-            stats = {}
-            stats['Rstd'] = np.std(ref)
-            stats['Mstd'] = np.std(model)
-            stats['n'] = len(ref)
-            stats['rho']=np.corrcoef([ref,model])[0,1]
-            if np.mean(ref)>-0.0001 and np.mean(ref)<0.0001: #eg, because the values are anomolies
-                stats['B']=np.nan
-                stats['B*']=np.nan
-            else:
-                stats['B'] = np.mean(model) - np.mean(ref)
-                stats['B*'] = (np.mean(model) - np.mean(ref))/(np.mean(ref))
-            #todo: other statistics?
-        else:
-            stats={'Rstd':np.nan,'Mstd':np.nan,'n':0, 'rho':np.nan, 'B':np.nan,'B*':np.nan}
-        Vstats[v]=stats
-    return Vstats
+def discrete_cmap(N, base_cmap=None):
+    # By Jake VanderPlas
+    # License: BSD-style
+    """Create an N-bin discrete colormap from the specified input map"""
 
-def format_date_axis(ax,tspan):
-    #ax.set_xlim(datetime.date(tspan[0].year,1,1), datetime.date(tspan[1].year,tspan[1].12,31))
-    ax.set_xlim(datetime.date(tspan[0].year,1,1), tspan[1])
-    if np.diff(tspan)[0].days<63:
-        ax.xaxis.set_major_locator(mpl.dates.WeekdayLocator(byweekday=mpl.dates.MO) )
-        ax.xaxis.set_major_formatter(mpl.dates.DateFormatter('%b\n%d'))
-    elif np.diff(tspan)[0].days<367:
-        ax.xaxis.set_major_locator(mpl.dates.MonthLocator(bymonthday=1, interval=3) )
-        ax.xaxis.set_major_formatter(mpl.dates.DateFormatter('%b'))
-        ax.xaxis.set_minor_locator(mpl.dates.MonthLocator(bymonthday=1, interval=1))
-    elif np.diff(tspan)[0].days<732:
-        ax.xaxis.set_major_locator(mpl.dates.MonthLocator(bymonth=[1,7],interval=1))
-        ax.xaxis.set_major_formatter(mpl.dates.DateFormatter('%m/%y')) #%m %y
-        ax.xaxis.set_minor_locator(mpl.dates.MonthLocator(bymonthday=1, interval=1))
-        ax.xaxis.set_minor_formatter(mpl.dates.DateFormatter(''))
-    elif np.diff(tspan)[0].days<1466:
-        ax.xaxis.set_major_locator(mpl.dates.MonthLocator(bymonth=7, bymonthday=1, interval=1) )
-        ax.xaxis.set_minor_locator(mpl.dates.MonthLocator(bymonth=7,bymonthday=1, interval=1))
-        ax.xaxis.set_minor_formatter(mpl.dates.DateFormatter('%Y'))
-    elif np.diff(tspan)[0].days<3655:
-        ax.xaxis.set_major_locator(mpl.dates.MonthLocator(bymonth=1,bymonthday=1, interval=1) )
-        ax.xaxis.set_minor_locator(mpl.dates.MonthLocator(bymonth=7,bymonthday=1, interval=1))
-        ax.xaxis.set_minor_formatter(mpl.dates.DateFormatter('%Y'))
-    elif np.diff(tspan)[0].days<9130: #25*365=9125
-        ax.xaxis.set_major_locator(mpl.dates.MonthLocator(bymonth=1,bymonthday=1, interval=1) )
-        ax.xaxis.set_minor_locator(mpl.dates.MonthLocator(bymonth=7,bymonthday=1, interval=1))
-        ax.xaxis.set_minor_formatter(mpl.dates.DateFormatter('%Y'))
-    else:
-        ax.xaxis.set_major_locator(mpl.dates.MonthLocator(bymonthday=1, interval=1))
-        ax.xaxis.set_minor_locator(mpl.dates.MonthLocator(bymonthday=1, interval=1))
-        ax.xaxis.set_minor_formatter(mpl.dates.DateFormatter('%y'))
+    # Note that if base_cmap is a string or None, you can simply do
+    #    return plt.cm.get_cmap(base_cmap, N)
+    # The following works for string, None, or a colormap instance:
 
-    if np.diff(tspan)[0].days<367:
-        ax.tick_params(axis='x', which='major', direction='out',labelsize=9)
-        ax.tick_params(axis='x', which='minor', direction='out')
-    elif np.diff(tspan)[0].days< 732:
-        ax.tick_params(axis='x', which='major', length=2, direction='out', labelsize=9, pad=1)
-        ax.tick_params(axis='x', which='minor', length=2, direction='in', labelsize=9, pad=1)  # labelbottom='off')
-        #ax.grid(axis='x', which='major', color='0.5', linestyle='-', linewidth=1.5)
-        ax.grid(axis='x', which='major', color='0.5', linestyle='-', linewidth=.5)
-    else:
-        ax.tick_params(axis='x', which='major',direction='out',labelbottom='off')
-        ax.tick_params(axis='x', which='minor', length=0, labelsize=9)
-        ax.grid(axis='x', which='major', color='.5', linestyle='-', linewidth=1)
-        #ax.grid(axis='x', which='minor', color='k', linestyle='-', linewidth=.5)
+    if base_cmap in ['viridis','viridis_r']:
+        reg_viridis()
+
+    base = plt.cm.get_cmap(base_cmap)
+    color_list = base(np.linspace(0, 1, N))
+    cmap_name = base.name + str(N)
+    try:
+        #standard colormaps, eg., jet
+        new_cmap=base.from_list(cmap_name, color_list, N)
+    except:
+        #eg., for extra colormaps implemented as a ListedColormap like viridis
+        new_cmap=mpl.colors.LinearSegmentedColormap.from_list(cmap_name, color_list, N)
+    return new_cmap
 
 def discrete_cmap_tuner(clim,vallims,Nlev,colmap,nancol='white'):
 
@@ -263,29 +106,123 @@ def discrete_cmap_tuner(clim,vallims,Nlev,colmap,nancol='white'):
 
     return(cmap,extopt,cbt,intbounds,allbounds)
 
-def discrete_cmap(N, base_cmap=None):
-    # By Jake VanderPlas
-    # License: BSD-style
-    """Create an N-bin discrete colormap from the specified input map"""
+def format_date_axis(ax,tspan):
+    #ax.set_xlim(datetime.date(tspan[0].year,1,1), datetime.date(tspan[1].year,tspan[1].12,31))
+    ax.set_xlim(datetime.date(tspan[0].year,1,1), tspan[1])
+    if np.diff(tspan)[0].days<63:
+        ax.xaxis.set_major_locator(mpl.dates.WeekdayLocator(byweekday=mpl.dates.MO) )
+        ax.xaxis.set_major_formatter(mpl.dates.DateFormatter('%b\n%d'))
+    elif np.diff(tspan)[0].days<367:
+        ax.xaxis.set_major_locator(mpl.dates.MonthLocator(bymonthday=1, interval=3) )
+        ax.xaxis.set_major_formatter(mpl.dates.DateFormatter('%b'))
+        ax.xaxis.set_minor_locator(mpl.dates.MonthLocator(bymonthday=1, interval=1))
+    elif np.diff(tspan)[0].days<732:
+        ax.xaxis.set_major_locator(mpl.dates.MonthLocator(bymonth=[1,7],interval=1))
+        ax.xaxis.set_major_formatter(mpl.dates.DateFormatter('%m/%y')) #%m %y
+        ax.xaxis.set_minor_locator(mpl.dates.MonthLocator(bymonthday=1, interval=1))
+        ax.xaxis.set_minor_formatter(mpl.dates.DateFormatter(''))
+    elif np.diff(tspan)[0].days<1466:
+        ax.xaxis.set_major_locator(mpl.dates.MonthLocator(bymonth=7, bymonthday=1, interval=1) )
+        ax.xaxis.set_minor_locator(mpl.dates.MonthLocator(bymonth=7,bymonthday=1, interval=1))
+        ax.xaxis.set_minor_formatter(mpl.dates.DateFormatter('%Y'))
+    elif np.diff(tspan)[0].days<3655:
+        ax.xaxis.set_major_locator(mpl.dates.MonthLocator(bymonth=1,bymonthday=1, interval=1) )
+        ax.xaxis.set_minor_locator(mpl.dates.MonthLocator(bymonth=7,bymonthday=1, interval=1))
+        ax.xaxis.set_minor_formatter(mpl.dates.DateFormatter('%Y'))
+    elif np.diff(tspan)[0].days<9130: #25*365=9125
+        ax.xaxis.set_major_locator(mpl.dates.MonthLocator(bymonth=1,bymonthday=1, interval=1) )
+        ax.xaxis.set_minor_locator(mpl.dates.MonthLocator(bymonth=7,bymonthday=1, interval=1))
+        ax.xaxis.set_minor_formatter(mpl.dates.DateFormatter('%Y'))
+    else:
+        ax.xaxis.set_major_locator(mpl.dates.MonthLocator(bymonthday=1, interval=1))
+        ax.xaxis.set_minor_locator(mpl.dates.MonthLocator(bymonthday=1, interval=1))
+        ax.xaxis.set_minor_formatter(mpl.dates.DateFormatter('%y'))
 
-    # Note that if base_cmap is a string or None, you can simply do
-    #    return plt.cm.get_cmap(base_cmap, N)
-    # The following works for string, None, or a colormap instance:
+    if np.diff(tspan)[0].days<367:
+        ax.tick_params(axis='x', which='major', direction='out',labelsize=9)
+        ax.tick_params(axis='x', which='minor', direction='out')
+    elif np.diff(tspan)[0].days< 732:
+        ax.tick_params(axis='x', which='major', length=2, direction='out', labelsize=9, pad=1)
+        ax.tick_params(axis='x', which='minor', length=2, direction='in', labelsize=9, pad=1)  # labelbottom='off')
+        #ax.grid(axis='x', which='major', color='0.5', linestyle='-', linewidth=1.5)
+        ax.grid(axis='x', which='major', color='0.5', linestyle='-', linewidth=.5)
+    else:
+        ax.tick_params(axis='x', which='major',direction='out',labelbottom='off')
+        ax.tick_params(axis='x', which='minor', length=0, labelsize=9)
+        ax.grid(axis='x', which='major', color='.5', linestyle='-', linewidth=1)
+        #ax.grid(axis='x', which='minor', color='k', linestyle='-', linewidth=.5)
 
-    if base_cmap in ['viridis','viridis_r']:
-        reg_viridis()
+def get_2Dtree(lons,lats,proj,Vpy=3):
+    if len(lons.shape) == 2:
+        lonsM, latsM = lons, lats
+    else:
+        lonsM, latsM = np.meshgrid(lons, lats)
+    x1, y1 = proj(lonsM, latsM)
+    if Vpy==2:
+        xypairs = zip(x1.flat, y1.flat)
+    else:
+        xypairs = list(zip(x1.flat, y1.flat))  # p3: must be placed in list
 
-    base = plt.cm.get_cmap(base_cmap)
-    color_list = base(np.linspace(0, 1, N))
-    cmap_name = base.name + str(N)
-    try:
-        #standard colormaps, eg., jet
-        new_cmap=base.from_list(cmap_name, color_list, N)
-    except:
-        #eg., for extra colormaps implemented as a ListedColormap like viridis
-        new_cmap=mpl.colors.LinearSegmentedColormap.from_list(cmap_name, color_list, N)
-    return new_cmap
+    domaintree = cKDTree(xypairs)
+    return domaintree
 
+def get_botdepth(lon,lat,method='tree'):
+    proj = getproj(setup='SNSfull', projpath=os.path.dirname(os.path.realpath(__file__)))
+    # proj = getproj(setup = 'NS', projpath = os.path.dirname(os.path.realpath(__file__)))
+    topofile = '/home/onur/WORK/projects/GB/data/topo/topo_HR2.nc'
+    #topofile='/home/onur/WORK/projects/GB/data/topo/topo_GreaterNorthSea.nc'
+    if os.path.exists(topofile):
+        nc=netCDF4.Dataset(topofile)
+        # depths=nc.variables['depth_average'][:]
+        # lats = nc.variables['lat'][:]
+        # lons = nc.variables['lon'][:]
+        depths = nc.variables['bathymetry'][:]
+        lats = nc.variables['latx'][:-1,:-1]
+        lons = nc.variables['lonx'][:-1,:-1]
+        nc.close()
+        depth = interpval2D(lats, lons, depths, lat, lon, method,proj)
+    else:
+        warnings.warn('Topo file not found in the provided location (%s). Filling nan for station depth:'%topofile)
+        depth=np.nan
+    return depth
+
+def get_skills_atstations(obs,sim,vars,layer):
+    #do the matchups and combine the obs&sim in a single structure:
+    #V[var] = { 'ref', 'model'} and optionally {'dates', 'lats', 'lons',}
+    V={}
+    for var in vars:
+        if obs[var]['presence']:
+            V[var]=date_matchup(obs[var][layer],sim[var][layer])
+        else:
+            print ('%s not found'%var)
+            V[var]={'dates':[np.nan],'ref':[np.nan],'model':[np.nan]}
+    stats=get_stats(V)
+    return(stats)
+
+def get_stats(V):
+    #copied from 'do_3dstats'
+    #expected structure: V[var]={'dates','lats','lons','ref','model'}
+    Vstats={}
+    for v in V.keys():
+        ref=V[v]['ref']
+        model=V[v]['model']
+        if len(ref)!=1:
+            stats = {}
+            stats['Rstd'] = np.std(ref)
+            stats['Mstd'] = np.std(model)
+            stats['n'] = len(ref)
+            stats['rho']=np.corrcoef([ref,model])[0,1]
+            if np.mean(ref)>-0.0001 and np.mean(ref)<0.0001: #eg, because the values are anomolies
+                stats['B']=np.nan
+                stats['B*']=np.nan
+            else:
+                stats['B'] = np.mean(model) - np.mean(ref)
+                stats['B*'] = (np.mean(model) - np.mean(ref))/(np.mean(ref))
+            #todo: other statistics?
+        else:
+            stats={'Rstd':np.nan,'Mstd':np.nan,'n':0, 'rho':np.nan, 'B':np.nan,'B*':np.nan}
+        Vstats[v]=stats
+    return Vstats
 
 def getproj(setup,projpath):
     pickledproj=os.path.join(projpath,'proj_'+setup+'.pickle')
@@ -341,6 +278,70 @@ def getproj(setup,projpath):
         pickle.dump((proj,),f) #,protocol=-1
         f.close()
     return proj
+
+def interp_2d_tree(vals,domaintree,lon,lat,k=4,kmin=1):
+    #vals: 2d field of values to be interpolated
+    #domaintree: query tree generated with scipy.spatial.cKDTree
+    #lon,lat:  coordinates to be used for interpolation
+    #k: number of cells to use for interpolation
+
+    dLi, gridindsLi = domaintree.query((lon, lat), k)
+    wLi = 1.0 / dLi ** 2
+
+    #remove the mask, if necessary
+    if isinstance(vals,np.ma.MaskedArray):
+        #vals[vals.mask] = np.nan
+        #vals.Mask=False
+        vals = vals.filled(np.nan)
+
+    if len(vals.shape)==2:
+        vals2int=vals[:, :].flatten()[gridindsLi]
+        #find the nan-indices and remove them (by nullifying their weights)
+        nani=np.where(np.isnan(vals2int))
+        wLi[nani]=0
+        vals2int[nani]=0
+        intval = np.sum(wLi * vals2int) / np.sum(wLi)
+    else:
+        raise(ValueError('shape of the data to be interpolated is more than 2-dimensional'))
+    return intval
+
+
+def interpval2D(lats,lons,vals,lat,lon,method,proj,domaintree=0):
+
+    # convert lat-lons to cartesian coordinates
+    x2,y2 = proj(lon,lat)
+
+    if method=='pretree':
+        if not isinstance(domaintree,int):  #p2: istype(domaintree,'integer'):
+            domaintree=domaintree
+        else:
+            warnings.WarningMessage('no pre-generated tree provided. Generating a new one')
+            method='tree'
+    else:
+        # meshscipy.spatial.ckdtree.cKDTree.query
+        if len(lons.shape) == 2:
+            lonsM, latsM = lons, lats
+        else:
+            lonsM, latsM = np.meshgrid(lons, lats)
+        x1, y1 = proj(lonsM, latsM)
+
+    if method == 'tree':
+        xypairs = list(zip(x1.flat, y1.flat)) #p3: must be placed in list
+        # ts=time.time()
+        domaintree = cKDTree(xypairs)
+        # print 'tree generated in:%.1f' %(time.time() - ts)
+
+    if method in ['NN','linear']:
+        coords = np.asarray(zip(np.reshape(x1,x1.size),np.reshape(y1,y1.size)))
+        if method=='NN':
+            f = interpolate.NearestNDInterpolator(coords, np.reshape(vals, vals.size))
+        elif method=='linear':
+            f = interpolate.LinearNDInterpolator(coords, np.reshape(vals,vals.size), fill_value=np.nan)
+        val = f(x2, y2)
+    elif method in ['tree','pretree']:
+        val=interp_2d_tree(vals, domaintree, x2, y2, k=4, kmin=1)
+
+    return val
 
 def reg_viridis():
     # Onur Kerimoglu: Following code is adapted from the mpl-colormaps package by Nathaniel Smith & Stefan van der Walt
