@@ -27,36 +27,35 @@ knownunits={'total_chlorophyll_calculator_result':'mg/m$^{3}$','GPM_phy_Chl':'mg
 logvars=['']
 primprodvars=['hzg_maecs_GPPR', 'hzg_maecs_NPPR','hzg_phy_NPPR','total_NPPR_calculator_result']
 
-def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,plottopo=True,datasource='GF',mode='makeplot'):
+def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plottopo=True,datasource='GF'):
 
-    #single panel plots (eg, 2013 study)
-    years2plot=0 #[2012,2013] #[2000,2001,2002,2003,2004,2005]
-    months2plot= [] #[9,10,11]
-    numcol0 = 3.0
-    figh=8
-    figw=8
-    dpi=200
-    showparmer=True
-    left=0.12;right=0.76;bottom=0.1;top=0.9; hsp=0.25; wsp=0.1
-
-    # #3 panels in a row
-    # years2plot = 0  # [2012,2013] #[2000,2001,2002,2003,2004,2005]
-    # # months2plot= [4,5,6,7,8,9]
-    # months2plot = []
-    # numcol0 = 3.0
-    # figh = 20
-    # figw = 15
-    # dpi = 200
-    # showparmer = False
-    # left = 0.08;right = 0.8;bottom = 0.1;top = 0.9;hsp = 0.25;wsp = 0.3
-
-    # # half-width page style plot
-    # months2plot= [3,4,5,6,7,8,9,10]
-    # numcol0 = 2.0
-    # figw = 6.5  # 12
-    # figh = 12
-    # showparmer = False
-    # left=0.07;right=0.8;bottom=0.05;top=0.85; hsp=0.25; wsp=0.1
+    if mode=='singlepanel': #single panel plots (eg, 2013 study)
+        years2plot=0 #[2012,2013] #[2000,2001,2002,2003,2004,2005]
+        months2plot= [] #[9,10,11]
+        numcol0 = 3.0
+        figh=8
+        figw=8
+        dpi=200
+        plottopo= True
+        showparmer=True
+        left=0.12;right=0.76;bottom=0.1;top=0.9; hsp=0.25; wsp=0.1
+    elif mode=='3panelsperrow': # 3 panels per row
+        years2plot = 0  # [2012,2013] #[2000,2001,2002,2003,2004,2005]
+        months2plot = [] # [4,5,6,7,8,9]
+        numcol0 = 3.0
+        figh = 18
+        figw = 15
+        dpi = 200
+        plottopo= False
+        showparmer = False
+        left = 0.08;right = 0.8;bottom = 0.05;top = 0.88;hsp = 0.2; wsp = 0.2
+    elif mode == 'halfpagewidth':  # half-width page style plot
+        months2plot= [1,2,3,4,5,6,7,8,9,10,11,12]
+        numcol0 = 2.0
+        figw = 6.5  # 12
+        figh = 12
+        showparmer = False
+        left=0.07;right=0.8;bottom=0.05;top=0.85; hsp=0.25; wsp=0.1
 
 
     if ('Y' in TempMeth0) and ('M' in TempMeth0):
@@ -832,15 +831,15 @@ if __name__=='__main__':
     if len(sys.argv)>1:
         fname=sys.argv[1]
     else:
-        fname = '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-P190529-fSG97dChl/extract_skillCS_sns144-GPMEH-P190529-fSG97dChl.2012-mm.nc'
+        fname = '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-P190529-fSG97dChl/extract_skillCB_sns144-GPMEH-P190529-fSG97dChl.2012-mm.nc'
         #fname = '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-P190607-fSG97dChl/extract_skillCS_sns144-GPMEH-P190607-fSG97dChl.2012-mm.nc'
     if len(sys.argv)>2:
         varnames=sys.argv[2].split(',')
     else:
-        varnames = ['total_chlorophyll_calculator_result', 'GPM_diat_C', 'GPM_nf_C', 'GPM_miczoo_C', 'GPM_meszoo_C']
+        #varnames = ['total_chlorophyll_calculator_result'] #, 'GPM_diat_C', 'GPM_nf_C', 'GPM_miczoo_C', 'GPM_meszoo_C']
         varnames = ['EH_abioP_O2_percSat']
         #varnames = ['GPM_phy_Chl','GPM_phy_C','GPM_zoo_C']
-        varnames=['EH_abioP_DIN','EH_abioP_DIP']
+        #varnames=['EH_abioP_DIN','EH_abioP_DIP']
         #varnames=['EH_abioP_DINO3','EH_abioP_DINH4']
         #varnames=['temp']
         #varnames = ['sigma_t']
@@ -864,16 +863,16 @@ if __name__=='__main__':
         #TempMeth = 'Yaverage_1-2-3'
         #TempMeth = 'Yaverage_6-7-8'
         #TempMeth = 'Yaverage_3-4-5'
-        TempMeth='Yaverage_1-2-12'
+        #TempMeth='Yaverage_1-2-12'
         #TempMeth='Yaverage'
-        #TempMeth='Maverage'
+        TempMeth='Maverage'
         #TempMeth = 'Y2013-M7'
 
 
     if len(sys.argv) > 4:
         VertMeth = sys.argv[4]
     else:
-        VertMeth = 'bot' #'surf','avg','int','each', 'SB'
+        VertMeth = 'surf' #'surf','avg','int','each', 'SB'
         # setup='deep_lake'
 
     if len(sys.argv) > 5:
@@ -918,4 +917,9 @@ if __name__=='__main__':
                 vars[varn]=[0,0]
                 print('clims for ' +varn + ' were not proviveded, natural limits will be used')
 
-    do_2Dplotmap(fname,vars,setup,VertMeth,TempMeth,plottopo=True,datasource='GF',mode='makeplot')
+    if len(sys.argv) > 9:
+        mode = sys.argv[9]
+    else:
+        mode = '3panelsperrow'  # 'singlepanel','halfpagewidth'
+
+    do_2Dplotmap(fname,vars,setup,VertMeth,TempMeth,colmap,Nlev,mode,plottopo=True,datasource='GF')

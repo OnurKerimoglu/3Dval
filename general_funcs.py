@@ -91,7 +91,7 @@ def discrete_cmap_tuner(clim,vallims,Nlev,colmap,nancol='white'):
     cbtstep = cbt[1] - cbt[0]
     intbounds = list(cbt)
 
-    cmap = discrete_cmap(Nlev + 1, colmap)
+    cmap = discrete_cmap(Nlev - 1, colmap)
 
     extover = False;
     extunder = False
