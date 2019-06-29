@@ -5,7 +5,7 @@
 """ module plot_varmap_multi.py
 example call from shell:
 
-$ python plot_GF_latmap_multi.py filename.nc
+$ python plot_varmap_multi.py filename.nc var1,var2 Maverage
 
 """
 #from pylab import *
@@ -18,10 +18,10 @@ import netCDF4,netcdftime,os
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from matplotlib.colors import LogNorm
-from general_funcs import fnclean,cm2inch,get_getm_bathymetry_cropped,getproj,discrete_cmap_tuner
+from general_funcs import fnclean,cm2inch,getproj,discrete_cmap_tuner
 
 knownunits={'total_chlorophyll_calculator_result':'mg/m$^{3}$','GPM_phy_Chl':'mg/m$^{3}$',
-            'total_NPPR_calculator_result':'mmolC/m$^2$/d','GPM_phy_NPPR':'mmolC/m$^2$/d',
+            'vert_int_total_NPPR':'mmolC/m$^2$/d','vert_int_NPPR':'mmolC/m$^2$/d',
             'EH_abioP_DINO3':'$\mu$M','EH_abioP_DINH4':'$\mu$M','EH_abioP_DIN':'$\mu$M','EH_abioP_DIP':'$\mu$M',
             'sigma_t':'kg/m$^3$','sigma0':'kg/m$^3$','rho':'kg/m$^3$', 'temp':u'\N{DEGREE SIGN}C', 'tempmean':u'\N{DEGREE SIGN}C', 'salt':'g/kg', 'saltmean':'g/kg'}
 logvars=['']
@@ -67,8 +67,8 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
         multiYfile=False
 
     proj=getproj(setup=setup)
-
-    # read the nc-file
+    
+        # read the nc-file
     print ('opening: '+fname)
     nc=netCDF4.Dataset(fname)
     ncv=nc.variables
@@ -80,6 +80,7 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
         os.mkdir(plotdir)
     fnamebase = os.path.basename(fname).split('.nc')[0]
     fname=os.path.join(plotdir,fnamebase)
+    
     #common variables
     H=0
     if datasource=='MERIS':
@@ -88,11 +89,17 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
         H=nc.variables['bathymetry'][:]
         x,y=proj(lons,lats)
     elif datasource=='GF':
-        topo=get_getm_bathymetry_cropped()
-        lats=topo['lats']; lons=topo['lons']
-        H = topo['H']
-        x,y = proj(lons,lats)
-
+       ncvk=nc.variables.keys()
+       if 'bathymetry' in ncvk and 'lon' in ncvk and 'lat' in ncvk:
+           lons=nc.variables['lon'][:] 
+           lats=nc.variables['lat'][:] 
+           H=nc.variables['bathymetry'][:] 
+       else:       
+            topo=get_getm_bathymetry_cropped()
+            lats=topo['lats']; lons=topo['lons']
+            H = topo['H']
+       x,y = proj(lons,lats)
+   
     tv = nc.variables['time']
     utime=netcdftime.utime(tv.units)
     tvec=utime.num2date(tv[:])
@@ -267,10 +274,10 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
 
                                     if multiYfile:
                                         filename = fname.split('.nc')[0] + '_' + str(
-                                            year) + '_latmap' + suffix + '_' + varname + tindsuf + '-' + setup + scalesuf + '.png'  # pdf
+                                            year) + '_varmap' + suffix + '_' + varname + tindsuf + '-' + setup + scalesuf + '.png'  # pdf
                                     else:
                                         filename = fname.split('.' + str(year) + '.nc')[0] + '_' + str(
-                                            year) + '_latmap' + suffix + '_' + varname + tindsuf + '-' + setup + scalesuf + '.png'  # pdf
+                                            year) + '_varmap' + suffix + '_' + varname + tindsuf + '-' + setup + scalesuf + '.png'  # pdf
 
                                     filename = fnclean(filename)
                                     plt.savefig(filename, dpi=dpi)
@@ -308,9 +315,9 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
                             scalesuf=plot2Dmap(f,ax,clim,x[:,:],y[:,:],vI[:,:],varname,proj,setup,titlestr,plottopo,H[:,:],showparmer,unitstr,colmap,Nlev)
 
                         if multiYfile:
-                            filename=fname.split('.nc')[0]+'_'+str(year)+'_latmap'+suffix+'_'+varname+tindsuf+'-'+setup+scalesuf+'.png' #pdf
+                            filename=fname.split('.nc')[0]+'_'+str(year)+'_varmap'+suffix+'_'+varname+tindsuf+'-'+setup+scalesuf+'.png' #pdf
                         else:
-                            filename=fname.split('.'+str(year)+'.nc')[0]+'_'+str(year)+'_latmap'+suffix+'_'+varname+tindsuf+'-'+setup+scalesuf+'.png' #pdf
+                            filename=fname.split('.'+str(year)+'.nc')[0]+'_'+str(year)+'_varmap'+suffix+'_'+varname+tindsuf+'-'+setup+scalesuf+'.png' #pdf
 
                         filename=fnclean(filename)
                         print ('\nsaved:'+filename)
@@ -339,7 +346,7 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
                     #     #titlestr=suffix+' '+longname+'\n'+str(tvec[i].date())
                     #     titlestr=str(tvec[i].date())
                     #     scalesuf=plot2Dmap(f,ax,clim,x,y,vI,varname,proj,setup,titlestr,plottopo,H,cbarstr=unitstr)
-                    #     filename=fname.split('.nc')[0]+'_'+str(year)+'_latmap'+'_'+varname+scalesuf+'.png' #pdf
+                    #     filename=fname.split('.nc')[0]+'_'+str(year)+'_varmap'+'_'+varname+scalesuf+'.png' #pdf
 
                     if len(v.shape)==3:
                         suffix=''
@@ -412,9 +419,9 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
 
                         # f.text(0.5, 0.96, longname + ' [' + unitstr + '] (' + titlestr + ')', horizontalalignment='center', size=8)
                         #if multiYfile:
-                        #    filename=fname.split('.nc')[0]+'_'+str(year)+'_latmap'+'_'+varname+tindsuf+'-'+setup+ scalesuf+'.png' #pdf
+                        #    filename=fname.split('.nc')[0]+'_'+str(year)+'_varmap'+'_'+varname+tindsuf+'-'+setup+ scalesuf+'.png' #pdf
                         #else:
-                        #    filename=fname.split('.'+str(year)+'.nc')[0]+'_'+str(year)+'_latmap'+'_'+varname+tindsuf+'-'+setup+ scalesuf+'.png' #pdf
+                        #    filename=fname.split('.'+str(year)+'.nc')[0]+'_'+str(year)+'_varmap'+'_'+varname+tindsuf+'-'+setup+ scalesuf+'.png' #pdf
 
                     elif len(v.shape)==4 and (VertMeth=='int' or VertMeth=='avg'):
 
@@ -517,9 +524,9 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
 
                     f.text(0.5,0.96,suffix+longname+' ['+unitstr+'] ('+str(tvec[i].year)+')', horizontalalignment='center')
                     if multiYfile:
-                        filename=fname.split('.nc')[0]+'_'+str(year)+'_latmap'+suffix+'_'+varname+tindsuf+'-'+setup+ scalesuf+'.png' #pdf
+                        filename=fname.split('.nc')[0]+'_'+str(year)+'_varmap'+suffix+'_'+varname+tindsuf+'-'+setup+ scalesuf+'.png' #pdf
                     else:
-                        filename=fname.split('.'+str(year)+'.nc')[0]+'_'+str(year)+'_latmap'+suffix+'_'+varname+tindsuf+'-'+setup+ scalesuf+'.png' #pdf
+                        filename=fname.split('.'+str(year)+'.nc')[0]+'_'+str(year)+'_varmap'+suffix+'_'+varname+tindsuf+'-'+setup+ scalesuf+'.png' #pdf
                 filename = fnclean(filename)
                 plt.savefig(filename,dpi=dpi)
                 print ('\nsaved:'+filename)
@@ -538,6 +545,10 @@ def getncvar(ncv, varname,clim):
 
     if varname == 'EH_abioP_DIN':
         varname = 'EH_abioP_DINO3+EH_abioP_DINH4'
+    if varname == 'vert_int_total_NPPR':
+        varname = 'total_NPPR_calculator_result*bathymetry'
+    if varname == 'vert_int_NPPR':
+        varname = 'GPM_phy_NPPR*bathymetry'
 
     if (varname in ncv) or (varname + 'mean' in ncv):
         try:
@@ -819,7 +830,7 @@ if __name__=='__main__':
         'GPM_phy_C': [0., 20],
         'GPM_phy_Chl':[0.,10],
         'GPM_phy_NPPR': [0, 500],  # 500 (mgC/m2/d) 300:Yintegral (gC/m2/y)
-        'total_NPPR_calculator_result':[0, 500], # 500 (mgC/m2/d) 300:Yintegral (gC/m2/y)
+        'vert_int_total_NPPR':[0, 500], # 500 (mgC/m2/d) 300:Yintegral (gC/m2/y)
         'GPM_meszoo_C':[0,5.],
         'GPM_miczoo_C': [0, 10.],
         'GPM_zoo_C': [0, 5.],
@@ -827,7 +838,6 @@ if __name__=='__main__':
         'total_nitrogen_calculator_result': [0,40.],
         'total_phosphorus_calculator_result': [0.,1.6],
     }
-
     if len(sys.argv)>1:
         fname=sys.argv[1]
     else:
@@ -868,34 +878,38 @@ if __name__=='__main__':
         TempMeth='Maverage'
         #TempMeth = 'Y2013-M7'
 
-
     if len(sys.argv) > 4:
-        VertMeth = sys.argv[4]
+        mode = sys.argv[4]
+    else:
+        mode = '3panelsperrow'  # 'singlepanel','halfpagewidth'
+
+    if len(sys.argv) > 5:
+        VertMeth = sys.argv[5]
     else:
         VertMeth = 'surf' #'surf','avg','int','each', 'SB'
         # setup='deep_lake'
 
-    if len(sys.argv) > 5:
-        setup = sys.argv[5]
+    if len(sys.argv) > 6:
+        setup = sys.argv[6]
     else:
         setup = 'SNSfull'  # WadSea SNSfull GBight
         # setup='deep_lake'
 
-    if len(sys.argv) > 6:
-        colmap = sys.argv[6]
+    if len(sys.argv) > 7:
+        colmap = sys.argv[7]
     else:
         colmap = 'viridis' #'v' 'viridis' #'jet'
         #colmap='Blues_r' #'bwr' #'Reds' #Blues_r' Reds_r
 
-    if len(sys.argv) > 7:
-        Nlev = int(sys.argv[7])
+    if len(sys.argv) > 8:
+        Nlev = int(sys.argv[8])
     else:
         Nlev= 6 #7 is std
 
     #cbar lims
     vars = {}
-    if len(sys.argv) > 8:
-        clim = map(float, sys.argv[8].split(','))
+    if len(sys.argv) > 9:
+        clim = map(float, sys.argv[9].split(','))
         if clim[0]!=clim[1]:
             print ('using the requested colorbar lims: [%s-%s]:'%(clim[0],clim[1]))
             climfromlib=False
@@ -916,10 +930,5 @@ if __name__=='__main__':
             else:
                 vars[varn]=[0,0]
                 print('clims for ' +varn + ' were not proviveded, natural limits will be used')
-
-    if len(sys.argv) > 9:
-        mode = sys.argv[9]
-    else:
-        mode = '3panelsperrow'  # 'singlepanel','halfpagewidth'
 
     do_2Dplotmap(fname,vars,setup,VertMeth,TempMeth,colmap,Nlev,mode,plottopo=True,datasource='GF')

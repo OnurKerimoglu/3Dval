@@ -216,27 +216,6 @@ def get_botdepth(lon,lat,method='tree'):
         depth=np.nan
     return depth
 
-def get_getm_bathymetry_cropped(fname='/home/onur/WORK/projects/GB/data/topo/topo_area_sns.nc'):
-    ncB=netCDF4.Dataset(fname)
-    ncBv=ncB.variables
-    #bathymetry from topo_sns.nc.
-    lonx=ncBv['lonx'][4:-1,1:-1] #this should be [95,138]
-    latx=ncBv['latx'][4:-1,1:-1] #this should be [95,138]
-    lonc=0.25*(lonx[:-1,:-1]+lonx[:-1,1:]+lonx[1:,:-1]+lonx[1:,1:]) #this should be [94,137]
-    latc=0.25*(latx[:-1,:-1]+latx[:-1,1:]+latx[1:,:-1]+latx[1:,1:])
-    H = ncBv['bathymetry'][4:-1,1:-1] #this should be [94,137])
-    try:
-        bunits =ncBv['bathymetry'].units
-    except:
-        bunits='m'
-    if 'A' in ncBv:
-        A= ncBv['A'][3:-1,1:-2] #this should be [94,137])
-    else:
-        A=0
-    topo={'H':H,'lats':latc, 'lons':lonc,'Hunit':bunits,'A':A}
-    ncB.close()
-    return(topo)
-
 def get_skills_atstations(obs,sim,vars,layer):
     #do the matchups and combine the obs&sim in a single structure:
     #V[var] = { 'ref', 'model'} and optionally {'dates', 'lats', 'lons',}

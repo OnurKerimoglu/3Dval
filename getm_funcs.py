@@ -78,10 +78,21 @@ def get_var_from_ncf(varn_vl,ncf):
 
     return(varF,success)
 
-def get_getm_dom_vars(simdomain):
-
-    # read getm- topo file for coordinates and bathymetry
-    topo = get_getm_bathymetry_cropped()
+def get_getm_dom_vars(simf,simdomain=''):
+    dominfo_found=False
+    #see if the domain info is provided in the simulation file
+    ncf=netCDF4.Dataset(simf)    
+    ncv=ncf.variables.keys()
+    if 'bathymetry' in ncv and 'lon' in ncv and 'lat' in ncv:
+        topo={'lonc':ncf.variables['lon'][:], 
+              'latc':ncf.variables['lat'][:], 
+              'H':ncf.variables['bathymetry'][:]} 
+        dominfo_found=True
+    ncf.close()
+    
+    if not dominfo_found:
+        # read getm- topo file for coordinates and bathymetry
+        topo = get_getm_bathymetry_cropped()
 
     if simdomain == 'SNSe':
         ysl = slice(10, 75)
@@ -93,6 +104,7 @@ def get_getm_dom_vars(simdomain):
     lons=topo['lonc'][ysl, xsl]
     lats=topo['latc'][ysl, xsl]
     bat=topo['H'][ysl, xsl]
+    
     if np.ma.is_masked(bat):
         bat=bat.filled(np.nan) # transform the masked values to nan
     return (lons,lats,bat,ysl,xsl)
