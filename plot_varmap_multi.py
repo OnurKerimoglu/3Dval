@@ -25,7 +25,7 @@ knownunits={'total_chlorophyll_calculator_result':'mg/m$^{3}$','GPM_phy_Chl':'mg
             'EH_abioP_DINO3':'$\mu$M','EH_abioP_DINH4':'$\mu$M','EH_abioP_DIN':'$\mu$M','EH_abioP_DIP':'$\mu$M',
             'sigma_t':'kg/m$^3$','sigma0':'kg/m$^3$','rho':'kg/m$^3$', 'temp':u'\N{DEGREE SIGN}C', 'tempmean':u'\N{DEGREE SIGN}C', 'salt':'g/kg', 'saltmean':'g/kg'}
 logvars=['']
-primprodvars=['hzg_maecs_GPPR', 'hzg_maecs_NPPR','hzg_phy_NPPR','total_NPPR_calculator_result']
+primprodvars=['hzg_maecs_GPPR', 'hzg_maecs_NPPR','hzg_phy_NPPR','vert_int_NPPR','total_NPPR_calculator_result','vert_int_total_NPPR']
 
 def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plottopo=True,datasource='GF'):
 
@@ -536,18 +536,18 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
     #close the netcdf file
     nc.close()
 
-def getncvar(ncv, varname,clim):
+def getncvar(ncv, varname0,clim):
 
     #if varname != 'currs':
     unitstr=''
-    if varname in knownunits.keys():
-        unitstr = knownunits[varname]
+    if varname0 in knownunits.keys():
+        unitstr = knownunits[varname0]
 
-    if varname == 'EH_abioP_DIN':
+    if varname0 == 'EH_abioP_DIN':
         varname = 'EH_abioP_DINO3+EH_abioP_DINH4'
-    if varname == 'vert_int_total_NPPR':
+    if varname0 == 'vert_int_total_NPPR':
         varname = 'total_NPPR_calculator_result*bathymetry'
-    if varname == 'vert_int_NPPR':
+    if varname0 == 'vert_int_NPPR':
         varname = 'GPM_phy_NPPR*bathymetry'
 
     if (varname in ncv) or (varname + 'mean' in ncv):
@@ -566,7 +566,6 @@ def getncvar(ncv, varname,clim):
     elif '/' in varname:
         vn1, vn2 = varname.split('/')
         v = ncv[vn1][:] / ncv[vn2][:]
-        varname = vn1 + '_div_' + vn2
         longname = vn1 + '/' + vn2
         if unitstr == '':
             if ncv[vn1].units == ncv[vn2].units:
@@ -576,14 +575,12 @@ def getncvar(ncv, varname,clim):
     elif '*' in varname:
         vn1, vn2 = varname.split('*')
         v = ncv[vn1][:] * ncv[vn2][:]
-        varname = vn1 + '_mult_' + vn2
         if unitstr=='':
             unitstr = ncv[vn1].units + '*' + ncv[vn2].units
         longname = ncv[vn1].long_name.replace('_', ' ') + '*' + ncv[vn2].long_name.replace('_', ' ')
     elif '+' in varname:
         vn1, vn2 = varname.split('+')
         v = ncv[vn1][:] + ncv[vn2][:]
-        varname = vn1 + '_plus_' + vn2
         if unitstr == '':
             unitstr = ncv[vn1].units + '+' + ncv[vn2].units
         longname = ncv[vn1].long_name.replace('_', ' ') + '+' + ncv[vn2].long_name.replace('_', ' ')
@@ -594,7 +591,7 @@ def getncvar(ncv, varname,clim):
         unitstr = ''  # '[-]'
     if '^3' in unitstr:
         unitstr = unitstr.replace('^3', '$^3$')
-    if varname in primprodvars and clim[1] > 0:
+    if varname0 in primprodvars and clim[1] > 0:
         v = v * 12  # [mmolC/1000molC*12gC/molC]
         unitstr = unitstr.replace('mmolC', 'mgC')
         print('primary production conversion (mmolC -> mgC)')
@@ -841,13 +838,14 @@ if __name__=='__main__':
     if len(sys.argv)>1:
         fname=sys.argv[1]
     else:
-        fname = '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-P190529-fSG97dChl/extract_skillCB_sns144-GPMEH-P190529-fSG97dChl.2012-mm.nc'
+        fname = '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-PPZZ-P190628-fSG97dChl/extract_RavgC_sns144-GPMEH-PPZZ-P190628-fSG97dChl.2012-mm.nc'
         #fname = '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-P190607-fSG97dChl/extract_skillCS_sns144-GPMEH-P190607-fSG97dChl.2012-mm.nc'
     if len(sys.argv)>2:
         varnames=sys.argv[2].split(',')
     else:
         #varnames = ['total_chlorophyll_calculator_result'] #, 'GPM_diat_C', 'GPM_nf_C', 'GPM_miczoo_C', 'GPM_meszoo_C']
         varnames = ['EH_abioP_O2_percSat']
+        varnames = ['vert_int_total_NPPR']
         #varnames = ['GPM_phy_Chl','GPM_phy_C','GPM_zoo_C']
         #varnames=['EH_abioP_DIN','EH_abioP_DIP']
         #varnames=['EH_abioP_DINO3','EH_abioP_DINH4']
@@ -881,7 +879,7 @@ if __name__=='__main__':
     if len(sys.argv) > 4:
         mode = sys.argv[4]
     else:
-        mode = '3panelsperrow'  # 'singlepanel','halfpagewidth'
+        mode = 'singlepanel' # '3panelsperrow'  # 'singlepanel','halfpagewidth'
 
     if len(sys.argv) > 5:
         VertMeth = sys.argv[5]
