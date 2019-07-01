@@ -35,12 +35,12 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
     #variables to plot, definitions
     varlongnames={'temp':'Temperature', 'salt':'Salinity', 'DOs':'O2 sat.', 'DIN':'DIN', 'DIP':'DIP', 'Chl':'Chl'}
     varunits={'temp':u'\N{DEGREE SIGN}C', 'salt':'PSU', 'DOs':'%', 'DIN':'$\mu$M', 'DIP':'$\mu$M', 'Chl':'mg/m$^3$'}
-    varlims_offshore={'temp':[0,20],'salt':[29,35],'DIN':[0,100],'DIP':[0,2.1],'Chl':[0,75]}
+    varlims_offshore={'temp':[0,20],'salt':[29,35],'DIN':[0,100],'DIP':[0,2.1],'Chl':[0,20]}
     varticks_offshore={'temp':[0,5,10,15,20],'salt':[29,31,33,35],
-                       'DIN': [0,20,40,60,80,100], 'DIP': [0,0.5,1.0,1.5,2.0], 'Chl': [0,15,30,45,60,75]}
-    varlims_coastal = {'temp': [-1.0, 22.], 'salt': [0, 30], 'DIN': [0, 350], 'DIP': [0, 3.5], 'Chl': [0, 100]}
+                       'DIN': [0,20,40,60,80,100], 'DIP': [0,0.5,1.0,1.5,2.0], 'Chl': [0,5,10,15,20]}
+    varlims_coastal = {'temp': [-1.0, 22.], 'salt': [0, 30], 'DIN': [0, 350], 'DIP': [0, 3.5], 'Chl': [0, 40]}
     varticks_coastal = {'temp': [0, 5, 10, 15, 20], 'salt': [0,10,20,30],
-                        'DIN':[0,100,200,300],'DIP':[0,1,2,3],'Chl':[0,20,40,60,80,100]}
+                        'DIN':[0,100,200,300],'DIP':[0,1,2,3],'Chl':[0,10,20,30,40]}
     axtune=True
     #figure parameters:
     #colnum= len(depthints.keys())
@@ -115,7 +115,7 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
                         if (obs[station][varname]['presence']) and (simset[simname][station][varname]['presence']):
                             skills=get_skillscores(obs[station][varname][layer],simset[simname][station][varname][layer],timeint)
                             if skills['n'] != 0:
-                                if (len(plotopts['sims2plot']) - 1) == 1:
+                                if (len(plotopts['sims2plot']) - 0) == 1:
                                     y = 1.08
                                 else:
                                     y = 1.08 - 0.12 * simno
@@ -247,9 +247,8 @@ def prepfig(res,figwh,colno,rowno,timeint):
     #years:
     numy=timeint[1].year-timeint[0].year+1
     if (figwh[0] == 0):
-        #figwh = cm2inch(12 * colno + 2, 4 * rowno)
-        #figwh = cm2inch(2.5*numy * colno + 2, 4 * rowno)
-        figwh = cm2inch(3.75 * numy * colno + 2, 4 * rowno)
+        #figwh = cm2inch(3.75 * numy * colno + 2, 4 * rowno)
+        figwh = cm2inch(2.25*numy * colno + 5, 4 * rowno)
     else:
         figwh = cm2inch(figwh[0], figwh[1])
     fig = plt.figure(figsize=figwh, dpi=res)

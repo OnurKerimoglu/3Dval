@@ -81,6 +81,7 @@ def get_var_from_ncf(varn_vl,ncf):
 def get_getm_dom_vars(simf,simdomain=''):
     dominfo_found=False
     #see if the domain info is provided in the simulation file
+    print('attempting to extract domain info from:'+simf) 
     ncf=netCDF4.Dataset(simf)    
     ncv=ncf.variables.keys()
     if 'bathymetry' in ncv and 'lon' in ncv and 'lat' in ncv:

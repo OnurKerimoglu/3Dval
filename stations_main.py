@@ -43,8 +43,9 @@ pathreg = {'onur': {#'GF-Mnm': '/home/onur/WORK/projects/2013/maecs/sns144-M1801
                     'cosyna': '/home/onur/WORK/projects/GB/data/stations/COSYNA/proc/nc'
                    },
         'g260108': {
-                    #'GF-PPZZ': '/work/gg0877/onur/simout-gpmeh/sns144-GPMEH-PPZZ-P190529-fSG97dChl/extract_skillC_sns144-GPMEH-PPZZ-P190529-fSG97dChl.2012-2013_zSB.nc',
-                    #'plotrootpath':'/work/gg0877/onur/simout-gpmeh/sns144-GPMEH-PPZZ-P190529-fSG97dChl/',
+                    'GF-PPZZ-fS': '/work/gg0877/onur/simout-gpmeh/sns144-GPMEH-PPZZ-P190628-fSG97dChl/extract_skillC_sns144-GPMEH-PPZZ-P190628-fSG97dChl.2012_zSB.nc',
+                    'GF-PPZZ-vS': '/work/gg0877/onur/simout-gpmeh/sns144-GPMEH-PPZZ-P190628-vSG97dChl/extract_skillC_sns144-GPMEH-PPZZ-P190628-vSG97dChl.2012_zSB.nc',
+                    'plotrootpath':'/work/gg0877/onur/simout-gpmeh/sns144-GPMEH-PPZZ-P190628-fSG97dChl/comp_vS',
                     'pickledobspath': './',
                     'BGC':    '/work/gg0877/onur/obsdata/stations/individual/BGC/',
                     'BSH':    '/work/gg0877/onur/obsdata/stations/individual/BSH/',
@@ -60,7 +61,7 @@ def main(modtype,modfname):
     #vars=['temp','salt'] #,'DOs']
     vars = ['DIN','DIP','Chl']
     depthints={'surface':[0,10]} #,'bottom':[10,0]} #for bottom, depthint is relative to bottom depth
-    timeint = [datetime.datetime(2012, 1, 1,0,0,0), datetime.datetime(2013, 12, 31,23,59,59)]
+    timeint = [datetime.datetime(2012, 1, 1,0,0,0), datetime.datetime(2012, 12, 31,23,59,59)]
     ##timeint = [datetime.datetime(2000, 1, 1, 0, 0, 0), datetime.datetime(2010, 12, 31, 23, 59, 59)]
     # regarding observations.
     statsets = ['BGC'] #'cosyna', 'BSH', 'BGC'
@@ -69,8 +70,8 @@ def main(modtype,modfname):
     stations=[]
     readobsraw=False #i.e., if the pickle file should be ignored
     # regarding simulations.
-    #sims2plot= ['GF-PPZZ']
-    sims2plot = ['GF-Mnm','GF-Mfc','GF-Mvc'] #'GF-c100','GF-ref'] #,'GF-M13R12','GF-M12R13']
+    sims2plot= ['GF-PPZZ-fS', 'GF-PPZZ-vS']
+    #sims2plot = ['GF-Mnm','GF-Mfc','GF-Mvc'] #'GF-c100','GF-ref'] #,'GF-M13R12','GF-M12R13']
     readsimraw=False #i.e., if the pickle file should be ignored
     simdomain=''
     meth2D='pretree'
