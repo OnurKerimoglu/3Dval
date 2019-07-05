@@ -51,11 +51,8 @@ def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,ob
         maxz_obs= obs[station]['bottom_depth']
         if (simname[0:2] == 'GF') and (meth2D == 'pretree'):
             sdata = interp_simdata_on_station(station,simdata,simtime,proj,domaintree,bat,lon,lat,maxz_obs,timeint,depthints,vars)
-        elif simname[0:5] == 'FVCOM':
-            #sdata =get_station_data_fvcom() #TODO: IVAN
-            raise(Exception('not yet implemented'))
         elif simname[0:5] == 'SCHISM':
-            #sdata =get_station_data_fvcom() #TODO: RICHARD
+            #sdata =get_station_data_schism() #TODO: RICHARD
             raise(Exception('not yet implemented'))
         else:
             raise (Exception('unknown spatial method for extracting values from simulation'))

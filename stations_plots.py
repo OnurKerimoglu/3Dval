@@ -34,7 +34,7 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
 
     #variables to plot, definitions
     varlongnames={'temp':'Temperature', 'salt':'Salinity', 'DOs':'O2 sat.', 'DIN':'DIN', 'DIP':'DIP', 'Chl':'Chl'}
-    varunits={'temp':u'\N{DEGREE SIGN}C', 'salt':'PSU', 'DOs':'%', 'DIN':'$\mu$M', 'DIP':'$\mu$M', 'Chl':'mg/m$^3$'}
+    varunits={'temp':u'\N{DEGREE SIGN}C', 'salt':'g/kg', 'DOs':'%', 'DIN':'$\mu$MN', 'DIP':'$\mu$MP', 'Chl':'mg/m$^3$'}
     varlims_offshore={'temp':[0,20],'salt':[29,35],'DIN':[0,100],'DIP':[0,2.1],'Chl':[0,20]}
     varticks_offshore={'temp':[0,5,10,15,20],'salt':[29,31,33,35],
                        'DIN': [0,20,40,60,80,100], 'DIP': [0,0.5,1.0,1.5,2.0], 'Chl': [0,5,10,15,20]}

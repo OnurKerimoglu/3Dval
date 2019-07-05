@@ -18,6 +18,7 @@ import netCDF4,netcdftime,os
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from matplotlib.colors import LogNorm
+from getm_funcs import get_getm_bathymetry_cropped
 from general_funcs import fnclean,cm2inch,getproj,discrete_cmap_tuner
 
 knownunits={'total_chlorophyll_calculator_result':'mg/m$^{3}$','GPM_phy_Chl':'mg/m$^{3}$',
