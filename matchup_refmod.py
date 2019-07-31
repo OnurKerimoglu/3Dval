@@ -357,7 +357,7 @@ class data(object):
             self.dates,self.depths,self.lons,self.lats,self.maxdepths,self.values,self.units = self.get_getmdata(vardict,unitdict,timeint)
         elif 'ICES' in type:
             vardict = {'T': 'TEMP', 'S': 'PSAL', 'Chl': 'CPHL', 'NO3': 'NTRA', 'NH4': 'AMON', 'DIP': 'PHOS'}
-            unitdict = {'[degC]': u'\N{DEGREE SIGN}C', '[psu]\r\n': 'g/kg', '[ug/l]': 'mgX/m$^3$',
+            unitdict = {'[degC]': u'\N{DEGREE SIGN}C','[d': u'\N{DEGREE SIGN}C', '[psu]': 'g/kg', '[ug/l]': 'mgX/m$^3$',
                         '[umol/l]': '$\mu$MX'}
             self.dates, self.depths, self.lons, self.lats,self.maxdepths,self.values, self.units = self.get_ices_data(timeint,vardict,unitdict)
         elif 'ESA-CCI' in type:
