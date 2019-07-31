@@ -503,7 +503,7 @@ if __name__=='__main__':
         files=['/home/onur/WORK/projects/GB/data/ices/lon-1-10_lat50-57/raw/2010-2014/BGC_data_block.pickle',
                '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-PPZZ-P190529-fSG97dChl-sedPS/extract_skillC_sns144-GPMEH-P190529-fSG97dChl.2012-2013_zSB.nc']
         #files = ['/home/onur/WORK/projects/GB/data/ices/lon-1-10_lat50-57/raw/TS-2008-2015/TS_data_block.pickle',,
-        #         '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1_TS_12-13_zSB.nc']
+        #         '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-Fnew/extract_MphysC_sns144-GPMEH-Fnew.2012_zSB.nc']
         # ESA-CCI:
         #files = ['/home/onur/WORK/projects/GB/data/satellite/ESA-CCI-v3.1-monthly/CCI_ALL-v3.1-MONTHLY_2008-2010_rgSNS_137x94_ymonmean_mean.nc',
         #        '/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117n-P161118-bdyi3-z01mm-wAtmN/sns144-M161117n-P161118-bdyi3-z01mm-wAtmN-attchl_2008-2010_ymonmean_mean.nc']
