@@ -249,7 +249,7 @@ def get_model_intonfb(simfile,preint,gridtype,fbname,varn,yrint,lonlims,date_fb,
         bg_contour=False;lon_FMD=0;lat_FMD=0;var_FMD=0
     else:
         # read coordinates
-        if gridtype in ['sns', 'gb300']:
+        if gridtype in ['getm-sns', 'getm-gb300']:
             if 'sns' in gridtype:
                 Tsetup='SNS'
                 if fbname in ['cosyna-tordania', 'richard-cuximm']:
@@ -279,11 +279,14 @@ def get_model_intonfb(simfile,preint,gridtype,fbname,varn,yrint,lonlims,date_fb,
             lat = lat_FMD[ysl, xsl]
             lon = lon_FMD[ysl, xsl]
 
+            nc = netCDF4.Dataset(simfile)
+            ncv = nc.variables
             if not varn in ncv:
                 if varn + 'mean' in ncv:
                     varnf = varn + 'mean'  # varname in file
             else:
                 varnf = varn
+            nc.close()
 
         elif 'ecosmoHR' in gridtype:
             Tsetup='ecosmoHR'
@@ -515,9 +518,10 @@ if __name__=='__main__':
         #simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1-AHm3/extract_Mphys_sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1-AHm3.2013.nc'
         #simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1-AHm2-c06-Ec01/extract_Mphysred_sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1-AHm2-c06-Ec01.12-13_S3.nc'
         #simfile = '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1-M12R12/sns144-M180109-nFpB-Pbg2017-B180106-vsdetp4b1-M12R12-1314_phys_zSB.nc'
+        simfile='/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-Fnew/extract_MphysC_sns144-GPMEH-Fnew.2012-2013_zSB.nc'
         #simfile = '/home/onur/WORK/projects/2013/gb300/GB300_2013-0608_dmean.nc'
         #simfile = '/home/onur/WORK/projects/2013/gb300/GB300_2012-06_2013-0608_dmean.nc'
-        simfile='/home/onur/WORK/projects/2013/ecosmoHR/2019-04-09/ef1ssv_12-13_GB_T.nc'
+        #simfile='/home/onur/WORK/projects/2013/ecosmoHR/2019-04-09/ef1ssv_12-13_GB_T.nc'
 
     #fname_topo = '/home/onur/WORK/projects/GB/gb300/topo_german_bight_300m_v06.0_curv.nc'
     fname_topo='/home/onur/WORK/projects/GB/data/topo/topo_area_sns.nc'
@@ -554,6 +558,6 @@ if __name__=='__main__':
     if len(sys.argv) > 7:
         gridtype = sys.argv[7]
     else:
-        gridtype = 'ecosmoHR' #'getm-gb300' #'getm-sns' #ecosmoHR
+        gridtype = 'getm-sns' #'getm-gb300' #'getm-sns' #ecosmoHR
 
     main(simfile,preint,gridtype,varn,fbrootpath,fbname,yrint,fname_topo)
