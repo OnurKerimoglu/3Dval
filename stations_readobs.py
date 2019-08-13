@@ -91,6 +91,11 @@ def fill_stationdata_obs(file,statset,vars,timeint,depthints0,olf):
     # reading metadata of station
     lon = ncf.variables[vlib['x']][:][0]
     lat = ncf.variables[vlib['y']][:][0]
+    
+    if station=='Helgoland':
+        lon=7.94 #originally 7.9
+        lat=54.18
+    
     if vlib['z'] in ncf.variables: #if a depth dimension exists, extract it
         depth = ncf.variables[vlib['z']][:]
     else: #assume that all are surface depths
