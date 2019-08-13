@@ -152,9 +152,10 @@ def format_date_axis(ax,tspan):
         ax.xaxis.set_minor_locator(mpl.dates.MonthLocator(bymonthday=1, interval=1))
         ax.xaxis.set_minor_formatter(mpl.dates.DateFormatter(''))
     elif np.diff(tspan)[0].days<1466:
-        ax.xaxis.set_major_locator(mpl.dates.MonthLocator(bymonth=7, bymonthday=1, interval=1) )
-        ax.xaxis.set_minor_locator(mpl.dates.MonthLocator(bymonth=7,bymonthday=1, interval=1))
-        ax.xaxis.set_minor_formatter(mpl.dates.DateFormatter('%Y'))
+        ax.xaxis.set_major_locator(mpl.dates.MonthLocator(bymonth=[1], interval=1) )
+        ax.xaxis.set_major_formatter(mpl.dates.DateFormatter('%Y'))
+        ax.xaxis.set_minor_locator(mpl.dates.MonthLocator(bymonthday=1, interval=1))
+        ax.xaxis.set_minor_formatter(mpl.dates.DateFormatter(''))
     elif np.diff(tspan)[0].days<3655:
         ax.xaxis.set_major_locator(mpl.dates.MonthLocator(bymonth=1,bymonthday=1, interval=1) )
         ax.xaxis.set_minor_locator(mpl.dates.MonthLocator(bymonth=7,bymonthday=1, interval=1))
@@ -171,7 +172,7 @@ def format_date_axis(ax,tspan):
     if np.diff(tspan)[0].days<367:
         ax.tick_params(axis='x', which='major', direction='out',labelsize=9)
         ax.tick_params(axis='x', which='minor', direction='out')
-    elif np.diff(tspan)[0].days< 732:
+    elif np.diff(tspan)[0].days< 1466:
         ax.tick_params(axis='x', which='major', length=2, direction='out', labelsize=9, pad=1)
         ax.tick_params(axis='x', which='minor', length=2, direction='in', labelsize=9, pad=1)  # labelbottom='off')
         #ax.grid(axis='x', which='major', color='0.5', linestyle='-', linewidth=1.5)

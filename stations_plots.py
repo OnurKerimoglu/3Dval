@@ -116,7 +116,7 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
                             skills=get_skillscores(obs[station][varname][layer],simset[simname][station][varname][layer],timeint)
                             if skills['n'] != 0:
                                 if (len(plotopts['sims2plot']) - 0) == 1:
-                                    y = 1.08
+                                    y = 1.05
                                 else:
                                     y = 1.08 - 0.12 * simno
                                 plt.text(1.0, y, r'$B^*$:%3.2f, $\rho$:%3.2f, $n$:%d'
