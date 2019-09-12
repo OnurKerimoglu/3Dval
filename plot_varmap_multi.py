@@ -22,11 +22,12 @@ from getm_funcs import get_getm_bathymetry_cropped
 from general_funcs import fnclean,cm2inch,getproj,discrete_cmap_tuner
 
 knownunits={'total_chlorophyll_calculator_result':'mg/m$^{3}$','GPM_phy_Chl':'mg/m$^{3}$',
-            'vert_int_total_NPPR':'mmolC/m$^2$/d','vert_int_NPPR':'mmolC/m$^2$/d',
+            'total_NPPR_calculator_result':'mgC/m$^2$/d','GPM_phy_NPPR':'mgC/m$^2$/d',
+            'EH_abioP_o2o_pel':'mmol/m$^2$/d','EH_abioS_o2o_brm':'mmol/m$^2$/d',
             'EH_abioP_DINO3':'$\mu$M','EH_abioP_DINH4':'$\mu$M','EH_abioP_DIN':'$\mu$M','EH_abioP_DIP':'$\mu$M',
             'sigma_t':'kg/m$^3$','sigma0':'kg/m$^3$','rho':'kg/m$^3$', 'temp':u'\N{DEGREE SIGN}C', 'tempmean':u'\N{DEGREE SIGN}C', 'salt':'g/kg', 'saltmean':'g/kg'}
 logvars=['']
-primprodvars=['hzg_maecs_GPPR', 'hzg_maecs_NPPR','hzg_phy_NPPR','vert_int_NPPR','total_NPPR_calculator_result','vert_int_total_NPPR']
+primprodvars=['hzg_maecs_GPPR', 'hzg_maecs_NPPR','GPM_phy_NPPR','total_NPPR_calculator_result']
 
 def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plottopo=True,datasource='GF'):
 
@@ -229,103 +230,7 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
             else:
                 v,unitstr,longname=getncvar(ncv,varname,clim)
 
-            if (len(v.shape)==4) and (VertMeth in ['each','SB','surf','bot']):
-                if VertMeth=='each':
-                    levind=np.arange(0,v.shape[1])
-                elif VertMeth=='SB':
-                    levind=[0,v.shape[1]-1] #only for bottom and surface
-                elif VertMeth=='surf':
-                    levind=[v.shape[1]-1] #only for bottom and surface
-                elif VertMeth=='bot':
-                    levind=[1] #only for bottom and surface
-                for k in levind:
-                    # lev=ncv['level'][:] #todo: more accurate information about the layer
-                    suffix = 'L' + str(k)
-                    print ('Level:' + str(k),)
-
-                    ##find a common clim, if not provided
-                    if clim[1] == -9:
-                        clim = [np.nanmin(v[:, k, :, :]), np.nanmax(v[:, k, :, :])]  # [np.amax(v)*.8,np.amax(v)] #
-                    print (' clim: ' + str(clim),)
-
-                    if TempMeth == 'snapshots':
-                        for mi, i in enumerate(tind):
-                            #print i,
-                            tindM = tind[mi]
-                            for ti, ii in enumerate(tindM):
-                                #print ii,
-                                titlestr = str(tvec[ii].date()) + ' ' + str(tvec[ii].time())
-                                tindsuf = '_'+titlestr.replace(' ','-').replace(':','')
-                                f = plt.figure(figsize=cm2inch((figw, figh)), dpi=dpi)
-                                f.subplots_adjust(left=left, right=right, bottom=bottom, top=top, hspace=hsp, wspace=wsp)
-                                f.text(0.5, 0.96, suffix + ' ' + longname + ' [' + unitstr + '] (' + str(year) + ')',
-                                       horizontalalignment='center', size=8)
-                                ax = plt.subplot(1, 1, 1)
-
-                                if varname != 'currs':
-                                    vI = v[i, k, :, :]
-                                    scalesuf = plot2Dmap(f, ax, clim, x[:, :], y[:, :], vI[:, :], varname, proj, setup,
-                                                         titlestr, plottopo, H[:, :], showparmer, unitstr, colmap, Nlev)
-                                else:
-                                    uI = u[ii, k, :, :]
-                                    vI = v[ii, k, :, :]
-                                    scalesuf = plot2Dmap_Q(f, ax, clim, x[:, :], y[:, :], uI[:, :], vI[:, :], varname,
-                                                           proj,setup, titlestr, plottopo, H[:, :], showparmer, unitstr,
-                                                           colmap,Nlev)
-
-                                    if multiYfile:
-                                        filename = fname.split('.nc')[0] + '_' + str(
-                                            year) + '_varmap' + suffix + '_' + varname + tindsuf + '-' + setup + scalesuf + '.png'  # pdf
-                                    else:
-                                        filename = fname.split('.' + str(year) + '.nc')[0] + '_' + str(
-                                            year) + '_varmap' + suffix + '_' + varname + tindsuf + '-' + setup + scalesuf + '.png'  # pdf
-
-                                    filename = fnclean(filename)
-                                    plt.savefig(filename, dpi=dpi)
-                                    # s=show()
-                                    plt.close()
-                                    print ('saved:' + filename)
-
-                    elif TempMeth in ['Maverage', 'Yaverage', 'YMaverage', 'Yintegral']:
-                        f = plt.figure(figsize=cm2inch((figw,figh)), dpi=dpi)
-                        f.subplots_adjust(left=left,right=right,bottom=bottom,top=top, hspace=hsp, wspace=wsp)
-                        f.text(0.5,0.96,suffix+' '+longname+' ['+unitstr+'] ('+str(year)+')', horizontalalignment='center',size=8)
-                        for mi,i in enumerate(tind):
-
-                            ax = plt.subplot(np.ceil(len(tind) / numcol), numcol, mi + 1)
-                            tindM=tind[mi]
-                            vI=0;  #temporal integrand
-                            for ti,ii in enumerate(tindM):
-                                #print 'scene-'+str(i),
-                                vI=vI+v[ii,k,:,:]
-
-                            if  TempMeth in ['Maverage','Yaverage','YMaverage']: #transform to temporal average
-                                vI=vI/len(tindM)
-                                if TempMeth0=='Yaverage':
-                                    titlestr='Annual Average'
-                                elif TempMeth == 'YMaverage':
-                                    titlestr='%s %s average'%(year,calendar.month_name[month])
-                            else:
-                                titlestr='Annual Integral'
-                                unitstr=unitstr.replace('d','y')
-
-                            if TempMeth in ['Maverage']:
-                                titlestr=str(calendar.month_name[months2plot[mi]])
-
-                            #titlestr=str(calendar.month_name[month]+' '+TempMeth.split('M')[1])
-                            scalesuf=plot2Dmap(f,ax,clim,x[:,:],y[:,:],vI[:,:],varname,proj,setup,titlestr,plottopo,H[:,:],showparmer,unitstr,colmap,Nlev)
-
-                        if multiYfile:
-                            filename=fname.split('.nc')[0]+'_'+str(year)+'_varmap'+suffix+'_'+varname+tindsuf+'-'+setup+scalesuf+'.png' #pdf
-                        else:
-                            filename=fname.split('.'+str(year)+'.nc')[0]+'_'+str(year)+'_varmap'+suffix+'_'+varname+tindsuf+'-'+setup+scalesuf+'.png' #pdf
-
-                        filename=fnclean(filename)
-                        print ('\nsaved:'+filename)
-                        plt.savefig(filename,dpi=dpi)
-                        #s=show()
-                        plt.close()
-            else : #i.e., not  (len(v.shape)==4) and (VertMeth in ['each','SB'])
+            if True: #(obsolete) i.e. not  (len(v.shape)==4) and (VertMeth in ['each','SB'])
 
                 f = plt.figure(figsize=cm2inch((figw,figh)), dpi=dpi)
                 f.subplots_adjust(left=left,right=right,bottom=bottom,top=top, hspace=hsp, wspace=wsp)
@@ -393,6 +298,7 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
 
                             if  TempMeth in ['Maverage','YMaverage', 'Yaverage']: #transform to temporal average
                                 vII=vII/len(tindM)
+                                #print('divide by len(tindM)')
                                 if varname=='currs':
                                     uII=uII/len(tindM)
                                 if TempMeth0=='Yaverage' :
@@ -417,112 +323,7 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
                                 scalesuf=plot2Dmap(f,ax,clim,x[:,:],y[:,:],vII[:,:],varname,proj,setup,titlestr,plottopo,H[:,:],showparmer,unitstr,colmap,Nlev)
                             else:
                                 scalesuf=plot2Dmap_Q(f,ax,clim,x[:,:],y[:,:],uII[:,:],vII[:,:],varname,proj,setup,titlestr,plottopo,H[:,:],showparmer,unitstr,colmap,Nlev)
-
-                        # f.text(0.5, 0.96, longname + ' [' + unitstr + '] (' + titlestr + ')', horizontalalignment='center', size=8)
-                        #if multiYfile:
-                        #    filename=fname.split('.nc')[0]+'_'+str(year)+'_varmap'+'_'+varname+tindsuf+'-'+setup+ scalesuf+'.png' #pdf
-                        #else:
-                        #    filename=fname.split('.'+str(year)+'.nc')[0]+'_'+str(year)+'_varmap'+'_'+varname+tindsuf+'-'+setup+ scalesuf+'.png' #pdf
-
-                    elif len(v.shape)==4 and (VertMeth=='int' or VertMeth=='avg'):
-
-                        # try to retrieve the layer height of the corresponding domain
-                        if (('h' in ncv.keys()) or ('hmean' in ncv.keys())):
-                            if 'h' in ncv.keys():
-                                lh = ncv['h'][:, :, :, :]
-                            else:
-                                lh = ncv['hmean'][:, :, :, :]
-                        else:
-                            # if not, we'll calculate the column-average, not weighted by layer thickness
-                            lh = 1.0 / v.shape[1] * np.ones((v.shape[0],v.shape[1], v.shape[2], v.shape[3]))
-                            print ('! no -h variable found, using unweighted averaging',)
-                            VertMeth = 'uwavg'
-
-                        if TempMeth=='snapshots':
-                            print (i,)
-
-                            #try to retrieve the layer height of the corresponding domain
-                            if (('h' in ncv.keys()) or ('hmean' in ncv.keys())):
-                                if 'h' in ncv.keys():
-                                    lh=ncv['h'][i,:,:,:]
-                                else:
-                                    lh = ncv['hmean'][i, :, :, :]
-                            else:
-                                #if not, we'll calculate the column-average, not weighted by layer thickness
-                                lh=1.0/v.shape[1]*np.ones((v.shape[1],v.shape[2],v.shape[3]))
-                                print ('! no -h variable found, using unweighted averaging',)
-                                VertMeth='uwavg'
-
-                            #integrate
-                            vI=0;lhI=0
-                            for k in range(1,v.shape[1]):
-                                lhI=lhI+lh[i,k,:,:]
-                                vI=vI+v[i,k,:,:]*lh[i,k,:,:]
-
-                            VertMeth_effective=VertMeth
-                            if VertMeth_effective=='avg':
-                                vI=vI/lhI
-                                suffix='average '
-                            elif VertMeth_effective=='int':
-                                unitstr=unitstr.replace('m**3','m**2')
-                                suffix='integral '
-
-                            titlestr=str(tvec[i].date())
-                            scalesuf=plot2Dmap(f,ax,clim,x[:,:],y[:,:],vI[:,:],varname,proj,setup,titlestr,plottopo,H[:,:],showparmer,unitstr,colmap,Nlev)
-
-                        elif TempMeth in ['Maverage','YMaverage', 'Yaverage', 'Yintegral']:
-
-                            #print '\nM: '+str(mi)+':',
-                            tindM=tind[mi]
-                            vII=0 #temporal integrand
-
-                            for ti,i in enumerate(tindM):
-                                #print 'scene-'+str(i),
-
-                                #vertical integrataion
-                                vI=0;lhI=0 #vertical integrands (also layer heights)
-                                for k in range(1,v.shape[1]):
-                                    lhI=lhI+lh[i,k,:,:]
-                                    vI=vI+v[i,k,:,:]*lh[i,k,:,:]
-
-                                VertMeth_effective=VertMeth
-                                if VertMeth=='avg' and varname in primprodvars:
-                                    VertMeth_effective='int'
-                                    suffix='int'
-
-                                if VertMeth_effective=='avg':
-                                    vI=vI/lhI
-                                    suffix='average'
-                                elif VertMeth_effective=='int':
-                                    unitstr=unitstr.replace('m**3','m**2')
-                                    suffix='integral'
-                                elif VertMeth_effective=='uwavg':
-                                    suffix='uwavg'
-
-                                #temporal integration
-                                vII=vII+vI
-
-                            if  TempMeth in ['Maverage','YMaverage', 'Yaverage']: #transform to temporal average
-                                vII=vII/len(tindM)
-                                if TempMeth0=='Yaverage':
-                                    titlestr='Annual Average'
-                                elif TempMeth == 'YMaverage':
-                                    titlestr = '%s %s average' % (year, calendar.month_name[month])
-                            elif TempMeth in ['Yintegral']:
-                                titlestr='Annual Integral'
-                                unitstr=unitstr.replace('d','y')
-                                if varname in primprodvars and clim[0]>0:
-                                    vII=vII/1000 #[gC/1000mgC]
-                                    unitstr=unitstr.replace('mgC','gC')
-                            if TempMeth in ['Maverage']:
-                                titlestr = str(calendar.month_name[months2plot[mi]])
-                            scalesuf=plot2Dmap(f,ax,clim,x[:,:],y[:,:],vII[:,:],varname,proj,setup,titlestr,plottopo,H[:,:],showparmer,unitstr,colmap,Nlev)
-
-
-                        #clim will be unique for each frame, if not provided
-                        if clim[1]==-9:
-                            clim=[np.nanmin(vI[:,:]),np.nanmax(vI[:,:])]
-
+                    
                     f.text(0.5,0.96,suffix+longname+' ['+unitstr+'] ('+str(tvec[i].year)+')', horizontalalignment='center')
                     if multiYfile:
                         filename=fname.split('.nc')[0]+'_'+str(year)+'_varmap'+suffix+'_'+varname+tindsuf+'-'+setup+ scalesuf+'.png' #pdf
@@ -543,13 +344,12 @@ def getncvar(ncv, varname0,clim):
     unitstr=''
     if varname0 in knownunits.keys():
         unitstr = knownunits[varname0]
-
+    
+    varname=varname0
     if varname0 == 'EH_abioP_DIN':
         varname = 'EH_abioP_DINO3+EH_abioP_DINH4'
-    if varname0 == 'vert_int_total_NPPR':
-        varname = 'total_NPPR_calculator_result*bathymetry'
-    if varname0 == 'vert_int_NPPR':
-        varname = 'GPM_phy_NPPR*bathymetry'
+    if varname0 == 'EH_abioP_o2o_pel':
+        varname = 'EH_abioP_o2o_bac+EH_abioP_o2o_n4n'
 
     if (varname in ncv) or (varname + 'mean' in ncv):
         try:
@@ -822,17 +622,18 @@ if __name__=='__main__':
         #'EH_abioS_sed_nn2': [0, 400],  # yintegral
         #'EH_abioS_sed_nn2':[0,3.0], #yaverage
         'EH_abioP_O2_percSat':[50,100],
+        'EH_abioP_o2o_pel':[0,50],
+        'EH_abioS_o2o_brm':[0,50],
         'total_chlorophyll_calculator_result':[0,10],
+        'total_NPPR_calculator_result':[0, 1000], # 1000 (mgC/m2/d) 300:Yintegral (gC/m2/y)
         'GPM_diat_C': [0., 20],
         'GPM_nf_C': [0., 20],
         'GPM_phy_C': [0., 20],
         'GPM_phy_Chl':[0.,10],
-        'GPM_phy_NPPR': [0, 500],  # 500 (mgC/m2/d) 300:Yintegral (gC/m2/y)
-        'vert_int_total_NPPR':[0, 500], # 500 (mgC/m2/d) 300:Yintegral (gC/m2/y)
+        'GPM_phy_NPPR': [0, 1000],  # 1000 (mgC/m2/d) 300:Yintegral (gC/m2/y)
         'GPM_meszoo_C':[0,5.],
         'GPM_miczoo_C': [0, 10.],
         'GPM_zoo_C': [0, 5.],
-        'Dissolved_Inorganic_Phosphorus_DIP_nutP_in_water': [0, 1.6],
         'total_nitrogen_calculator_result': [0,40.],
         'total_phosphorus_calculator_result': [0.,1.6],
     }
@@ -846,7 +647,6 @@ if __name__=='__main__':
     else:
         #varnames = ['total_chlorophyll_calculator_result'] #, 'GPM_diat_C', 'GPM_nf_C', 'GPM_miczoo_C', 'GPM_meszoo_C']
         varnames = ['EH_abioP_O2_percSat']
-        varnames = ['vert_int_total_NPPR']
         #varnames = ['GPM_phy_Chl','GPM_phy_C','GPM_zoo_C']
         #varnames=['EH_abioP_DIN','EH_abioP_DIP']
         #varnames=['EH_abioP_DINO3','EH_abioP_DINH4']
