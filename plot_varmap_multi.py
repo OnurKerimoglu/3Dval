@@ -578,6 +578,7 @@ def plot2Dmap(f,ax,clim,x,y,v,varname,proj,setup,titlestr,plottopo,H,showparmer=
                                         spacing='proportional')
         cb.formatter.set_scientific(True)
         cb.formatter.set_powerlimits((-4, 4))
+        cb.ax.tick_params(labelsize=10)
         cb.update_ticks()
         scalesuf = '_CL_%.1f_%.1f'%(clim[0],clim[1])
         scalesuf=scalesuf.replace('.0', '')
@@ -708,7 +709,9 @@ if __name__=='__main__':
     #cbar lims
     vars = {}
     if len(sys.argv) > 9:
-        clim = map(float, sys.argv[9].split(','))
+        climstr = sys.argv[9].split(',')
+        clim=[float(str) for str in climstr]
+        #print('clim: ' + climstr)
         if clim[0]!=clim[1]:
             print ('using the requested colorbar lims: [%s-%s]:'%(clim[0],clim[1]))
             climfromlib=False
