@@ -390,8 +390,8 @@ def getncvar(ncv, varname0,clim):
 
     if unitstr == '-':
         unitstr = ''  # '[-]'
-    if '^3' in unitstr:
-        unitstr = unitstr.replace('^3', '$^3$')
+    #if '^3' in unitstr:
+    #    unitstr = unitstr.replace('^3', '$^3$')
     if varname0 in primprodvars and clim[1] > 0:
         v = v * 12  # [mmolC/1000molC*12gC/molC]
         unitstr = unitstr.replace('mmolC', 'mgC')
@@ -547,7 +547,7 @@ def plot2Dmap(f,ax,clim,x,y,v,varname,proj,setup,titlestr,plottopo,H,showparmer=
 
     #retrieve the axes position to set the colorbar position
     pos1 = ax.get_position()
-    poscbar = [pos1.x0 + pos1.width + 0.07, pos1.y0+0.09 , 0.02, pos1.height * 0.7]
+    poscbar = [pos1.x0 + pos1.width + 0.07, pos1.y0+0.125 , 0.02, pos1.height * 0.62]
     cax = plt.axes(position=poscbar)
 
     #cb = plt.colorbar(pcf, cax=cax,ticks=cbt)
