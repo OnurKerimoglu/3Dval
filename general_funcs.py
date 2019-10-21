@@ -274,6 +274,24 @@ def getproj(setup,projpath=os.path.dirname(os.path.realpath(__file__))):
                        urcrnrlat=56.0, #55.8,
                        lat_0=52.0,
                        lon_0=5.)
+        elif setup=='WadSea':
+            proj = Basemap(projection='lcc',
+                           resolution='i',
+                           llcrnrlon=6.2,
+                           llcrnrlat=53.2,
+                           urcrnrlon=9.3,
+                           urcrnrlat=55.1,
+                           lat_0=52.0,
+                           lon_0=5.)
+        elif setup=='GBight':
+            proj = Basemap(projection='lcc',
+                           resolution='i',
+                           llcrnrlon=4,
+                           llcrnrlat=52.9,
+                           urcrnrlon=9.7,
+                           urcrnrlat=55.6,
+                           lat_0=52.0,
+                           lon_0=5.)
         elif setup=='SNSext':
             proj=Basemap(projection='lcc',
                        resolution='i',
