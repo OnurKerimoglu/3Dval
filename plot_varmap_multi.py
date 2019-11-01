@@ -620,6 +620,9 @@ if __name__=='__main__':
         'EH_abioP_DINO3': [0, 50],
         'EH_abioP_DINH4': [0, 5],
         'EH_abioP_DIP': [0, 3.0],
+        'zoo2phy':[0,1.0],
+        'fr_diatC': [0, 1.0],
+        'fr_meszooC': [0, 1.0],
         #'EH_abioP_DIP': [0, 1.5],
         #'EH_abioS_sed_nn2': [0, 400],  # yintegral
         #'EH_abioS_sed_nn2':[0,3.0], #yaverage
@@ -642,13 +645,15 @@ if __name__=='__main__':
     if len(sys.argv)>1:
         fname=sys.argv[1]
     else:
-        fname = '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-PPZZ-P190628-fSG97dChl/extract_RavgC_sns144-GPMEH-PPZZ-P190628-fSG97dChl.2012-mm.nc'
+        fname = '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-G191007-Fnew3-PPZZSi-PinR-P191010-vS/extract_PZCtotVA_sns144-GPMEH-G191007-Fnew3-PPZZSi-PinR-P191010-vS.2013-mm.nc'
+        #fname = '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-PPZZ-P190628-fSG97dChl/extract_RavgC_sns144-GPMEH-PPZZ-P190628-fSG97dChl.2012-mm.nc'
         #fname = '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-P190607-fSG97dChl/extract_skillCS_sns144-GPMEH-P190607-fSG97dChl.2012-mm.nc'
     if len(sys.argv)>2:
         varnames=sys.argv[2].split(',')
     else:
         #varnames = ['total_chlorophyll_calculator_result'] #, 'GPM_diat_C', 'GPM_nf_C', 'GPM_miczoo_C', 'GPM_meszoo_C']
-        varnames = ['EH_abioP_O2_percSat']
+        varnames=['zoo2phy','fr_diatC','fr_meszooC']
+        #varnames = ['EH_abioP_O2_percSa']
         #varnames = ['GPM_phy_Chl','GPM_phy_C','GPM_zoo_C']
         #varnames=['EH_abioP_DIN','EH_abioP_DIP']
         #varnames=['EH_abioP_DINO3','EH_abioP_DINH4']
@@ -675,8 +680,8 @@ if __name__=='__main__':
         #TempMeth = 'Yaverage_6-7-8'
         #TempMeth = 'Yaverage_3-4-5'
         #TempMeth='Yaverage_1-2-12'
-        #TempMeth='Yaverage'
-        TempMeth='Maverage'
+        TempMeth='Yaverage_7'
+        #TempMeth='Maverage'
         #TempMeth = 'Y2013-M7'
 
     if len(sys.argv) > 4:
