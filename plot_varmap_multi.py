@@ -24,7 +24,8 @@ from general_funcs import fnclean,cm2inch,getproj,discrete_cmap_tuner
 knownunits={'total_chlorophyll_calculator_result':'mg/m$^{3}$','GPM_phy_Chl':'mg/m$^{3}$',
             'total_NPPR_calculator_result':'mgC/m$^2$/d','GPM_phy_NPPR':'mgC/m$^2$/d',
             'EH_abioP_o2o_pel':'mmol/m$^2$/d','EH_abioS_o2o_brm':'mmol/m$^2$/d',
-            'EH_abioP_DINO3':'$\mu$M','EH_abioP_DINH4':'$\mu$M','EH_abioP_DIN':'$\mu$M','EH_abioP_DIP':'$\mu$M',
+            'EH_abioP_DINO3':'$\mu$M','EH_abioP_DINH4':'$\mu$M','EH_abioP_DIN':'$\mu$M',
+            'EH_abioP_DIP':'$\mu$M','EH_abioP_DISi':'$\mu$M',
             'sigma_t':'kg/m$^3$','sigma0':'kg/m$^3$','rho':'kg/m$^3$', 'temp':u'\N{DEGREE SIGN}C', 'tempmean':u'\N{DEGREE SIGN}C', 'salt':'g/kg', 'saltmean':'g/kg'}
 logvars=['']
 primprodvars=['hzg_maecs_GPPR', 'hzg_maecs_NPPR','GPM_phy_NPPR','total_NPPR_calculator_result']
@@ -620,9 +621,10 @@ if __name__=='__main__':
         'EH_abioP_DINO3': [0, 50],
         'EH_abioP_DINH4': [0, 5],
         'EH_abioP_DIP': [0, 3.0],
-        'zoo2phy':[0,1.0],
-        'fr_diatC': [0, 1.0],
-        'fr_meszooC': [0, 1.0],
+        'EH_abioP_DISi': [0, 45.0],
+        'zoo2phy':[0.4,1.0],
+        'fr_diatC': [0.5, 0.9],
+        'fr_meszooC': [0.1, 0.5],
         #'EH_abioP_DIP': [0, 1.5],
         #'EH_abioS_sed_nn2': [0, 400],  # yintegral
         #'EH_abioS_sed_nn2':[0,3.0], #yaverage
