@@ -7,7 +7,7 @@ provides functions relevant to getm simulations
 import netCDF4
 import numpy as np
 
-def get_getm_dataF(simf,varns,ysl,xsl,getmv='mean',fabmv='GPMEH'):
+def get_getm_dataF(simf,varns,ysl,xsl,getmv='mean',modtype='GF-PPZZ'):
     vlib = {'t': 'time', 'z': 'depth'}
 
     if getmv == '3d':
@@ -16,12 +16,12 @@ def get_getm_dataF(simf,varns,ysl,xsl,getmv='mean',fabmv='GPMEH'):
         vlibgetm={'temp': 'tempmean', 'salt': 'saltmean', 'ssh': 'elevmean'}
     vlib.update(vlibgetm)
 
-    if fabmv == 'maecs':
+    if modtype == 'GF-maecs':
         vlibfabm={'DOs': 'hzg_maecs_O2_percSat','DIN': 'hzg_maecs_nutN', 'DIP': 'hzg_maecs_nutP', 'Chl': 'hzg_maecs_chl'}
-    elif fabmv == 'GPMEH.PZ':
-        vlibfabm={'DOs':'EH_abioP_O2_percSat','DIN':'EH_abioP_DINO3+EH_abioP_DINH4','DIP':'EH_abioP_DIP','Chl':'GPM_phy_Chl'}
-    elif fabmv[:3]=='GPM':
-        vlibfabm={'DOs':'EH_abioP_O2_percSat','DIN':'EH_abioP_DINO3+EH_abioP_DINH4','DIP':'EH_abioP_DIP','Chl':'total_chlorophyll_calculator_result'}
+    elif modtype == 'GF-PZ':
+        vlibfabm={'DOs':'EH_abioP_O2_percSat','DIN':'EH_abioP_DINO3+EH_abioP_DINH4','NO3':'EH_abioP_DINO3','NH4':'EH_abioP_DINH4','DIP':'EH_abioP_DIP','Si':'EH_abioP_DISi','Chl':'GPM_phy_Chl'}
+    elif modtype=='GF-PPZZ':
+        vlibfabm={'DOs':'EH_abioP_O2_percSat','DIN':'EH_abioP_DINO3+EH_abioP_DINH4','NO3':'EH_abioP_DINO3','NH4':'EH_abioP_DINH4','DIP':'EH_abioP_DIP','Si':'EH_abioP_DISi','Chl':'total_chlorophyll_calculator_result'}
     vlib.update(vlibfabm)
 
     try:

@@ -15,6 +15,7 @@ python3.5 stations_main.py GF-PPZZ simfname.nc
 import os,sys
 import warnings
 import datetime
+import numpy as np
 import stations_readobs as SRO
 import stations_readsim as SRS
 import stations_plots as SP
@@ -36,8 +37,8 @@ pathreg = {'onur': {#'GF-Mnm': '/home/onur/WORK/projects/2013/maecs/sns144-M1801
                     #'GF-ref': '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1_BGC_12-13_S.nc',
                     #'plotrootpath':'/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1-AHm2-c06-Ec01-comp/',
                     #'GF-PPZZ': '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-P190529-fSG97dChl/extract_skillC_sns144-GPMEH-P190529-fSG97dChl.2012-2013_zSB.nc',
-                    'GF-3DFnew': '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-Fnew/extract_physC_sns144-GPMEH-Fnew.2012-2013_zSB.nc',
-                    'plotrootpath':'/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-Fnew/',
+                    'GF-3DFnew': '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-G191216-Fnew3-PPZZSi-P191220-vS/extract_skillC_sns144-GPMEH-G191216-Fnew3-PPZZSi-P191220-vS.2011_zSB.nc',
+                    'plotrootpath':'/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-G191216-Fnew3-PPZZSi-P191220-vS/',
                     'pickledobspath': './',
                     'BGC':    '/home/onur/WORK/projects/GB/data/stations/individual/BGC/',
                     'BSH':    '/home/onur/WORK/projects/GB/data/stations/individual/BSH/',
@@ -46,6 +47,7 @@ pathreg = {'onur': {#'GF-Mnm': '/home/onur/WORK/projects/2013/maecs/sns144-M1801
         'g260108': {
                     'GF-PPZZ-fS': '/work/gg0877/onur/simout-gpmeh/sns144-GPMEH-PPZZ-P190628-fSG97dChl/extract_skillC_sns144-GPMEH-PPZZ-P190628-fSG97dChl.2012_zSB.nc',
                     'GF-PPZZ-vS': '/work/gg0877/onur/simout-gpmeh/sns144-GPMEH-PPZZ-P190628-vSG97dChl/extract_skillC_sns144-GPMEH-PPZZ-P190628-vSG97dChl.2012_zSB.nc',
+                    'GF-3DFnew': '/work/gg0877/onur/simout-gpmeh/sns144-GPMEH-Fnew/extract_physC_sns144-GPMEH-Fnew.2012-2013_zSB.nc',
                     'plotrootpath':'/work/gg0877/onur/simout-gpmeh/sns144-GPMEH-PPZZ-P190628-fSG97dChl/comp_vS',
                     'pickledobspath': './',
                     'BGC':    '/work/gg0877/onur/obsdata/stations/individual/BGC/',
@@ -55,32 +57,40 @@ pathreg = {'onur': {#'GF-Mnm': '/home/onur/WORK/projects/2013/maecs/sns144-M1801
          'newuser': {}
            }
 
-def main(modtype,modfname):
+def main(modtype,modfname,statsets,yint):
     #PARAMETERS:
     # general
-    user='onur' #'g260108'
-    vars=['temp','salt'] #,'DOs']
-    #vars = ['DIN','DIP','Chl']
+    user='g260108' #'onur' #
+    vars_default=['temp','salt','DOs','DIN','DIP','Chl']
     depthints={'surface':[0,10]} #,'bottom':[10,0]} #for bottom, depthint is relative to bottom depth
-    timeint = [datetime.datetime(2012, 1, 1,0,0,0), datetime.datetime(2013, 12, 31,23,59,59)]
-    ##timeint = [datetime.datetime(2000, 1, 1, 0, 0, 0), datetime.datetime(2010, 12, 31, 23, 59, 59)]
+    #timeint = [datetime.datetime(2012, 1, 1,0,0,0), datetime.datetime(2013, 12, 31,23,59,59)]
+    timeint = [datetime.datetime(yint[0], 1, 1,0,0,0), datetime.datetime(yint[1], 12, 31,23,59,59)]
     # regarding observations.
-    statsets = ['cosyna'] #'cosyna', 'BSH', 'BGC'
+    if len(statsets)==0:
+       statsets = ['cosyna', 'BSH', 'BGC']
+       statsets = ['BGC']
     #stations = ['Ems', 'Deutsche Bucht','NBII']
     #stations = ['Cuxhaven','HPA-Elbe']
     stations=[]
-    readobsraw=False #i.e., if the pickle file should be ignored
+    if len(statsets)==1 and statsets[0]=='cosyna':
+       vars=['temp','salt'] #,'DOs']
+    elif len(statsets)==1 and statsets[0]=='BGC':
+       vars=['DIN','DIP','Si','Chl']
+    else:
+       vars=vars_default
+ 
     # regarding simulations.
+    #only if modfname==''
     sims2plot=['GF-3DFnew']
     #sims2plot= ['GF-PPZZ-fS', 'GF-PPZZ-vS']
     #sims2plot = ['GF-Mnm','GF-Mfc','GF-Mvc'] #'GF-c100','GF-ref'] #,'GF-M13R12','GF-M12R13']
     readsimraw=False #i.e., if the pickle file should be ignored
+    readobsraw=False #i.e., if the pickle file should be ignored
     simdomain=''
     meth2D='pretree'
     #regarding plots:
     olf=4.0 #
-    getmv='3d' #mean,3d
-    fabmv='GPMEH'
+    getmv='mean' #mean,3d
     
     pathreg_u=pathreg[user]
     
@@ -95,7 +105,7 @@ def main(modtype,modfname):
     #READ SIMULATIONS
     simset={}    
     for simno, simname in enumerate(sims2plot):
-        sim=SRS.readsim(pathreg_u,simname,readsimraw,simdomain,meth2D,statsets,timeint,depthints,obs,vars,getmv,fabmv)
+        sim=SRS.readsim(pathreg_u,simname,readsimraw,simdomain,meth2D,statsets,timeint,depthints,obs,vars,getmv,modtype)
         simset[simname]=sim
     plotopts={'TS':True,'TSstyle':'TSdefault','varns':vars,'sims2plot':sims2plot}
 
@@ -108,11 +118,22 @@ if __name__=='__main__':
     if len(sys.argv)>1:
        modtype=sys.argv[1]
     else:
-       modtype=''
+       modtype='GF-PPZZ'
 
     if len(sys.argv)>2:
        modfname=sys.argv[2]
     else:
        modfname=''
     
-    main(modtype,modfname)
+    if len(sys.argv)>3:
+       statsets=sys.argv[3].split(',')
+    else:
+       statsets=[]
+    
+    if len(sys.argv)>4:
+       yints=sys.argv[4].split(',')
+       yint=[np.int(y) for y in yints]
+    else:
+       yint=[2011,2011]
+
+    main(modtype,modfname,statsets,yint)

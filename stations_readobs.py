@@ -79,7 +79,7 @@ def fill_stationdata_obs(file,statset,vars,timeint,depthints0,olf):
     elif statset in ['BSH']:
         vlib = {'t': 'time', 'x': 'lon', 'y': 'lat', 'z': 'depth', 'temp': 'temp', 'salt': 'sal','DOs': 'DOsat'}
     elif statset in ['BGC']:
-        vlib = {'t': 'time', 'x': 'lon', 'y': 'lat', 'z': 'depth', 'Chl': 'chl', 'DIN': 'DIN', 'DIP': 'DIP'}
+        vlib = {'t': 'time', 'x': 'lon', 'y': 'lat', 'z': 'depth', 'Chl': 'chl', 'DIN': 'DIN', 'DIP': 'DIP', 'Si':'Si', 'NO3':'NO3', 'NH4':'NH4'}
 
     #variables without depth dimension
     noZDvars = ['ssh']
@@ -92,7 +92,8 @@ def fill_stationdata_obs(file,statset,vars,timeint,depthints0,olf):
     lon = ncf.variables[vlib['x']][:][0]
     lat = ncf.variables[vlib['y']][:][0]
     
-    if station=='Helgoland':
+    if station=='Helgoland' and False:
+        print('Helgoland: shifting the station to 7.94E to 54.18N')
         lon=7.94 #originally 7.9
         lat=54.18
     
@@ -102,8 +103,9 @@ def fill_stationdata_obs(file,statset,vars,timeint,depthints0,olf):
         depth=-9999*np.ones(1)
     time_num = ncf.variables[vlib['t']][:]
     time = netCDF4.num2date(time_num, ncf.variables[vlib['t']].getncattr('units'))
-
-    # find the max_depth, if necessary
+    #for ti,t in enumerate(time):
+    #    print(str(time_num[ti])+' '+ str(t)+' '+str(type(t)))# find the max_depth, if necessary
+    
     try:
         maxz=ncf.bottom_depth
     except:

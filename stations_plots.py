@@ -14,9 +14,9 @@ from general_funcs import getproj,format_date_axis
 class Style:
     def __init__(self,opt='default'):
         if opt=='TSdefault':
-            self.res = 150
+            self.res = 300
             self.figwh=[0, 0]
-            self.col={'obs':'0.3','sim':['b','g','r','k']}
+            self.col={'obs':'0.6','sim':['k','r','b','g']}
             self.line={'obs':'None','sim':['-','-','-','-']}
             self.marker={'obs':'o','sim':['None','None','None','None']}
             self.lw={'obs':1,'sim':[1,1,1,1]}
@@ -34,13 +34,17 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
 
     #variables to plot, definitions
     varlongnames={'temp':'Temperature', 'salt':'Salinity', 'DOs':'O2 sat.', 'DIN':'DIN', 'DIP':'DIP', 'Chl':'Chl'}
-    varunits={'temp':u'\N{DEGREE SIGN}C', 'salt':'g/kg', 'DOs':'%', 'DIN':'$\mu$MN', 'DIP':'$\mu$MP', 'Chl':'mg/m$^3$'}
-    varlims_offshore={'temp':[0,20],'salt':[29,35],'DIN':[0,100],'DIP':[0,2.1],'Chl':[0,20]}
+    varunits={'temp':u'\N{DEGREE SIGN}C', 'salt':'g/kg', 'DOs':'%', 'DIN':'$\mu$MN', 'NH4':'$\mu$MN', 'NO3':'$\mu$MN', 'Si':'$\mu$MSi', 'DIP':'$\mu$MP', 'Chl':'mg/m$^3$'}
+    varlims_offshore={'temp':[0,20],'salt':[28,35],'NH4':[0,20],'NO3':[0,60],'DIN':[0,50],
+                      'DIP':[0,2.1], 'Si':[0,50],'Chl':[0,20]}
     varticks_offshore={'temp':[0,5,10,15,20],'salt':[29,31,33,35],
-                       'DIN': [0,20,40,60,80,100], 'DIP': [0,0.5,1.0,1.5,2.0], 'Chl': [0,5,10,15,20]}
-    varlims_coastal = {'temp': [-1.0, 22.], 'salt': [0, 30], 'DIN': [0, 350], 'DIP': [0, 3.5], 'Chl': [0, 40]}
+                       'NH4': [0,5,10,15,20],'NO3': [0,10,20,30,40,50],'DIN': [0,10,20,30,40,50],
+                       'DIP': [0,0.5,1.0,1.5,2.0],'Si': [0,10,20,30,40,50], 'Chl': [0,5,10,15,20]}
+    varlims_coastal = {'temp': [-1.0, 22.], 'salt': [0, 30],'NH4':[0,50],'NO3':[0,350], 'DIN': [0, 350],
+                       'DIP': [0, 3.5], 'Si':[0, 250], 'Chl': [0, 40]}
     varticks_coastal = {'temp': [0, 5, 10, 15, 20], 'salt': [0,10,20,30],
-                        'DIN':[0,100,200,300],'DIP':[0,1,2,3],'Chl':[0,10,20,30,40]}
+                        'NH4': [0,10,20,30,40,50],'NO3':[0,100,200,300],'DIN':[0,100,200,300],
+                        'DIP':[0,1,2,3],'Si': [0,50,100,150,200,250],'Chl':[0,10,20,30,40]}
     axtune=True
     #figure parameters:
     #colnum= len(depthints.keys())
@@ -73,7 +77,7 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
 
             # genereate a new figure, size of which is a function of number of variables (rows) and layers (columns) to be show
             fig = prepfig(S.res, S.figwh, colnum, rownum, timeint)
-            fig.subplots_adjust(hspace=.22, wspace=.2, left=0.15, right=0.7, top=0.75, bottom=0.06)
+            fig.subplots_adjust(hspace=.30, wspace=.2, left=0.15, right=0.7, top=0.75, bottom=0.06)
             # name of the station
             fig.text(0.76, 0.99, station + '\n$Z_{max}$=%.1f m' % obs[station]['bottom_depth'], verticalalignment='top',
                      horizontalalignment='right', size=10)
@@ -124,7 +128,11 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
                                         fontsize=9, ha='right',va='center', transform=ax.transAxes, color=S.col['sim'][simno])
 
                 #ylabel:varname, unit
-                plt.ylabel(varlongnames[varname]+' ['+varunits[varname]+']',size=9)
+                if varname in varlongnames.keys():
+                    varlongname=varlongnames[varname]
+                else:
+                    varlongname=varname
+                plt.ylabel(varlongname+' ['+varunits[varname]+']',size=9)
                 ax.get_yaxis().set_label_coords(-0.17, 0.5)
 
                 if (axtune) and (varname in varticks.keys()):
