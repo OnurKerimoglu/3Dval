@@ -6,6 +6,7 @@ Created on 23 Nov 2016
 import os,sys
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as colors
 
 #local modules
 #sys.path.insert(1, '/home/onur/WORK/codes/python/')
@@ -33,7 +34,7 @@ def main(files,ftypes,fnames,varnames,plfpath,vertloc,yrs,seasons,split,scatter,
     MSVstats={};MSVset={}
     for mno,m in enumerate(fnames[1:]):
         print ('  Model:'+m)
-        Vset,Uset=get_matchups(files,ftypes,fnames,varnames,yrs)
+        Vset,Uset=get_matchups(files,fnames,fnames,varnames,yrs)
 
         if split=='none':
             #filter for vertical location
@@ -279,7 +280,9 @@ def scatter_refmod(Vset,Vstat,Uset,plfpath,fnameroot,xylabels,title=''):
         xidx = np.clip(np.digitize(x, xedges), 0, hist.shape[0] - 1)
         yidx = np.clip(np.digitize(y, yedges), 0, hist.shape[1] - 1)
         plt.sca(ax)
-        pcf=plt.scatter(x, y, c=hist[xidx, yidx],cmap=plt.get_cmap('viridis'),lw=0,s=3)
+        cmap = truncate_colormap(plt.get_cmap('gray_r'), 0.4, 1.0) 
+        #pcf=plt.scatter(x, y, c=hist[xidx, yidx],cmap=plt.get_cmap('viridis'),lw=0,s=3)
+        pcf=plt.scatter(x, y, c=hist[xidx, yidx],cmap=cmap,lw=0,s=3)
         plt.plot([minval,maxval],[minval,maxval],'-k')
         ax.tick_params(axis='both', which='major', labelsize=8)
         ax.set_xlim([minval,maxval])
@@ -458,6 +461,12 @@ def group_seasons (matchups,seasons):
             SVset[s]=Vset
     return SVset
 
+def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
+    new_cmap = colors.LinearSegmentedColormap.from_list(
+        'trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, a=minval, b=maxval),
+        cmap(np.linspace(minval, maxval, n)))
+    return new_cmap
+
 def get_stats_demo():
     # Reference std
     stdrefs = dict(winter=48.491,
@@ -508,7 +517,6 @@ if __name__=='__main__':
         #files = ['/home/onur/WORK/projects/GB/data/satellite/ESA-CCI-v3.1-monthly/CCI_ALL-v3.1-MONTHLY_2008-2010_rgSNS_137x94_ymonmean_mean.nc',
         #        '/home/onur/WORK/projects/GB/maecs/3d/sns144-M161117n-P161118-bdyi3-z01mm-wAtmN/sns144-M161117n-P161118-bdyi3-z01mm-wAtmN-attchl_2008-2010_ymonmean_mean.nc']
 
-
     if len(sys.argv)>2:
         ftypes=sys.argv[2].split(',')
         for i,ftype in enumerate(ftypes):
@@ -523,7 +531,8 @@ if __name__=='__main__':
         #ftypes=['ICES','GETM.M-MAECS']
         ftypes = ['ICES', 'GETM.M-GPMEH']
         #ftypes = ['ESA-CCI', 'GETM.M-MAECS']
-
+    
+    #todo: eliminate fnames (and use only ftypes)
     if len(sys.argv)>3:
         fnames=sys.argv[3].split(',')
         print ('   fnames0:%s\n   fnames1:%s' % (fnames[0], fnames[1]))
@@ -554,34 +563,35 @@ if __name__=='__main__':
         vertloc = 'surf' #surf,bot,all
 
     if len(sys.argv) > 7:
-        seasons = sys.argv[7].split(',')
+        yrsS = sys.argv[7].split(',')
+        yrs=[np.int(y) for y in yrsS]   
+    else:
+        yrs=[2012,2013]
+
+    if len(sys.argv) > 8:
+        remOLmeth=sys.argv[8]
+    else:
+        remOLmeth='middle' #none,percentile,middle
+
+    if len(sys.argv) > 9:
+        seasons = sys.argv[9].split(',')
     else:
         #seasons=['growing','winter','spring','summer']
         seasons = ['all']
 
-    if len(sys.argv) > 8:
-        split = sys.argv[8]
+    if len(sys.argv) > 10:
+        split = sys.argv[10]
     else:
         split='none' #none,regions,vertloc
 
-    if len(sys.argv)>9:
-        scatter=True if sys.argv[9] == '1' else False
+    if len(sys.argv)>11:
+        scatter=True if sys.argv[11] == '1' else False
     else:
         scatter=True
 
-    if len(sys.argv)>10:
-        taylor = True if sys.argv[10] == '1' else False
+    if len(sys.argv)>12:
+        taylor = True if sys.argv[12] == '1' else False
     else:
         taylor=True
-
-    if len(sys.argv) > 11:
-        remOLmeth=sys.argv[11]
-    else:
-        remOLmeth='middle' #none,percentile,middle
-
-    if len(sys.argv) > 12:
-        yrs = sys.argv[11].split(',')
-    else:
-        yrs=[2012,2013]
 
     main(files,ftypes,fnames,varnames,plfpath,vertloc,yrs,seasons,split,scatter,taylor,remOLmeth,demo=False)
