@@ -147,9 +147,9 @@ def format_date_axis(ax,tspan):
         ax.xaxis.set_major_formatter(mpl.dates.DateFormatter('%b'))
         ax.xaxis.set_minor_locator(mpl.dates.MonthLocator(bymonthday=1, interval=1))
     elif np.diff(tspan)[0].days<732:
-        ax.xaxis.set_major_locator(mpl.dates.MonthLocator(bymonth=[1,7],interval=1))
-        ax.xaxis.set_major_formatter(mpl.dates.DateFormatter('%m/%y')) #%m %y
-        ax.xaxis.set_minor_locator(mpl.dates.MonthLocator(bymonthday=1, interval=1))
+        ax.xaxis.set_major_locator(mpl.dates.MonthLocator(bymonth=[1],interval=1))
+        ax.xaxis.set_major_formatter(mpl.dates.DateFormatter('%Y')) #%m %y
+        ax.xaxis.set_minor_locator(mpl.dates.MonthLocator(bymonthday=[1], interval=1))
         ax.xaxis.set_minor_formatter(mpl.dates.DateFormatter(''))
     elif np.diff(tspan)[0].days<1466:
         ax.xaxis.set_major_locator(mpl.dates.MonthLocator(bymonth=[1], interval=1) )

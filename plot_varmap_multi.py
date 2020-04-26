@@ -502,8 +502,8 @@ def plot2Dmap(f,ax,clim,x,y,v,varname,proj,setup,titlestr,plottopo,H,showparmer=
     if clim[0] == clim[-1]:
         clim=[np.floor(minval), np.ceil(maxval)]
 
-    if colmap in ('bwr','Blues_r','Reds'): #(clim[0]*-1)==(clim[1]):
-        unitstr = '$\%\Delta$'
+    #if colmap in ('bwr','Blues_r','Reds'): #(clim[0]*-1)==(clim[1]):
+    #    unitstr = '$\%\Delta$'
 
     if unitstr=='degC' and clim[1]<15:
         unitstr= 'K'
@@ -622,9 +622,9 @@ if __name__=='__main__':
         'EH_abioP_DINH4': [0, 5],
         'EH_abioP_DIP': [0, 3.0],
         'EH_abioP_DISi': [0, 45.0],
-        'zoo2phy':[0.4,1.0],
-        'fr_diatC': [0.5, 0.9],
-        'fr_meszooC': [0.1, 0.5],
+        'zoo2phy':[0.0,1.0],
+        'fr_diatC': [0.5, 1.0],
+        'fr_meszooC': [0.0, 1.0],
         #'EH_abioP_DIP': [0, 1.5],
         #'EH_abioS_sed_nn2': [0, 400],  # yintegral
         #'EH_abioS_sed_nn2':[0,3.0], #yaverage
@@ -632,12 +632,12 @@ if __name__=='__main__':
         'EH_abioP_o2o_pel':[0,50],
         'EH_abioS_o2o_brm':[0,50],
         'total_chlorophyll_calculator_result':[0,10],
-        'total_NPPR_calculator_result':[0, 1000], # 1000 (mgC/m2/d) 300:Yintegral (gC/m2/y)
+        'total_NPPR_calculator_result':[400, 1400], # 1000 (mgC/m2/d) 300:Yintegral (gC/m2/y)
         'GPM_diat_C': [0., 20],
         'GPM_nf_C': [0., 20],
         'GPM_phy_C': [0., 20],
         'GPM_phy_Chl':[0.,10],
-        'GPM_phy_NPPR': [0, 1000],  # 1000 (mgC/m2/d) 300:Yintegral (gC/m2/y)
+        'GPM_phy_NPPR': [200, 1400],  # 1000 (mgC/m2/d) 300:Yintegral (gC/m2/y)
         'GPM_meszoo_C':[0,5.],
         'GPM_miczoo_C': [0, 10.],
         'GPM_zoo_C': [0, 5.],

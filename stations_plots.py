@@ -15,7 +15,7 @@ class Style:
     def __init__(self,opt='default'):
         if opt=='TSdefault':
             self.res = 300
-            self.figwh=[0, 0]
+            self.figwh=[12, 10]
             self.col={'obs':'0.6','sim':['k','r','b','g']}
             self.line={'obs':'None','sim':['-','-','-','-']}
             self.marker={'obs':'o','sim':['None','None','None','None']}
@@ -49,7 +49,7 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
     #figure parameters:
     #colnum= len(depthints.keys())
     colnum=1
-    rownum=len(plotopts['varns'])
+    rownum=max(2,len(plotopts['varns']))
     S = Style(opt=plotopts['TSstyle'])
 
     #if the plotpath doesn't exist, create it
@@ -57,8 +57,8 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
         os.makedirs(plotpath)
 
     #projection (for showing stations on maps)
-    #proj=getproj(setup='SNSfull',projpath=os.path.dirname(os.path.realpath(__file__)))
-    proj = getproj(setup='WadSea', projpath=os.path.dirname(os.path.realpath(__file__)))
+    proj=getproj(setup='SNSfull',projpath=os.path.dirname(os.path.realpath(__file__)))
+    #proj = getproj(setup='WadSea', projpath=os.path.dirname(os.path.realpath(__file__)))
 
     #extract the station list if not provided
     if len(stations)==0:
@@ -111,14 +111,18 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
                 # plot each sim
                 for simno,simname in enumerate(plotopts['sims2plot']): #enumerate(simset.keys()):
                     if simset[simname][station][varname]['presence']:
-                        hset,idset,anyplotinax,anyplotinfig = plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,simname,ax,
+                        if 'GF-' in simname:
+                            simnameleg=simname.replace('GF','sim')
+                        else:
+                            simnameleg=simname
+                        hset,idset,anyplotinax,anyplotinfig = plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,simnameleg,ax,
                                                                             simset[simname][station][varname][layer]['time'],
                                                                             simset[simname][station][varname][layer]['value'],
                                                                             timeint, S, 'sim',simno)
                         # annotate skill scores
                         if (obs[station][varname]['presence']) and (simset[simname][station][varname]['presence']):
                             skills=get_skillscores(obs[station][varname][layer],simset[simname][station][varname][layer],timeint)
-                            if skills['n'] != 0:
+                            if (simno==0) and (skills['n'] != 0):
                                 if (len(plotopts['sims2plot']) - 0) == 1:
                                     y = 1.05
                                 else:

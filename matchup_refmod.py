@@ -335,6 +335,7 @@ class data(object):
         if 'GETM' in type:
             type_phys=type.split('-')[0]
             type_fabm = type.split('-')[1]
+            print('type_fabm:'+type_fabm)
             vardict={}
             if type_phys == 'GETM':
                 vlibphys = {'T': 'temp', 'S': 'salt'}
@@ -344,8 +345,7 @@ class data(object):
 
             if type_fabm == 'MAECS':
                 vlibfabm = {'Chl':'hzg_maecs_chl', 'NO3': 'hzg_maecs_nutN', 'DIP': 'hzg_maecs_nutP', 'Kd':'hzg_maecs_att'}
-
-            elif type_fabm == 'GPMEH.PZ':
+            elif type_fabm == 'GPM.PZ':
                 vlibfabm = {'DOs': 'EH_abioP_O2_percSat', 'NO3': 'EH_abioP_DINO3', 'NH4': 'EH_abioP_DINH4', 'DIP': 'EH_abioP_DIP',
                             'Chl': 'GPM_phy_Chl'}
             elif type_fabm[:3] == 'GPM':
