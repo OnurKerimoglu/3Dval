@@ -13,7 +13,7 @@ import matplotlib.colors as colors
 from matchup_refmod import get_matchups,filter_matchups_vertloc
 from taylorDiagram import TaylorDiagram
 
-def main(files,ftypes,fnames,varnames,plfpath,vertloc,yrs,seasons,split,scatter,taylor,remOLmeth,demo=False):
+def main(files,ftypes,fnames,varnames,plfpath,vertloc,yrs,seasons,split,scatter,taylor,barplotsacross,remOLmeth,demo=False):
     if demo==True:
         # get statistics
         [stdrefs,samples,x95,y95,x99,y99]=get_stats_demo()
@@ -40,18 +40,25 @@ def main(files,ftypes,fnames,varnames,plfpath,vertloc,yrs,seasons,split,scatter,
             #filter for vertical location
             Vset,vlsuf = filter_matchups_vertloc(Vset,vertloc)
 
-            #group and store into a seasons structure
+            # year interval suffix
+            yrsuf = '_' + str(yrs[0]) + '-' + str(yrs[1])
+
+            # Scatter and Taylor plots: group and store into a seasons structure
             SVset=group_seasons(Vset,seasons)
             SVstats={}
             for s in seasons:
                 print ('    Season:'+s)
-                # remove the outliers
+                # remove the outliers.
                 Dset,OLsuf = remove_outliers(SVset[s],remOLmeth)
                 # get statistics
                 SVstats[s] = get_stats(Dset)
-                # year interval suffix
-                yrsuf = '_' + str(yrs[0]) + '-' + str(yrs[1])
-                #do the scatter plots
+
+                if barplotsacross != 'none':
+                    fnameroot = files[mno + 1].split('/')[-1].replace('.nc', '') + '_vs_' + fnames[
+                        0] + vlsuf + yrsuf + '_S' + s + OLsuf + '_across_' + barplotsacross
+                    #TODO: use Dset (outliers filtered)
+                    barplots_across(Dset, Uset, barplotsacross, plfpath, fnameroot,
+                                    [ftypes[0], ftypes[mno + 1]])  # ,title=s
                 if scatter:
                     fnameroot = files[mno+1].split('/')[-1].replace('.nc', '') + '_vs_' + fnames[0] + vlsuf +yrsuf +'_S'+s+OLsuf+'_scatter'
                     scatter_refmod(Dset,SVstats[s],Uset,plfpath,fnameroot,[ftypes[0],ftypes[mno+1]]) # ,title=s
@@ -173,6 +180,106 @@ def remove_outliers(Dsetin, method='percentile'):
 
     return (Dsetout,suf)
 
+def barplots_across(Vset,Uset,acrossvar,plfpath,fnameroot,realids,title=''):
+    possibleenvvars=['botdepth']
+    if acrossvar not in possibleenvvars:
+        raise (Exception('barplots_across: unknown environmental parameter "%s". Available options are: %s.'%(acrossvar,', '.join(possibleenvvars))))
+
+    print('barplots_across: %s:'%acrossvar)
+    import pandas as pd
+    import numpy as np
+    import seaborn as sns
+
+    plottype = 'violin'  # box,violin
+
+    # pal = {'2011': 'skyblue', '2012': 'darkblue', '2013': 'orange', '2014': 'red'}
+    palw = {'obs': 'white', 'sim': 'gray'}
+    vars2plot=Vset.keys() #i.e., everything available
+    #vars2plot=['NO3','DIP','Chl']
+    unitspretty = {'NO3': '$\mu$MN','NH4': '$\mu$MN', 'DIP': '$\mu$MP', 'Chl':'mgChl/m$^3$'}  # 'NO3:DIP': 'molN/molP',
+
+    ids=['obs','sim']
+    if acrossvar=='botdepth':
+        nodes = ['<10', '10-20', '>20']
+        xlabel = 'Bottom depth interval [m]'
+
+    for vno,v in enumerate(vars2plot):
+        print('      %s'%v,end=": ")
+        f = plt.figure(figsize=(3.0, 3.0), dpi=150)
+        ax = f.add_axes([0.2, 0.2, 0.6, 0.6])
+
+        # collect the data
+        df0=[[],[],[]]
+        minval=1e9
+        maxval=0.0
+        nvec=[None]*len(nodes)
+        for nodeno, node in enumerate(nodes):
+            for idno,id in enumerate(ids):
+                if id=='obs':
+                    vals=Vset[v]['ref']
+                elif id=='sim':
+                    vals=Vset[v]['model']
+                if acrossvar=='botdepth':
+                    depths=Vset[v]['maxdepths']
+                    if '-' in node:
+                        depthind=np.where((depths>=float(node.split('-')[0])) * (depths<float(node.split('-')[1])))
+                    elif '<' in node:
+                        depthind = np.where(depths < float(node.split('<')[1]))
+                    elif '>' in node:
+                        depthind = np.where(depths >= float(node.split('>')[1]))
+
+                    vals=vals[depthind]
+                    nvec[nodeno] = len(vals)
+                    envvar='depth'
+                minval = min(min(vals), minval)
+                maxval = max(max(vals), maxval)
+                df_element = [vals, [node] * len(vals), [id] * len(vals)]
+                df0=np.concatenate([df0, df_element], axis=1)
+
+        DF = pd.DataFrame(columns=['value', envvar, 'dataset'], data=df0.T)
+        DF['value'] = DF['value'].astype(float)
+
+        # do the plot
+        if plottype == 'violin':
+            sns.violinplot(x=envvar, y='value', data=DF, inner=None, hue='dataset', palette=palw)  # , color = ".8")
+        elif plottype == 'box':
+            sns.boxplot(x=envvar, y='value', data=DF, ax=ax, hue='dataset', palette=palw)
+        #sns.stripplot(x='station', y='value', data=Odf, ax=ax, color='white', hue='year', palette=palw,
+                      # palette= pal2,
+        #              jitter=False, split=True, linewidth=1, size=8, edgecolor='black')
+        #ax.title()
+        plt.text(0.0, 1.02, r'$n_i$=%s; $\Sigma n_i=%s$'%(','.join(list(map(str,nvec))),sum(nvec)),
+                 transform=ax.transAxes, size=9)
+        ax.tick_params(axis='both', which='major', labelsize=8)
+        ax.set_xlabel(xlabel,size=8)
+        ax.set_ylabel(v + ' [' + unitspretty[v] + ']',size=8)
+        ax.set_ylim(minval*0.98,maxval*1.02)
+        #ax.get_yaxis().set_label_coords(-0.15, 0.5)
+
+        # legend:
+        # place it outside (hints from https://stackoverflow.com/questions/4700614/how-to-put-the-legend-out-of-the-plot)
+        # box = ax.get_position()
+        # ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+        if vno == 0:
+            ax.legend_.remove()
+        #     handles, labels = ax.get_legend_handles_labels()
+        #     lgd = ax.legend(reversed(handles[0:2]), reversed(labels[0:2]),
+        #                     loc='center left',
+        #                     fontsize=12,  # 'large',
+        #                     handletextpad=0.5,
+        #                     bbox_to_anchor=(1., 0.5))
+        #     lgd.legendHandles[0]._sizes = [40]
+        #     lgd.legendHandles[1]._sizes = [40]
+        else:
+            ax.legend_.remove()
+
+        fname = os.path.join(plfpath, fnameroot + '_' +plottype+'_' + v + '.png')
+        plt.savefig(fname, dpi=300)
+        #print('      plotted:' + fname)
+        print ('ok', end =" ")
+        plt.close()
+    print ('')
+
 def plot_Taylor(fname, rects, colors, stdrefs, samples, legend=True,x95=0, y95=0, x99=0, y99=0):
 
     # figure size according to row&column numbers
@@ -263,8 +370,8 @@ def plot_Taylor(fname, rects, colors, stdrefs, samples, legend=True,x95=0, y95=0
 
 def scatter_refmod(Vset,Vstat,Uset,plfpath,fnameroot,xylabels,title=''):
     # expected structure: V[var]={'dates','lats','lons','ref','sim'}
+    print('scatterplots:')
     plotext='.png'
-
     for v in Vset.keys():
         x = Vset[v]['ref']
         y = Vset[v]['model']
@@ -306,7 +413,7 @@ def scatter_refmod(Vset,Vstat,Uset,plfpath,fnameroot,xylabels,title=''):
         cb.ax.set_title('count', fontsize=8)
 
         fname = os.path.join(plfpath,fnameroot + '_' + v + plotext)
-        plt.savefig(fname, dpi=150)
+        plt.savefig(fname, dpi=300)
         plt.close()
         print ('      plotted:' + fname)
 
@@ -510,7 +617,8 @@ if __name__=='__main__':
     else:
         # ICES:
         files=['/home/onur/WORK/projects/GB/data/ices/lon-1-10_lat50-57/raw/2010-2014/BGC_data_block.pickle',
-               '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-PPZZ-P190529-fSG97dChl-sedPS/extract_skillC_sns144-GPMEH-P190529-fSG97dChl.2012-2013_zSB.nc']
+               #'/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-PPZZ-P190529-fSG97dChl-sedPS/extract_skillC_sns144-GPMEH-P190529-fSG97dChl.2012-2013_zSB.nc'
+               '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223/extract_skillC_sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223.2010-2014_zSB.nc']
         #files = ['/home/onur/WORK/projects/GB/data/ices/lon-1-10_lat50-57/raw/TS-2008-2015/TS_data_block.pickle',,
         #         '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-Fnew/extract_MphysC_sns144-GPMEH-Fnew.2012_zSB.nc']
         # ESA-CCI:
@@ -566,7 +674,7 @@ if __name__=='__main__':
         yrsS = sys.argv[7].split(',')
         yrs=[np.int(y) for y in yrsS]   
     else:
-        yrs=[2012,2013]
+        yrs=[2011,2014]
 
     if len(sys.argv) > 8:
         remOLmeth=sys.argv[8]
@@ -587,11 +695,16 @@ if __name__=='__main__':
     if len(sys.argv)>11:
         scatter=True if sys.argv[11] == '1' else False
     else:
-        scatter=True
+        scatter=False
 
     if len(sys.argv)>12:
         taylor = True if sys.argv[12] == '1' else False
     else:
-        taylor=True
+        taylor=False
 
-    main(files,ftypes,fnames,varnames,plfpath,vertloc,yrs,seasons,split,scatter,taylor,remOLmeth,demo=False)
+    if len(sys.argv)>13:
+        barplotsacross = sys.argv[13]
+    else:
+        barplotsacross='salinity' #'none',botdepth,salinity
+
+    main(files,ftypes,fnames,varnames,plfpath,vertloc,yrs,seasons,split,scatter,taylor,barplotsacross,remOLmeth,demo=False)

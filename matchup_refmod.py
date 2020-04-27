@@ -27,7 +27,7 @@ def get_matchups(files,ftypes,fnames,varnames,yrs):
 
         #check if the pickled data exists:
         if os.path.isfile(picklefname):
-            matchupsetV,unitsetV = np.load(picklefname)
+            matchupsetV,unitsetV = np.load(picklefname, encoding='latin1')
             print ('un-pickled:'+picklefname)
         else:
             #if it does not exist:
