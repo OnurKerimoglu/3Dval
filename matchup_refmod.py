@@ -13,7 +13,7 @@ from scipy.spatial import cKDTree
 
 from getm_funcs import get_getm_bathymetry_cropped
 
-cordict={'mgN m-3':'$\mu$MN'}
+cordict={'mgN m-3':'$\mu$MN','[ps':'g/kg'}
 corfacts={'mgN m-3':1./14.0067}
 
 def get_matchups(files,ftypes,fnames,varnames,yrs):
@@ -218,7 +218,8 @@ def find_matchups(ref,model,varnames):
             depths=depths[vali]
         if list(maxdepths) != [-1]:
             maxdepths=maxdepths[vali]
-
+        
+        print('%s: minlat:%s,maxlat:%s'%(v,min(lats[vali]),max(lats[vali])))
         #store
         matchupsetR[v]={'dates': dates[vali],'depths': depths, 'maxdepths':maxdepths, 'lats':lats[vali] , 'lons': lons[vali], 'ref': Vref[vali], 'model':Vmodel[vali]}
         unitsetR[v] = {'ref': ref.units[v], 'model': model.units[v]}
@@ -415,7 +416,7 @@ class data(object):
         #dates
         tv=nc.variables['time']
         utime = netcdftime.utime(tv.units)
-        datetimes = utime.num2date(tv[:])
+        datetimes = utime.num2date(list(tv[:]))
         datesF=np.array([datetimes[r].date() for r in range(len(datetimes))])
 
         ti = (datesF >= timeint[0]) & (datesF <= timeint[1])
@@ -573,14 +574,14 @@ class data(object):
         dates=np.array([rd+datetime.timedelta(0,dataV[r,tcol]) for r in range(len(dataV[:,1]))]) #reconstruct dates
         ti = (dates > timeint[0]) & (dates < timeint[1])
 
-        #max.depth filter
-        zmaxi=(dataV[:,zmaxcol]>=zmaxint[0]) | (dataV[:,zmaxcol]<=zmaxint[1])
+        #max.depth filter: this fields tend to be gappy, so do not use
+        #zmaxi=(dataV[:,zmaxcol]>=zmaxint[0]) | (dataV[:,zmaxcol]<=zmaxint[1])
 
         #depth-interval filter (if specified)
         zi = (dataV[:, zcol] >= zint[0]) & (dataV[:, zcol] <= zint[1])
 
         #reduce the data , such that the lat-lon filtering doesn't have to scan all the data.
-        ind=ti & zmaxi & zi
+        ind=ti & zi #& zmaxi
         if sum(ind)==0:
             raise(Warning('no observations left after filtering for t,zmax and z'))
             return([])
