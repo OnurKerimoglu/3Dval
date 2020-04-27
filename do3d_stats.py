@@ -10,7 +10,7 @@ import matplotlib.colors as colors
 
 #local modules
 #sys.path.insert(1, '/home/onur/WORK/codes/python/')
-from matchup_refmod import get_matchups,filter_matchups_vertloc
+from matchup_refmod import get_matchups,filter_matchups_vertloc,combine_matchedup_sets
 from taylorDiagram import TaylorDiagram
 
 def main(files,ftypes,fnames,varnames,plfpath,vertloc,yrs,seasons,split,scatter,taylor,barplotsacross,remOLmeth,demo=False):
@@ -36,6 +36,13 @@ def main(files,ftypes,fnames,varnames,plfpath,vertloc,yrs,seasons,split,scatter,
         print ('  Model:'+m)
         Vset,Uset=get_matchups(files,fnames,fnames,varnames,yrs)
 
+        if barplotsacross == 'salinity':
+            filesS=['/home/onur/WORK/projects/GB/data/ices/lon-1-10_lat50-57/raw/2010-2014/TS_data_block.pickle',
+                    '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223/extract_MphysC_sns144-GPMEH-G191007-Fnew3-PPZZSi-PinR-P191010-vS.2010-2014_zSB.nc']
+            fnamesS=['ICES', 'GETM-GPM.PPZZ-EH.GC']
+            VsetS, UsetS = get_matchups(filesS, fnamesS, fnames, ['S'], yrs)
+            Vset=combine_matchedup_sets(Vset,VsetS,Uset,UsetS)
+
         if split=='none':
             #filter for vertical location
             Vset,vlsuf = filter_matchups_vertloc(Vset,vertloc)
@@ -43,7 +50,7 @@ def main(files,ftypes,fnames,varnames,plfpath,vertloc,yrs,seasons,split,scatter,
             # year interval suffix
             yrsuf = '_' + str(yrs[0]) + '-' + str(yrs[1])
 
-            # Scatter and Taylor plots: group and store into a seasons structure
+            # group and store into a seasons structure
             SVset=group_seasons(Vset,seasons)
             SVstats={}
             for s in seasons:
@@ -181,7 +188,7 @@ def remove_outliers(Dsetin, method='percentile'):
     return (Dsetout,suf)
 
 def barplots_across(Vset,Uset,acrossvar,plfpath,fnameroot,realids,title=''):
-    possibleenvvars=['botdepth']
+    possibleenvvars=['botdepth','salinity']
     if acrossvar not in possibleenvvars:
         raise (Exception('barplots_across: unknown environmental parameter "%s". Available options are: %s.'%(acrossvar,', '.join(possibleenvvars))))
 
@@ -202,6 +209,11 @@ def barplots_across(Vset,Uset,acrossvar,plfpath,fnameroot,realids,title=''):
     if acrossvar=='botdepth':
         nodes = ['<10', '10-20', '>20']
         xlabel = 'Bottom depth interval [m]'
+    elif acrossvar=='salinity':
+        nodes = ['<30', '30-33', '>33']
+        xlabel = 'Salinity interval [g/kg]'
+    else:
+         raise(Exception('unknown environmental variable: %s'%acrossvar))
 
     for vno,v in enumerate(vars2plot):
         print('      %s'%v,end=": ")
@@ -227,6 +239,16 @@ def barplots_across(Vset,Uset,acrossvar,plfpath,fnameroot,realids,title=''):
                         depthind = np.where(depths < float(node.split('<')[1]))
                     elif '>' in node:
                         depthind = np.where(depths >= float(node.split('>')[1]))
+                elif acrossvar == 'salinity':
+                    Smes = Vset[v]['S-ref']
+                    Smod = Vset[v]['S-mod']
+                    if '-' in node:
+                        depthind = np.where(
+                            (Smes >= float(node.split('-')[0])) * (Smes < float(node.split('-')[1])))
+                    elif '<' in node:
+                        depthind = np.where(Smes < float(node.split('<')[1]))
+                    elif '>' in node:
+                        depthind = np.where(Smes >= float(node.split('>')[1]))
 
                     vals=vals[depthind]
                     nvec[nodeno] = len(vals)
@@ -563,8 +585,11 @@ def group_seasons (matchups,seasons):
             for v in matchups.keys():
                 datesM=[date.month for date in matchups[v]['dates']]
                 mi=np.in1d(datesM,months)
-                Vset[v] = {'dates': matchups[v]['dates'][mi], 'lats': matchups[v]['lats'][mi], 'lons': matchups[v]['lons'][mi],
-                                 'ref': matchups[v]['ref'][mi], 'model': matchups[v]['model'][mi]}
+                #Vset[v] = {'dates': matchups[v]['dates'][mi], 'lats': matchups[v]['lats'][mi], 'lons': matchups[v]['lons'][mi],
+                #                 'ref': matchups[v]['ref'][mi], 'model': matchups[v]['model'][mi]}
+                Vset[v] = {}
+                for par in matchups[v].keys():
+                    Vset[v][par] = matchups[v][par][mi]
             SVset[s]=Vset
     return SVset
 

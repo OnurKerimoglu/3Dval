@@ -239,6 +239,48 @@ def distance(origin, destination):
     d = radius * c
     return d
 
+def combine_matchedup_sets(Vset1,Vset2,Uset1,Uset2):
+    print('Combining matched-up datasets.')
+    VsetC_vali = {}
+    VsetC = Vset1
+    if len(Vset2.keys())>1:
+        raise(Exception('Vset2 can contain only 1 variable. It contains: %s'%','.join(list(Vset2.keys()))))
+    v2 = list(Vset2.keys())[0]
+    #new field names
+    fCr=v2 + '-ref'
+    fCm=v2 + '-mod'
+    V2jd = np.array([Vset2[v2]['dates'][ti].timetuple().tm_yday for ti in range(len(Vset2[v2]['dates']))])
+    for v1 in Vset1.keys():
+        VsetC[v1][fCr] = np.nan * np.ones(len(Vset1[v1]['ref']))
+        VsetC[v1][fCm] = np.nan * np.ones(len(Vset1[v1]['ref']))
+        totavgi=0
+        totsinglei=0
+        V1jd =np.array([Vset1[v1]['dates'][ti].timetuple().tm_yday for ti in range(len(Vset1[v1]['dates']))])
+        for i1 in range(0,len(VsetC[v1])):
+            #idates=abs(Vset1[v1]['dates'][i1] - Vset2[v2]['dates'])<datetime.timedelta(days=30)
+            idates = abs(V1jd[i1] - V2jd)<90 #match based on julian days
+            ilats=abs(Vset1[v1]['lats'][i1] - Vset2[v2]['lats'])<1.0
+            ilons=abs(Vset1[v1]['lons'][i1] - Vset2[v2]['lons'])<1.0
+            idepths=abs(Vset1[v1]['depths'][i1] - Vset2[v2]['depths'])<10.0
+            #imaxdepths=abs(Vset1[v1]['maxdepths'][i1] - Vset2[v2]['maxdepths'])<1.0
+            i2=np.where(idates*idepths*ilats*ilons)[0] #*imaxdepths
+            if len(i2)==1:
+                VsetC[v1][fCr][i1] = Vset2[v2]['ref'][i2[0]]
+                VsetC[v1][fCm][i1] = Vset2[v2]['model'][i2[0]]
+                totsinglei = totsinglei + 1
+            elif len(i2)>1:
+                VsetC[v1][fCr][i1] = Vset2[v2]['ref'][i2].mean()
+                VsetC[v1][fCm][i1] = Vset2[v2]['model'][i2].mean()
+                totavgi=totavgi+1
+        #remove nan's, i.e., not filled indices
+        vali = np.isfinite(VsetC[v1][fCr])
+        VsetC_vali[v1]={}
+        print('  %s: for %s samples, %s matching samples were found for %s (single: %s, averaged multiple: %s)' %(v1, len(Vset1[v1]['ref'][:]),sum(vali), v2, totsinglei, totavgi))
+        for f in VsetC[v1].keys():
+            VsetC_vali[v1][f]=VsetC[v1][f][vali]
+
+    return VsetC_vali
+
 def filter_matchups_region(Vset0,r):
     Rdict = {'NW': [[53.5,56.0],[0,5.0]], 'NE': [[54.5,56.0],[5.0,10.0]],
              'SW': [[51.0,53.5],[0,5.0]], 'SE': [[51.0,54.5],[5.0,10.0]],
