@@ -156,7 +156,7 @@ def remove_outliers(Dsetin, method='percentile'):
             # construct a suffix
             suf = '_' + str(perc) + 'perc'
         elif method=='middle':
-            Mperc=99
+            Mperc=90
             Lperc = (100. - Mperc) / 2.
             Hperc=100.-(100-Mperc)/2.
             # find the treshold value based on the percentile
@@ -208,10 +208,12 @@ def barplots_across(Vset,Uset,acrossvar,plfpath,fnameroot,realids,title=''):
     ids=['obs','sim']
     if acrossvar=='botdepth':
         nodes = ['<10', '10-20', '>20']
-        xlabel = 'Bottom depth interval [m]'
+        xlabel = 'Bottom depth [m]'
+        envmethod=''
     elif acrossvar=='salinity':
-        nodes = ['<30', '30-33', '>33']
-        xlabel = 'Salinity interval [g/kg]'
+        nodes = ['<29.5', '29.5-32', '>32']
+        xlabel = 'Salinity [g/kg]'
+        envmethod='abs' #'rel','abs'
     else:
          raise(Exception('unknown environmental variable: %s'%acrossvar))
 
@@ -240,15 +242,19 @@ def barplots_across(Vset,Uset,acrossvar,plfpath,fnameroot,realids,title=''):
                     elif '>' in node:
                         depthind = np.where(depths >= float(node.split('>')[1]))
                 elif acrossvar == 'salinity':
-                    Smes = Vset[v]['S-ref']
-                    Smod = Vset[v]['S-mod']
+                    if envmethod == 'abs':
+                        S = Vset[v]['S-ref']
+                    elif envmethod =='rel':
+                        if id=='obs':
+                            S = Vset[v]['S-ref']
+                        elif id=='sim':
+                            S = Vset[v]['S-mod']
                     if '-' in node:
-                        depthind = np.where(
-                            (Smes >= float(node.split('-')[0])) * (Smes < float(node.split('-')[1])))
+                        depthind = np.where((S >= float(node.split('-')[0])) * (S < float(node.split('-')[1])))
                     elif '<' in node:
-                        depthind = np.where(Smes < float(node.split('<')[1]))
+                        depthind = np.where(S < float(node.split('<')[1]))
                     elif '>' in node:
-                        depthind = np.where(Smes >= float(node.split('>')[1]))
+                        depthind = np.where(S >= float(node.split('>')[1]))
 
                     vals=vals[depthind]
                     nvec[nodeno] = len(vals)
@@ -295,7 +301,7 @@ def barplots_across(Vset,Uset,acrossvar,plfpath,fnameroot,realids,title=''):
         else:
             ax.legend_.remove()
 
-        fname = os.path.join(plfpath, fnameroot + '_' +plottype+'_' + v + '.png')
+        fname = os.path.join(plfpath, fnameroot+envmethod + '_' +plottype+'_' + v + '.png')
         plt.savefig(fname, dpi=300)
         #print('      plotted:' + fname)
         print ('ok', end =" ")
@@ -730,6 +736,6 @@ if __name__=='__main__':
     if len(sys.argv)>13:
         barplotsacross = sys.argv[13]
     else:
-        barplotsacross='salinity' #'none',botdepth,salinity
+        barplotsacross='none' #'none',botdepth,salinity
 
     main(files,ftypes,fnames,varnames,plfpath,vertloc,yrs,seasons,split,scatter,taylor,barplotsacross,remOLmeth,demo=False)

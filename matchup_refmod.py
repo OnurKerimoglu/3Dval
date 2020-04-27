@@ -252,17 +252,17 @@ def combine_matchedup_sets(Vset1,Vset2,Uset1,Uset2):
     fCm=v2 + '-mod'
     V2jd = np.array([Vset2[v2]['dates'][ti].timetuple().tm_yday for ti in range(len(Vset2[v2]['dates']))])
     for v1 in Vset1.keys():
+        print('  '+v1,end='')
         VsetC[v1][fCr] = np.nan * np.ones(len(Vset1[v1]['ref']))
         VsetC[v1][fCm] = np.nan * np.ones(len(Vset1[v1]['ref']))
-        totavgi=0
-        totsinglei=0
+        totavgi=0; totsinglei=0; skipped=0
         V1jd =np.array([Vset1[v1]['dates'][ti].timetuple().tm_yday for ti in range(len(Vset1[v1]['dates']))])
-        for i1 in range(0,len(VsetC[v1])):
-            #idates=abs(Vset1[v1]['dates'][i1] - Vset2[v2]['dates'])<datetime.timedelta(days=30)
-            idates = abs(V1jd[i1] - V2jd)<90 #match based on julian days
-            ilats=abs(Vset1[v1]['lats'][i1] - Vset2[v2]['lats'])<1.0
-            ilons=abs(Vset1[v1]['lons'][i1] - Vset2[v2]['lons'])<1.0
-            idepths=abs(Vset1[v1]['depths'][i1] - Vset2[v2]['depths'])<10.0
+        for i1 in range(0,len(VsetC[v1]['ref'])):
+            idates=abs(Vset1[v1]['dates'][i1] - Vset2[v2]['dates'])<datetime.timedelta(days=10)
+            #idates = abs(V1jd[i1] - V2jd)<90 #match based on julian days
+            ilats=abs(Vset1[v1]['lats'][i1] - Vset2[v2]['lats'])<0.05
+            ilons=abs(Vset1[v1]['lons'][i1] - Vset2[v2]['lons'])<0.05
+            idepths=abs(Vset1[v1]['depths'][i1] - Vset2[v2]['depths'])<5.0
             #imaxdepths=abs(Vset1[v1]['maxdepths'][i1] - Vset2[v2]['maxdepths'])<1.0
             i2=np.where(idates*idepths*ilats*ilons)[0] #*imaxdepths
             if len(i2)==1:
@@ -273,10 +273,12 @@ def combine_matchedup_sets(Vset1,Vset2,Uset1,Uset2):
                 VsetC[v1][fCr][i1] = Vset2[v2]['ref'][i2].mean()
                 VsetC[v1][fCm][i1] = Vset2[v2]['model'][i2].mean()
                 totavgi=totavgi+1
+            else:
+                skipped=skipped+1
         #remove nan's, i.e., not filled indices
         vali = np.isfinite(VsetC[v1][fCr])
         VsetC_vali[v1]={}
-        print('  %s: for %s samples, %s matching samples were found for %s (single: %s, averaged multiple: %s)' %(v1, len(Vset1[v1]['ref'][:]),sum(vali), v2, totsinglei, totavgi))
+        print('  %s: for %s samples, %s skipped, %s matching samples were found for %s (single: %s, averaged multiple: %s)' %(v1, len(Vset1[v1]['ref'][:]),skipped,sum(vali), v2, totsinglei, totavgi))
         for f in VsetC[v1].keys():
             VsetC_vali[v1][f]=VsetC[v1][f][vali]
 
@@ -356,7 +358,8 @@ def convert_units(matchupset,unitset):
                 print (' ref:'+ unitset[v]['ref']+'->'+unitsetC[v]),
             if unitset[v]['model'] in cordict.keys():
                 unitsetC[v]=cordict[unitset[v]['model']]
-                matchupset[v]['model']=matchupset[v]['model']*corfacts[unitset[v]['model']]
+                corfact = corfacts[unitset[v]['ref']] if unitset[v]['ref'] in corfacts.keys() else 1.0
+                matchupset[v]['ref'] = matchupset[v]['ref'] * corfact
                 corrected=True
                 print (' model:' + unitset[v]['model'] + '->' + unitsetC[v]),
             print ('') #to end the line
