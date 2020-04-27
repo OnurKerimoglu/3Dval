@@ -577,14 +577,14 @@ class data(object):
         dates=np.array([rd+datetime.timedelta(0,dataV[r,tcol]) for r in range(len(dataV[:,1]))]) #reconstruct dates
         ti = (dates > timeint[0]) & (dates < timeint[1])
 
-        #max.depth filter: this fields tend to be gappy, so do not use
-        #zmaxi=(dataV[:,zmaxcol]>=zmaxint[0]) | (dataV[:,zmaxcol]<=zmaxint[1])
+        #max.depth filter: this fields tends to be gappy
+        zmaxi=(dataV[:,zmaxcol]>=zmaxint[0]) | (dataV[:,zmaxcol]<=zmaxint[1])
 
         #depth-interval filter (if specified)
         zi = (dataV[:, zcol] >= zint[0]) & (dataV[:, zcol] <= zint[1])
 
         #reduce the data , such that the lat-lon filtering doesn't have to scan all the data.
-        ind=ti & zi #& zmaxi
+        ind=ti & zi & zmaxi
         if sum(ind)==0:
             raise(Warning('no observations left after filtering for t,zmax and z'))
             return([])

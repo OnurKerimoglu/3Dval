@@ -38,7 +38,7 @@ def main(files,ftypes,fnames,varnames,plfpath,vertloc,yrs,seasons,split,scatter,
 
         if barplotsacross == 'salinity':
             filesS=['/home/onur/WORK/projects/GB/data/ices/lon-1-10_lat50-57/raw/2010-2014/TS_data_block.pickle',
-                    '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223/extract_MphysC_sns144-GPMEH-G191007-Fnew3-PPZZSi-PinR-P191010-vS.2010-2014_zSB.nc']
+                    '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223/extract_MphysC_sns144-GPMEH-G191007-Fnew3-PPZZSi-PinR-P191010-vS.2011-2014_zSB.nc']
             fnamesS=['ICES', 'GETM-GPM.PPZZ-EH.GC']
             VsetS, UsetS = get_matchups(filesS, fnamesS, fnames, ['S'], yrs)
             Vset=combine_matchedup_sets(Vset,VsetS,Uset,UsetS)
@@ -156,7 +156,7 @@ def remove_outliers(Dsetin, method='percentile'):
             # construct a suffix
             suf = '_' + str(perc) + 'perc'
         elif method=='middle':
-            Mperc=90
+            Mperc=99
             Lperc = (100. - Mperc) / 2.
             Hperc=100.-(100-Mperc)/2.
             # find the treshold value based on the percentile
@@ -726,7 +726,7 @@ if __name__=='__main__':
     if len(sys.argv)>11:
         scatter=True if sys.argv[11] == '1' else False
     else:
-        scatter=False
+        scatter=True
 
     if len(sys.argv)>12:
         taylor = True if sys.argv[12] == '1' else False
@@ -736,6 +736,6 @@ if __name__=='__main__':
     if len(sys.argv)>13:
         barplotsacross = sys.argv[13]
     else:
-        barplotsacross='none' #'none',botdepth,salinity
+        barplotsacross='salinity' #'none',botdepth,salinity
 
     main(files,ftypes,fnames,varnames,plfpath,vertloc,yrs,seasons,split,scatter,taylor,barplotsacross,remOLmeth,demo=False)
