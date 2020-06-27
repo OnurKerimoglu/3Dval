@@ -29,6 +29,7 @@ knownunits={'total_chlorophyll_calculator_result':'mg/m$^{3}$','GPM_phy_Chl':'mg
             'sigma_t':'kg/m$^3$','sigma0':'kg/m$^3$','rho':'kg/m$^3$', 'temp':u'\N{DEGREE SIGN}C', 'tempmean':u'\N{DEGREE SIGN}C', 'salt':'g/kg', 'saltmean':'g/kg'}
 logvars=['']
 primprodvars=['hzg_maecs_GPPR', 'hzg_maecs_NPPR','GPM_phy_NPPR','total_NPPR_calculator_result']
+cbarorient = 'horizontal'
 
 def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plottopo=True,datasource='GF'):
 
@@ -37,11 +38,14 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
         months2plot= [] #[9,10,11]
         numcol0 = 3.0
         figh=8
-        figw=8
-        dpi=200
-        plottopo= True
-        showparmer=True
-        left=0.12;right=0.76;bottom=0.1;top=0.9; hsp=0.25; wsp=0.1
+        figw=6
+        dpi=100
+        plottopo= False
+        showparmer=False
+        if cbarorient=='vertical':
+            left = 0.12;right = 0.76; bottom = 0.1;top = 0.9;hsp = 0.25;wsp = 0.1
+        if cbarorient=='horizontal':
+            left=0.12;right=0.9;bottom=0.17;top=0.9; hsp=0.25; wsp=0.1
     elif mode=='3panelsperrow': # 3 panels per row
         years2plot = 0  # [2012,2013] #[2000,2001,2002,2003,2004,2005]
         months2plot = [] # [4,5,6,7,8,9]
@@ -105,7 +109,7 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
    
     tv = nc.variables['time']
     utime=netcdftime.utime(tv.units)
-    tvec=utime.num2date(tv[:])
+    tvec=utime.num2date(list(tv[:]))
 
     #extract days, months, years to be used for finding time indices later
     years=[tvec[ti].year for ti in range(0,len(tvec))]
@@ -161,7 +165,7 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
                 months2plot=uniquemonths
 
         if TempMeth in ['Yaverage','Yintegral']:
-            showparmer=True
+            #showparmer=True
             tind=1*[None]
             if '_' not in TempMeth0: #take everything available that for the year
                 tind[0]= np.where(np.in1d(years,year))[0][:]
@@ -446,21 +450,28 @@ def plot2Dmap_Q(f,ax,clim,x,y,u,v,varname,proj,setup,titlestr,plottopo,H,showpar
         if showparmer:
             proj.drawparallels(np.arange(51., 57., 1.), labels=[1, 0, 0, 0], fontsize=9)
             proj.drawmeridians(np.arange(-1., 10., 1.), labels=[0, 0, 0, 1], fontsize=9)
-        else:
-            proj.drawparallels(np.arange(51., 57., 1.), labels=[1, 0, 0, 0], fontsize=9,linewidth = 0)
-            proj.drawmeridians(np.arange(-1., 10., 1.), labels=[0, 0, 0, 1], fontsize=9,linewidth = 0)
+        #else:
+        #    proj.drawparallels(np.arange(51., 57., 1.), labels=[1, 0, 0, 0], fontsize=9,linewidth = 0)
+        #    proj.drawmeridians(np.arange(-1., 10., 1.), labels=[0, 0, 0, 1], fontsize=9,linewidth = 0)
 
     # plot
     if plotcont:
         # retrieve the axes position to set the colorbar position
         pos1 = ax.get_position()
-        poscbar = [pos1.x0 + pos1.width + 0.07, pos1.y0 + 0.09, 0.02, pos1.height * 0.7]
+        #poscbar = [pos1.x0 + pos1.width + 0.07, pos1.y0 + 0.09, 0.02, pos1.height * 0.7]
+
+        if cbarorient == 'vertical':
+            poscbar = [pos1.x0 + pos1.width + 0.07, pos1.y0 + 0.09, 0.02, pos1.height * 0.7]
+        elif cbarorient == 'horizontal':
+            poscbar = [pos1.x0, pos1.y0 - 0.09, pos1.width, 0.02]
+
         cax = plt.axes(position=poscbar)
 
         #cb=plt.colorbar(pcf)
         #plt.setp(cb.ax.get_yticklabels()[::2], visible=False)
         norm = mpl.colors.BoundaryNorm(intbounds, cmap.N)
         cb = mpl.colorbar.ColorbarBase(cax, cmap=cmap,
+                                       orientation=cbarorient,
                                        norm=norm,
                                        boundaries=allbounds,
                                        extend=extopt,
@@ -548,16 +559,12 @@ def plot2Dmap(f,ax,clim,x,y,v,varname,proj,setup,titlestr,plottopo,H,showparmer=
 
     #retrieve the axes position to set the colorbar position
     pos1 = ax.get_position()
-    poscbar = [pos1.x0 + pos1.width + 0.07, pos1.y0+0.125 , 0.02, pos1.height * 0.62]
+    #poscbar = [pos1.x0 + pos1.width + 0.07, pos1.y0+0.125 , 0.02, pos1.height * 0.62]
+    if cbarorient == 'vertical':
+        poscbar = [pos1.x0 + pos1.width + 0.07, pos1.y0 + 0.09, 0.02, pos1.height * 0.7]
+    elif cbarorient == 'horizontal':
+        poscbar = [pos1.x0, pos1.y0 - 0.12, pos1.width, 0.02]
     cax = plt.axes(position=poscbar)
-
-    #cb = plt.colorbar(pcf, cax=cax,ticks=cbt)
-    # cb.ax.tick_params(axis='both', which='major', labelsize=10, length=0)
-
-    #if showparmer:
-    #    cb=plt.colorbar(pcf,shrink=0.6)
-    #else:
-    #    cb=plt.colorbar(pcf,shrink=0.9)
 
     #norm = mpl.colors.BoundaryNorm(allbounds[1:-1], cmap.N)
     if logplot:
@@ -570,6 +577,7 @@ def plot2Dmap(f,ax,clim,x,y,v,varname,proj,setup,titlestr,plottopo,H,showparmer=
     else:
         norm = mpl.colors.BoundaryNorm(intbounds, cmap.N)
         cb = mpl.colorbar.ColorbarBase(cax, cmap=cmap,
+                                        orientation=cbarorient,
                                         norm=norm,
                                         boundaries=allbounds,
                                         extend=extopt,
@@ -647,6 +655,7 @@ if __name__=='__main__':
     if len(sys.argv)>1:
         fname=sys.argv[1]
     else:
+        #fname = '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-G191007-Fnew3-PPZZSi-PinR-P191010-vS/extract_PZCtotVA_sns144-GPMEH-G191007-Fnew3-PPZZSi-PinR-P191010-vS.2013-mm.nc'
         fname = '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-G191007-Fnew3-PPZZSi-PinR-P191010-vS/extract_PZCtotVA_sns144-GPMEH-G191007-Fnew3-PPZZSi-PinR-P191010-vS.2013-mm.nc'
         #fname = '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-PPZZ-P190628-fSG97dChl/extract_RavgC_sns144-GPMEH-PPZZ-P190628-fSG97dChl.2012-mm.nc'
         #fname = '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-P190607-fSG97dChl/extract_skillCS_sns144-GPMEH-P190607-fSG97dChl.2012-mm.nc'
@@ -700,7 +709,7 @@ if __name__=='__main__':
     if len(sys.argv) > 6:
         setup = sys.argv[6]
     else:
-        setup = 'SNSfull'  # WadSea SNSfull GBight
+        setup = 'WadSea'  # WadSea SNSfull GBight
         # setup='deep_lake'
 
     if len(sys.argv) > 7:
