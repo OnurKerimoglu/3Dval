@@ -16,7 +16,8 @@ def readobs(paths,readraw,statsets,stations,timeint,depthints,vars,olf):
 
     pickleobs=True
     if pickleobs:
-        picklecode = '_%s_%s_%s-%s' % ('-'.join(statsets), '-'.join(depthints.keys()), timeint[0].year, timeint[1].year)
+        #picklecode = '_%s_%s_%s-%s' % ('-'.join(statsets), '-'.join(depthints.keys()), timeint[0].year, timeint[1].year)
+        picklecode = '_%s_%s-%s' % ('-'.join(statsets), timeint[0].year, timeint[1].year)
         if olf>0:
             picklecode=picklecode+'_OLstd%s' %int(olf)
         pickledobsfile = os.path.join(paths['pickledobspath'], 'obs' + picklecode + '.pickle')

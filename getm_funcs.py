@@ -74,7 +74,7 @@ def get_var_from_ncf(varn_vl,ncf):
         else:
             varF=0
             success = False
-            raise(Warning('requested variable not found:'+varn))
+            raise(Warning('requested variable not found:'+varn_vl))
 
     return(varF,success)
 
@@ -110,7 +110,8 @@ def get_getm_dom_vars(simf,simdomain=''):
         bat=bat.filled(np.nan) # transform the masked values to nan
     return (lons,lats,bat,ysl,xsl)
 
-def get_getm_bathymetry_cropped(fname='/home/onur/WORK/projects/GB/data/topo/topo_area_sns.nc',setup='SNS'):
+#def get_getm_bathymetry_cropped(fname='/home/onur/WORK/projects/GB/data/topo/topo_area_sns.nc',setup='SNS'):
+def get_getm_bathymetry_cropped(fname='/pf/g/g260108/setups/3Dsetups/sns/Forcing/Topo/topo_area_sns.nc',setup='SNS'):
     ncB=netCDF4.Dataset(fname)
     ncBv=ncB.variables
     #bathymetry from a topo file

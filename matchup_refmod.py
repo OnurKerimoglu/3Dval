@@ -353,7 +353,8 @@ def convert_units(matchupset,unitset):
             corrected=False
             if unitset[v]['ref'] in cordict.keys():
                 unitsetC[v]=cordict[unitset[v]['ref']]
-                matchupset[v]['ref']=matchupset[v]['ref']*corfacts[unitset[v]['ref']]
+                corfact = corfacts[unitset[v]['ref']] if unitset[v]['ref'] in corfacts.keys() else 1.0
+                matchupset[v]['ref']=matchupset[v]['ref']*corfact
                 corrected=True
                 print (' ref:'+ unitset[v]['ref']+'->'+unitsetC[v]),
             if unitset[v]['model'] in cordict.keys():
