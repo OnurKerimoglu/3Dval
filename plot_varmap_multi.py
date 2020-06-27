@@ -463,7 +463,7 @@ def plot2Dmap_Q(f,ax,clim,x,y,u,v,varname,proj,setup,titlestr,plottopo,H,showpar
         if cbarorient == 'vertical':
             poscbar = [pos1.x0 + pos1.width + 0.07, pos1.y0 + 0.09, 0.02, pos1.height * 0.7]
         elif cbarorient == 'horizontal':
-            poscbar = [pos1.x0, pos1.y0 - 0.09, pos1.width, 0.02]
+            poscbar = [pos1.x0, pos1.y0 - 0.10, pos1.width, 0.02]
 
         cax = plt.axes(position=poscbar)
 
@@ -526,6 +526,7 @@ def plot2Dmap(f,ax,clim,x,y,v,varname,proj,setup,titlestr,plottopo,H,showparmer=
         logplot = False
         cmap, extopt, cbt, intbounds, allbounds = discrete_cmap_tuner(clim, [minval, maxval], Nlev=Nlev, colmap=colmap,
                                                                       nancol='white')
+        if clim[0]==-0.7 and clim[1]==0.7: cbt=[-0.7,-0.3,0.3,0.7]
     cmap.set_bad(str(landgr))
 
 
@@ -563,7 +564,7 @@ def plot2Dmap(f,ax,clim,x,y,v,varname,proj,setup,titlestr,plottopo,H,showparmer=
     if cbarorient == 'vertical':
         poscbar = [pos1.x0 + pos1.width + 0.07, pos1.y0 + 0.09, 0.02, pos1.height * 0.7]
     elif cbarorient == 'horizontal':
-        poscbar = [pos1.x0, pos1.y0 - 0.12, pos1.width, 0.02]
+        poscbar = [pos1.x0, pos1.y0 - 0.10, pos1.width, 0.02]
     cax = plt.axes(position=poscbar)
 
     #norm = mpl.colors.BoundaryNorm(allbounds[1:-1], cmap.N)
@@ -621,7 +622,7 @@ if __name__=='__main__':
         'currs': [0.0, 0.2],
         't2': [0, 20],
         'elev': [-1.0, 1.0],
-        'temp': [12, 18.],
+        'temp': [10, 20.],
         'salt': [15, 33],
         'sigma_t': [-1.0, 0.0],
         'sigma0': [-1.0, 0.0],

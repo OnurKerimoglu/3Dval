@@ -16,10 +16,11 @@ class Style:
         if opt=='TSdefault':
             self.res = 300
             self.figwh=[12, 10]
-            self.col={'obs':'0.6','sim':['k','r','b','g']}
+            #self.col={'obs':'0.6','sim':['k','r','b','g']}
+            self.col={'obs':'0.6','sim':['k','tomato','darkblue','deepskyblue']}
             self.line={'obs':'None','sim':['-','-','-','-']}
             self.marker={'obs':'o','sim':['None','None','None','None']}
-            self.lw={'obs':1,'sim':[1,1,1,1]}
+            self.lw={'obs':1,'sim':[1,2,1,1]}
 
 def stations_plots(plotopts,obs,sim,plotrootpath,statsets,stations,timeint,depthints):
     fnamecode= '_%s-%s' %(timeint[0].year, timeint[1].year)

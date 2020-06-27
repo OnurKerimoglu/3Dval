@@ -37,9 +37,8 @@ pathreg = {'onur': {#'GF-Mnm': '/home/onur/WORK/projects/2013/maecs/sns144-M1801
                     #'GF-ref': '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1_BGC_12-13_S.nc',
                     #'plotrootpath':'/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1-AHm2-c06-Ec01-comp/',
                     #'GF-PPZZ': '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-P190529-fSG97dChl/extract_skillC_sns144-GPMEH-P190529-fSG97dChl.2012-2013_zSB.nc',
-                    #'GF-3DFnew': '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-G191216-Fnew3-PPZZSi-P191220-vS/extract_skillC_sns144-GPMEH-G191216-Fnew3-PPZZSi-P191220-vS.2011_zSB.nc',
-                    'GF-ref': '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223/extract_skillC_sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223.2010-2014_zSB.nc',
-                    'plotrootpath':'/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223/',
+                    'GF-3DFnew': '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-G191216-Fnew3-PPZZSi-P191220-vS/extract_skillC_sns144-GPMEH-G191216-Fnew3-PPZZSi-P191220-vS.2011_zSB.nc',
+                    'plotrootpath':'/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-G191216-Fnew3-PPZZSi-P191220-vS/',
                     'pickledobspath': './',
                     'BGC':    '/home/onur/WORK/projects/GB/data/stations/individual/BGC/',
                     'BSH':    '/home/onur/WORK/projects/GB/data/stations/individual/BSH/',
@@ -51,10 +50,10 @@ pathreg = {'onur': {#'GF-Mnm': '/home/onur/WORK/projects/2013/maecs/sns144-M1801
                     'GF-ref': '/work/gg0877/onur/simout-gpmeh/sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223/extract_skillC_sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223.2010-2014_zSB.nc',
                     'GF-R12': '/work/gg0877/onur/simout-gpmeh/sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223-R12/extract_skillC_sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223-R12.2013_zSB.nc',
                     'GF-M12': '/work/gg0877/onur/simout-gpmeh/sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223-M12/extract_skillC_sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223-M12.2013_zSB.nc',
-                    'GF-W12': '/work/gg0877/onur/simout-gpmeh/sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223-W12/extract_skillC_sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223-W12.2013_zSB.nc',
+                    'GF-W12': '/work/gg0877/onur/simout-gpmeh/sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223-W12/extract_skillC_sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223-W12.2013_06-08_zSB.nc',
                     'plotrootpath':'/work/gg0877/onur/simout-gpmeh/sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223/3Dval_stations_2012-2013_scens',
                     'pickledobspath': './',
-                    'BSH':    '/work/gg0877/onur/obsdata/stations/individual/BGC/',
+                    'BGC':    '/work/gg0877/onur/obsdata/stations/individual/BGC/',
                     'BSH':    '/work/gg0877/onur/obsdata/stations/individual/BSH/',
                     'cosyna': '/work/gg0877/onur/obsdata/stations/COSYNA/proc/nc'
                     },
@@ -64,21 +63,20 @@ pathreg = {'onur': {#'GF-Mnm': '/home/onur/WORK/projects/2013/maecs/sns144-M1801
 def main(modtype,modfname,statsets,yint):
     #PARAMETERS:
     # general
-    user='onur' #g260108' #'onur' #
+    user='g260108' #'onur' #
     vars_default=['temp','salt','DOs','DIN','DIP','Chl']
-    depthints={'surface':[0,10]} #,'bottom':[10,0]} #for bottom, depthint is relative to bottom depth
+    depthints={'surface':[0,10],'bottom':[10,0]} #for bottom, depthint is relative to bottom depth
     #timeint = [datetime.datetime(2012, 1, 1,0,0,0), datetime.datetime(2013, 12, 31,23,59,59)]
     timeint = [datetime.datetime(yint[0], 1, 1,0,0,0), datetime.datetime(yint[1], 12, 31,23,59,59)]
     # regarding observations.
     if len(statsets)==0:
        statsets = ['cosyna', 'BSH', 'BGC']
-       statsets = ['BGC']
     #stations = ['Ems', 'Deutsche Bucht','NBII']
     #stations = ['Cuxhaven','HPA-Elbe']
     stations=[]
     if len(statsets)==1 and statsets[0]=='cosyna':
-       vars=['DOs']
-       #vars=['temp','salt'] #,'DOs']
+       #vars=['DOs']
+       vars=['temp','salt'] #,'DOs']
     elif len(statsets)==1 and statsets[0]=='BGC':
        vars=['DIN','DIP','Si','Chl']
     else:
@@ -86,7 +84,8 @@ def main(modtype,modfname,statsets,yint):
  
     # regarding simulations.
     #only if modfname==''
-    sims2plot=['GF-ref']  #, 'GF-R12', 'GF-M12', 'GF-W12']
+    sims2plot=['GF-ref']
+    #sims2plot=['GF-ref', 'GF-R12', 'GF-M12', 'GF-W12']
     #sims2plot= ['GF-PPZZ-fS', 'GF-PPZZ-vS']
     #sims2plot = ['GF-Mnm','GF-Mfc','GF-Mvc'] #'GF-c100','GF-ref'] #,'GF-M13R12','GF-M12R13']
     readsimraw=False #i.e., if the pickle file should be ignored
@@ -139,6 +138,6 @@ if __name__=='__main__':
        yints=sys.argv[4].split(',')
        yint=[np.int(y) for y in yints]
     else:
-       yint=[2011,2014]
+       yint=[2012,2013]
 
     main(modtype,modfname,statsets,yint)
