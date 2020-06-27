@@ -316,7 +316,7 @@ def get_model_intonfb(simfile,preint,gridtype,fbname,varn,yrint,lonlims,date_fb,
         nct = ncv['time']
         utime = netcdftime.utime(nct.units)
         # reduce to a daily resolution
-        date_mt_all = np.array([t.date() for t in utime.num2date(nct[:])])
+        date_mt_all = np.array([t.date() for t in utime.num2date(list(nct[:]))])
 
         if Y != -1:
             mons = np.array([d.month for d in date_mt_all])
