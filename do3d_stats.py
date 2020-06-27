@@ -43,12 +43,12 @@ def main(files,ftypes,fnames,varnames,plfpath,vertloc,yrs,seasons,split,scatter,
             VsetS, UsetS = get_matchups(filesS, fnamesS, fnames, ['S'], yrs)
             Vset=combine_matchedup_sets(Vset,VsetS,Uset,UsetS)
 
+        # year interval suffix
+        yrsuf = '_' + str(yrs[0]) + '-' + str(yrs[1])
+
         if split=='none':
             #filter for vertical location
             Vset,vlsuf = filter_matchups_vertloc(Vset,vertloc)
-
-            # year interval suffix
-            yrsuf = '_' + str(yrs[0]) + '-' + str(yrs[1])
 
             # group and store into a seasons structure
             SVset=group_seasons(Vset,seasons)
@@ -63,14 +63,13 @@ def main(files,ftypes,fnames,varnames,plfpath,vertloc,yrs,seasons,split,scatter,
                 if barplotsacross != 'none':
                     fnameroot = files[mno + 1].split('/')[-1].replace('.nc', '') + '_vs_' + fnames[
                         0] + vlsuf + yrsuf + '_S' + s + OLsuf + '_across_' + barplotsacross
-                    #TODO: use Dset (outliers filtered)
                     barplots_across(Dset, Uset, barplotsacross, plfpath, fnameroot,
                                     [ftypes[0], ftypes[mno + 1]])  # ,title=s
                 if scatter:
                     fnameroot = files[mno+1].split('/')[-1].replace('.nc', '') + '_vs_' + fnames[0] + vlsuf +yrsuf +'_S'+s+OLsuf+'_scatter'
                     scatter_refmod(Dset,SVstats[s],Uset,plfpath,fnameroot,[ftypes[0],ftypes[mno+1]]) # ,title=s
                 if taylor:
-                    fname = os.path.join(plfpath,files[mno + 1].split('/')[-1].replace('.nc', '') + '_vs_' + fnames[0] + vlsuf + '_S' + s+OLsuf+'_taylor'+'_' + '_'.join(varnames)+'.png')
+                    fname = os.path.join(plfpath,files[mno + 1].split('/')[-1].replace('.nc', '') + '_vs_' + fnames[0] + vlsuf + yrsuf + '_S' + s+OLsuf+'_taylor'+'_' + '_'.join(varnames)+'.png')
                     stdrefs, samples, rects, colors = arrange4Taylor(SVstats[s], 'V', s=s)
                     plot_Taylor(fname,rects,colors,stdrefs,samples,legend=False)
 
@@ -79,7 +78,8 @@ def main(files,ftypes,fnames,varnames,plfpath,vertloc,yrs,seasons,split,scatter,
             Vset, vlsuf = filter_matchups_vertloc(Vset, vertloc)
 
             #regions=['NW','NE','SW','SE']
-            regions = ['W', 'E']
+            regions = ['WadSea']
+            #regions = ['WadSea']
             # group and store into a seasonsXregions structure
             SVRset = group_seasonsXregions(Vset, seasons,regions)
             SVRstats = {}
@@ -93,17 +93,21 @@ def main(files,ftypes,fnames,varnames,plfpath,vertloc,yrs,seasons,split,scatter,
                     # get statistics
                     VRstats[v] = get_stats(Dset)
 
-                    # do the scatter plots
-                    if scatter:
-                        fnameroot = files[mno+1].split('/')[-1].replace('.nc', '') + '_vs_' + fnames[0] + vlsuf + '_S' + s + '_'+v+OLsuf+'_scatter'
-                        UsetR={}
-                        for r in VRstats[v].keys():
-                            UsetR[r]=Uset[v]
-                        scatter_refmod(Dset, VRstats[v], UsetR, plfpath,fnameroot, [fnames[0], fnames[mno + 1]])  # ,title=s
                     if taylor:
-                        fname = os.path.join(plfpath,files[mno + 1].split('/')[-1].replace('.nc', '') + '_vs_' + fnames[0] + vlsuf + '_S' + s + '_'+v+OLsuf+ '_taylor' + '_' + '_'.join(regions) + '.png')
+                        fname = os.path.join(plfpath,files[mno + 1].split('/')[-1].replace('.nc', '') + '_vs_' + fnames[0] + vlsuf + yrsuf + '_S' + s + '_'+v+OLsuf+ '_taylor' + '_' + '_'.join(regions) + '.png')
                         stdrefs, samples, rects, colors = arrange4Taylor(VRstats[v], 'V', s=s)
                         plot_Taylor(fname, rects, colors, stdrefs, samples, legend=False)
+
+                    for r in VRstats[v].keys():
+                        if scatter:
+                            fnameroot = files[mno+1].split('/')[-1].replace('.nc', '') + '_vs_' + fnames[0] + vlsuf + yrsuf + '_S' + s + '_'+v+OLsuf+'_scatter+'+r
+                            scatter_refmod({v:Dset[r]}, {v:VRstats[v][r]}, Uset, plfpath,fnameroot, [fnames[0], fnames[mno + 1]])  # ,title=s
+
+                        if barplotsacross != 'none':
+                            fnameroot = files[mno + 1].split('/')[-1].replace('.nc', '') + '_vs_' + fnames[0] + \
+                                        vlsuf + yrsuf + '_S' + s + OLsuf + '_across_' + barplotsacross + '_'+r
+                            barplots_across({v:Dset[r]}, Uset, barplotsacross, plfpath, fnameroot, [ftypes[0], ftypes[mno + 1]])
+
                 SVRstats[s]=VRstats
         elif split == 'vertloc':
             vertlocs=['surf','bot']
@@ -134,7 +138,7 @@ def main(files,ftypes,fnames,varnames,plfpath,vertloc,yrs,seasons,split,scatter,
     print ('done.')
     return
 
-def remove_outliers(Dsetin, method='percentile'):
+def remove_outliers(Dsetin, method='percentile',logtransform=True):
     if method=='none':
         suf=''
         return (Dsetin,suf)
@@ -142,6 +146,9 @@ def remove_outliers(Dsetin, method='percentile'):
     Dsetout={}
     #for each variable
     for v in Dsetin.keys():
+        if logtransform and (v in ['Chl']):
+            Dsetin[v]['ref'] = np.log(Dsetin[v]['ref'])
+            Dsetin[v]['model'] = np.log(Dsetin[v]['model'])
         #find the indices to keep
         if method=='percentile':
             # parameters for the percentile method
@@ -156,7 +163,7 @@ def remove_outliers(Dsetin, method='percentile'):
             # construct a suffix
             suf = '_' + str(perc) + 'perc'
         elif method=='middle':
-            Mperc=99
+            Mperc=90
             Lperc = (100. - Mperc) / 2.
             Hperc=100.-(100-Mperc)/2.
             # find the treshold value based on the percentile
@@ -183,6 +190,10 @@ def remove_outliers(Dsetin, method='percentile'):
             else:
                 Dsetout[v][f]=Dsetin[v][f][ind]
 
+        if logtransform and (v in ['Chl']):
+            Dsetout[v]['ref'] = np.exp(Dsetout[v]['ref'])
+            Dsetout[v]['model'] = np.exp(Dsetout[v]['model'])
+
     print ('removed %d outliers based on %s'%(nrem, methmsg))
 
     return (Dsetout,suf)
@@ -197,7 +208,7 @@ def barplots_across(Vset,Uset,acrossvar,plfpath,fnameroot,realids,title=''):
     import numpy as np
     import seaborn as sns
 
-    plottype = 'violin'  # box,violin
+    plottype = 'box'  # box,violin
 
     # pal = {'2011': 'skyblue', '2012': 'darkblue', '2013': 'orange', '2014': 'red'}
     palw = {'obs': 'white', 'sim': 'gray'}
@@ -229,6 +240,7 @@ def barplots_across(Vset,Uset,acrossvar,plfpath,fnameroot,realids,title=''):
         nvec=[None]*len(nodes)
         for nodeno, node in enumerate(nodes):
             for idno,id in enumerate(ids):
+                envvar = 'depth'
                 if id=='obs':
                     vals=Vset[v]['ref']
                 elif id=='sim':
@@ -236,12 +248,13 @@ def barplots_across(Vset,Uset,acrossvar,plfpath,fnameroot,realids,title=''):
                 if acrossvar=='botdepth':
                     depths=Vset[v]['maxdepths']
                     if '-' in node:
-                        depthind=np.where((depths>=float(node.split('-')[0])) * (depths<float(node.split('-')[1])))
+                        envind=np.where((depths>=float(node.split('-')[0])) * (depths<float(node.split('-')[1])))
                     elif '<' in node:
-                        depthind = np.where(depths < float(node.split('<')[1]))
+                        envind = np.where(depths < float(node.split('<')[1]))
                     elif '>' in node:
-                        depthind = np.where(depths >= float(node.split('>')[1]))
+                        envind = np.where(depths >= float(node.split('>')[1]))
                 elif acrossvar == 'salinity':
+                    envvar = 'salinity'
                     if envmethod == 'abs':
                         S = Vset[v]['S-ref']
                     elif envmethod =='rel':
@@ -250,15 +263,15 @@ def barplots_across(Vset,Uset,acrossvar,plfpath,fnameroot,realids,title=''):
                         elif id=='sim':
                             S = Vset[v]['S-mod']
                     if '-' in node:
-                        depthind = np.where((S >= float(node.split('-')[0])) * (S < float(node.split('-')[1])))
+                        envind = np.where((S >= float(node.split('-')[0])) * (S < float(node.split('-')[1])))
                     elif '<' in node:
-                        depthind = np.where(S < float(node.split('<')[1]))
+                        envind = np.where(S < float(node.split('<')[1]))
                     elif '>' in node:
-                        depthind = np.where(S >= float(node.split('>')[1]))
+                        envind = np.where(S >= float(node.split('>')[1]))
 
-                    vals=vals[depthind]
-                    nvec[nodeno] = len(vals)
-                    envvar='depth'
+                vals=vals[envind]
+                nvec[nodeno] = len(vals)
+
                 minval = min(min(vals), minval)
                 maxval = max(max(vals), maxval)
                 df_element = [vals, [node] * len(vals), [id] * len(vals)]
@@ -396,14 +409,15 @@ def plot_Taylor(fname, rects, colors, stdrefs, samples, legend=True,x95=0, y95=0
     #plt.show()
     print ('      plotted:' + fname)
 
-def scatter_refmod(Vset,Vstat,Uset,plfpath,fnameroot,xylabels,title=''):
+def scatter_refmod(Vset,Vstat,Uset,plfpath,fnameroot,xylabels,title='',logtransform=True):
     # expected structure: V[var]={'dates','lats','lons','ref','sim'}
     print('scatterplots:')
     plotext='.png'
     for v in Vset.keys():
         x = Vset[v]['ref']
         y = Vset[v]['model']
-        Ustr=' ['+Uset[v]+']'
+
+        Ustr = ' [' + Uset[v] + ']'
 
         f = plt.figure(figsize=(3.0, 3.0), dpi=150)
         ax = f.add_axes([0.2, 0.2, 0.6, 0.6])
@@ -420,6 +434,12 @@ def scatter_refmod(Vset,Vstat,Uset,plfpath,fnameroot,xylabels,title=''):
         pcf=plt.scatter(x, y, c=hist[xidx, yidx],cmap=cmap,lw=0,s=3)
         plt.plot([minval,maxval],[minval,maxval],'-k')
         ax.tick_params(axis='both', which='major', labelsize=8)
+        if logtransform and (v in ['Chl']):
+            ax.set_yscale('log')
+            ax.set_xscale('log')
+            logsuf='_log'
+        else:
+            logsuf=''
         ax.set_xlim([minval,maxval])
         ax.set_ylim([minval,maxval])
         plt.xlabel(xylabels[0]+' '+v+Ustr,size=8)
@@ -440,7 +460,7 @@ def scatter_refmod(Vset,Vstat,Uset,plfpath,fnameroot,xylabels,title=''):
         cb.ax.tick_params(axis='both', which='major', labelsize=8)
         cb.ax.set_title('count', fontsize=8)
 
-        fname = os.path.join(plfpath,fnameroot + '_' + v + plotext)
+        fname = os.path.join(plfpath,fnameroot + '_' + v+logsuf + plotext)
         plt.savefig(fname, dpi=300)
         plt.close()
         print ('      plotted:' + fname)
@@ -528,9 +548,9 @@ def group_seasonsXregions (matchups,seasons,regions):
     Rdict = {'NW': [[54,56.0],[0,4.0]], 'NE': [[55.0,56.0],[4.0,10.0]],
               'SW': [[51.0,54.0],[0,5.0]], 'SE': [[51.0,55.0],[5.0,10.0]],
              'W': [[51.0,56.0],[0,5.0]], 'E': [[51.0,56.0],[5.0,10.0]],
-             'all':[]}
+             'WadSea':[[53.2, 55.1],[6.2,9.3]], 'all': []}
     seasondefs = {'all': np.arange(1, 13), 'winter': np.array([1, 2, 3, 10, 11, 12]),
-                  'growing': np.arange(4, 10), 'spring': np.arange(4, 7), 'summer': np.arange(7, 10)}
+                  'growing': np.arange(4, 10), 'spring': np.arange(4, 7), 'summer': np.arange(7, 9)}
     SVRset = {}
     for s in seasons:
         months = seasondefs[s]
@@ -550,8 +570,11 @@ def group_seasonsXregions (matchups,seasons,regions):
                     lonint=Rdict[r][1]
                     ri=(matchups[v]['lats']>=latint[0]) * (matchups[v]['lats']<=latint[1]) *(matchups[v]['lons']>=lonint[0]) * (matchups[v]['lons']<=lonint[1])
                     mri=mi*ri
-                Rset[r] = {'dates': matchups[v]['dates'][mri], 'lats': matchups[v]['lats'][mri], 'lons': matchups[v]['lons'][mri],
-                           'ref': matchups[v]['ref'][mri], 'model': matchups[v]['model'][mri]}
+                #Rset[r] = {'dates': matchups[v]['dates'][mri], 'lats': matchups[v]['lats'][mri], 'lons': matchups[v]['lons'][mri],
+                #           'ref': matchups[v]['ref'][mri], 'model': matchups[v]['model'][mri]}
+                Rset[r] = {}
+                for par in matchups[v].keys():
+                    Rset[r][par] = matchups[v][par][mri]
             VRset[v]=Rset
         SVRset[s]=VRset
     return SVRset
@@ -560,7 +583,8 @@ def group_regions (matchups,regions):
     print ('Grouping Regions')
     Rdict = {'NW': [[53.5, 56.0], [0, 5.0]], 'NE': [[54.5, 56.0], [5.0, 10.0]],
              'SW': [[51.0, 53.5], [0, 5.0]], 'SE': [[51.0, 54.5], [5.0, 10.0]],
-             'W': [[51.0, 56.0], [0, 6.0]], 'E': [[51.0, 56.0], [6.0, 10.0]], 'all': []}
+             'W': [[51.0, 56.0], [0, 6.0]], 'E': [[51.0, 56.0], [6.0, 10.0]],
+             'WadSea':[[53.2, 55.1],[6.2,9.3]], 'all': []}
     VRset={}
     for v in matchups.keys():
         Rset = {}
@@ -572,15 +596,18 @@ def group_regions (matchups,regions):
                 latint=Rdict[r][0]
                 lonint=Rdict[r][1]
                 ri=(matchups[v]['lats']>=latint[0]) * (matchups[v]['lats']<=latint[1]) *(matchups[v]['lons']>=lonint[0]) * (matchups[v]['lons']<=lonint[1])
-            Rset[r] = {'dates': matchups[v]['dates'][ri], 'lats': matchups[v]['lats'][ri], 'lons': matchups[v]['lons'][ri],
-                       'ref': matchups[v]['ref'][ri], 'model': matchups[v]['model'][ri]}
+            #Rset[r] = {'dates': matchups[v]['dates'][ri], 'lats': matchups[v]['lats'][ri], 'lons': matchups[v]['lons'][ri],
+            #           'ref': matchups[v]['ref'][ri], 'model': matchups[v]['model'][ri]}
+            Rset[v] = {}
+            for par in matchups[v].keys():
+                Rset[v][par] = matchups[v][par][ri]
         VRset[v]=Rset
     return VRset
 
 def group_seasons (matchups,seasons):
     print ('Grouping Seasons')
     seasondefs = {'all': np.arange(1, 13), 'winter':np.array([1,2,3,10,11,12]),
-                  'growing':np.arange(4,10),'spring':np.arange(4,7),'summer':np.arange(7,10)}
+                  'growing':np.arange(4,10),'spring':np.arange(4,7),'summer':np.arange(7,9)}
     SVset={}
     for s in seasons:
         if s=='all':
@@ -685,7 +712,7 @@ if __name__=='__main__':
         varnames = sys.argv[4].split(',')
     else:
         #varnames=['Kd']
-        varnames = ['Chl','NO3','NH4','DIP']
+        varnames = ['Chl'] #,'NO3','NH4','DIP']
         #varnames = ['S','T']
 
     if len(sys.argv) > 5:
@@ -736,6 +763,6 @@ if __name__=='__main__':
     if len(sys.argv)>13:
         barplotsacross = sys.argv[13]
     else:
-        barplotsacross='salinity' #'none',botdepth,salinity
+        barplotsacross='none' #'none',botdepth,salinity
 
     main(files,ftypes,fnames,varnames,plfpath,vertloc,yrs,seasons,split,scatter,taylor,barplotsacross,remOLmeth,demo=False)
