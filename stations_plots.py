@@ -102,8 +102,16 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
 
                 #make the plots:
                 hset = []; idset = []  #list of handles (needed for legend)
+
                 #plot obs
                 if obs[station][varname]['presence']:
+                    # limit the months to include
+                    months2keep = [] #[7, 8]
+                    if len(months2keep)>0:
+                        monsuf='_M'+'-'.join(map(str,months2keep))
+                        obs[station][varname][layer] = stationdata_filter_time(obs[station][varname][layer],months2keep)
+                    else:
+                        monsuf=''
                     hset,idset,anyplotinax,anyplotinfig = plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,'obs',ax,
                                                                         obs[station][varname][layer]['time'],
                                                                         obs[station][varname][layer]['value'],
@@ -171,12 +179,33 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
             if not anyplotinfig:
                 plt.close()
             else:
-                fname = os.path.join(plotpath,'TSplots%s_%s_%s.png' % (fnamecode, station, layer))
+                fname = os.path.join(plotpath,'TSplots%s_%s_%s%s.png' % (fnamecode, station, layer,monsuf))
                 fig.savefig(fname,dpi=S.res, bbox_extra_artists=(lgd,)) #, bbox_inches='tight')
                 plt.close()
                 print ('figure saved:%s'%fname)
                 #return
     return
+
+def stationdata_filter_time(din,months2keep):
+
+    #find the indices
+    dates=din['time']
+    months=np.array([date.month for date in dates])
+    #tind=np.array([])
+    tfilter=False #reject all
+    for m in months2keep:
+        tfilter=tfilter + (months==m)
+        #tind= np.concatenate((tind,np.where(months==m)[0]),axis=0)
+    tind=np.where(tfilter)[0]
+    #apply the indices to all fields
+    dout={}
+    for f in din.keys():
+        if len(din[f])==len(dates):
+            dout[f]=din[f][tind]
+        else:
+            dout[f]=din[f]
+
+    return dout
 
 def get_skillscores(obs,sim,timeint):
     #reduce time
