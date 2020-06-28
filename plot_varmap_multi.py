@@ -39,7 +39,7 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
         numcol0 = 3.0
         figh=8
         figw=6
-        dpi=100
+        dpi=150
         plottopo= False
         showparmer=False
         if cbarorient=='vertical':
@@ -329,7 +329,9 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
                             else:
                                 scalesuf=plot2Dmap_Q(f,ax,clim,x[:,:],y[:,:],uII[:,:],vII[:,:],varname,proj,setup,titlestr,plottopo,H[:,:],showparmer,unitstr,colmap,Nlev)
                     
-                    f.text(0.5,0.96,suffix+longname+' ['+unitstr+'] ('+str(tvec[i].year)+')', horizontalalignment='center')
+                    #f.text(0.5,0.96,suffix+longname+' ['+unitstr+'] ('+str(tvec[i].year)+')', horizontalalignment='center')
+                    f.text(0.5, 0.92, suffix + longname + '\n(' + str(tvec[i].year) + ')',
+                           horizontalalignment='center',size=9)
                     if multiYfile:
                         filename=fname.split('.nc')[0]+'_'+str(year)+'_varmap'+suffix+'_'+varname+tindsuf+'-'+setup+ scalesuf+'.png' #pdf
                     else:
@@ -529,7 +531,6 @@ def plot2Dmap(f,ax,clim,x,y,v,varname,proj,setup,titlestr,plottopo,H,showparmer=
         if clim[0]==-0.7 and clim[1]==0.7: cbt=[-0.7,-0.3,0.3,0.7]
     cmap.set_bad(str(landgr))
 
-
     if logplot:
         #clim=[1e-1,np.amax(v)] #[np.amax(v)*.8,np.amax(v)] #
         if clim[0]<1e0:
@@ -728,10 +729,10 @@ if __name__=='__main__':
     vars = {}
     if len(sys.argv) > 9:
         climstr = sys.argv[9].split(',')
-        clim=[float(str) for str in climstr]
+        clim=[float(s) for s in climstr]
         #print('clim: ' + climstr)
         if clim[0]!=clim[1]:
-            print ('using the requested colorbar lims: [%s-%s]:'%(clim[0],clim[1]))
+            print ('using the requested colorbar lims: [%d-%d]:'%(clim[0],clim[1]))
             climfromlib=False
             for varn in varnames:
                 vars[varn] = clim
@@ -751,4 +752,5 @@ if __name__=='__main__':
                 vars[varn]=[0,0]
                 print('clims for ' +varn + ' were not proviveded, natural limits will be used')
 
+    print('using python version %s'%sys.version_info[0])
     do_2Dplotmap(fname,vars,setup,VertMeth,TempMeth,colmap,Nlev,mode,plottopo=True,datasource='GF')
