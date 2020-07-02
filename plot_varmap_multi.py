@@ -39,13 +39,15 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
         numcol0 = 3.0
         figh=8
         figw=6
+        if setup in ['SNSfull']:
+            figw=7
         dpi=150
-        plottopo= False
-        showparmer=False
+        plottopo= True
+        showparmer=True
         if cbarorient=='vertical':
             left = 0.12;right = 0.76; bottom = 0.1;top = 0.9;hsp = 0.25;wsp = 0.1
         if cbarorient=='horizontal':
-            left=0.12;right=0.9;bottom=0.17;top=0.9; hsp=0.25; wsp=0.1
+            left=0.16;right=0.96;bottom=0.17;top=0.9; hsp=0.25; wsp=0.1
     elif mode=='3panelsperrow': # 3 panels per row
         years2plot = 0  # [2012,2013] #[2000,2001,2002,2003,2004,2005]
         months2plot = [] # [4,5,6,7,8,9]
@@ -330,7 +332,7 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
                                 scalesuf=plot2Dmap_Q(f,ax,clim,x[:,:],y[:,:],uII[:,:],vII[:,:],varname,proj,setup,titlestr,plottopo,H[:,:],showparmer,unitstr,colmap,Nlev)
                     
                     #f.text(0.5,0.96,suffix+longname+' ['+unitstr+'] ('+str(tvec[i].year)+')', horizontalalignment='center')
-                    f.text(0.5, 0.92, suffix + longname + '\n(' + str(tvec[i].year) + ')',
+                    f.text(left+(right-left)/2., 0.92, suffix + longname + '\n(' + str(tvec[i].year) + ')',
                            horizontalalignment='center',size=9)
                     if multiYfile:
                         filename=fname.split('.nc')[0]+'_'+str(year)+'_varmap'+suffix+'_'+varname+tindsuf+'-'+setup+ scalesuf+'.png' #pdf
@@ -549,14 +551,17 @@ def plot2Dmap(f,ax,clim,x,y,v,varname,proj,setup,titlestr,plottopo,H,showparmer=
     plt.title(titlestr,size=9)
 
     #setup specific features
-    if setup in ['NSBS','NSBSfull','SNSfull','SNS','GBight','WadSea']:
+    if setup in ['NSBS','NSBSfull','SNSfull','SNS','GBight','WadSea','Ems']:
         #coastlines, etc
         #proj.drawcoastlines(color=(0.3,0.3,0.3),linewidth=0.5) #, resolution='h')
         proj.fillcontinents((landgr,landgr,landgr),lake_color=(landgr,landgr,landgr))
         if showparmer:
-            proj.drawparallels(np.arange(51.,57.,1.), labels=[1,0,0,0],fontsize=9)
+            res=1.0
+            if setup in ['Ems']:
+                res=0.5
+            proj.drawparallels(np.arange(51.,57.,res), labels=[1,0,0,0],fontsize=7,color='0.4')
             #proj.drawmeridians(np.arange(-1.,10.,1.))
-            proj.drawmeridians(np.arange(-1.,10.,1.), labels=[0,0,0,1],fontsize=9)
+            proj.drawmeridians(np.arange(-1.,10.,res), labels=[0,0,0,1],fontsize=7,color='0.4')
         #ax.patch.set_facecolor((0.9,0.9,1.0))
 
     #retrieve the axes position to set the colorbar position
@@ -632,6 +637,7 @@ if __name__=='__main__':
         'EH_abioP_DINH4': [0, 5],
         'EH_abioP_DIP': [0, 3.0],
         'EH_abioP_DISi': [0, 45.0],
+        'Chl2C':[0.02,0.04],
         'zoo2phy':[0.0,1.0],
         'fr_diatC': [0.5, 1.0],
         'fr_meszooC': [0.0, 1.0],
