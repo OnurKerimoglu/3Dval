@@ -260,84 +260,84 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
                     #     titlestr=str(tvec[i].date())
                     #     scalesuf=plot2Dmap(f,ax,clim,x,y,vI,varname,proj,setup,titlestr,plottopo,H,cbarstr=unitstr)
                     #     filename=fname.split('.nc')[0]+'_'+str(year)+'_varmap'+'_'+varname+scalesuf+'.png' #pdf
+                    if len(v.shape)!=3:
+                        v=v.squeeze()
+                        if len(v.shape)!=3:
+                            raise(Exception('expecting 3 dimensions in file. Dimensions found: %s'%v.shape))
+                    if TempMeth=='snapshots':#directly plot the variable
+                        #print 'scene-'+str(i),
+                        if varname!='currs':
+                            vI=v[i,:,:]
+                            if varname=='t2':
+                                vI=vI-273.15
+                        else:
+                            uI=u[i,:,:]
+                            vI=v[i,:,:]
 
-                    if len(v.shape)==3:
-                        suffix=''
-                        if TempMeth=='snapshots':#directly plot the variable
+                        titlestr=str(tvec[i][0].date())
+                        if datasource=='MERIS':
+                            month=months2plot[mi]
+                            titlestr=str(calendar.month_name[month])
+                            scalesuf=plot2Dmap(f,ax,clim,x,y,vI,varname,proj,setup,titlestr,plottopo,H,showparmer,unitstr,colmap,Nlev)
+                        else:
+                            if varname!='currs':
+                                scalesuf=plot2Dmap(f,ax,clim,x[:,:],y[:,:],vI[:,:],varname,proj,setup,titlestr,plottopo,H[:,:],showparmer,unitstr,colmap,Nlev)
+                            else:
+                                scalesuf=plot2Dmap_Q(f,ax,clim,x[:,:],y[:,:],uI[:,:],vI[:,:],varname,proj,setup,titlestr,plottopo,H[:,:],showparmer,unitstr,colmap,Nlev)
+
+                    elif TempMeth in ['Maverage','YMaverage', 'Yaverage', 'Yintegral']:
+                        #print '\nM: '+str(mi)+':',
+                        tindM=tind[mi]
+                        vII=0; uII=0 #temporal integrand
+                        for ti,i in enumerate(tindM):
                             #print 'scene-'+str(i),
+                            #temporal integration
                             if varname!='currs':
                                 vI=v[i,:,:]
                                 if varname=='t2':
                                     vI=vI-273.15
+                                vII=vII+vI
                             else:
                                 uI=u[i,:,:]
                                 vI=v[i,:,:]
+                                uII=uII+uI
+                                vII=vII+vI
 
-                            titlestr=str(tvec[i][0].date())
-                            if datasource=='MERIS':
-                                month=months2plot[mi]
-                                titlestr=str(calendar.month_name[month])
-                                scalesuf=plot2Dmap(f,ax,clim,x,y,vI,varname,proj,setup,titlestr,plottopo,H,showparmer,unitstr,colmap,Nlev)
-                            else:
-                                if varname!='currs':
-                                    scalesuf=plot2Dmap(f,ax,clim,x[:,:],y[:,:],vI[:,:],varname,proj,setup,titlestr,plottopo,H[:,:],showparmer,unitstr,colmap,Nlev)
-                                else:
-                                    scalesuf=plot2Dmap_Q(f,ax,clim,x[:,:],y[:,:],uI[:,:],vI[:,:],varname,proj,setup,titlestr,plottopo,H[:,:],showparmer,unitstr,colmap,Nlev)
+                        if  TempMeth in ['Maverage','YMaverage', 'Yaverage']: #transform to temporal average
+                            vII=vII/len(tindM)
+                            #print('divide by len(tindM)')
+                            if varname=='currs':
+                                uII=uII/len(tindM)
+                            if TempMeth0=='Yaverage' :
+                                titlestr='Annual Average'
+                            elif TempMeth == 'YMaverage':
+                                titlestr='%s %s average'%(year,calendar.month_name[month])
+                        elif TempMeth in ['Yintegral']:
+                            unitstr=unitstr.replace('d','y')
+                            titlestr='Annual Integral'
+                            #titlestr=unitstr
+                            if varname in primprodvars:
+                                vII=vII/1000*12 #[mmolC/1000molC*12gC/molC]
+                                unitstr=unitstr.replace('mmolC','gC')
+                                titlestr='GPPR ['+unitstr+'] ('+str(tvec[i].year)+')'
+                            if varname=='hzg_medmac_denit_rate':
+                                titlestr='Den. Rate ['+unitstr+'] ('+str(tvec[i].year)+')'
 
-                        elif TempMeth in ['Maverage','YMaverage', 'Yaverage', 'Yintegral']:
+                        if TempMeth in ['Maverage']:
+                            titlestr=str(calendar.month_name[months2plot[mi]])
 
-                            #print '\nM: '+str(mi)+':',
-                            tindM=tind[mi]
-                            vII=0; uII=0 #temporal integrand
-                            for ti,i in enumerate(tindM):
-                                #print 'scene-'+str(i),
-                                #temporal integration
-                                if varname!='currs':
-                                    vI=v[i,:,:]
-                                    if varname=='t2':
-                                        vI=vI-273.15
-                                    vII=vII+vI
-                                else:
-                                    uI=u[i,:,:]
-                                    vI=v[i,:,:]
-                                    uII=uII+uI
-                                    vII=vII+vI
-
-                            if  TempMeth in ['Maverage','YMaverage', 'Yaverage']: #transform to temporal average
-                                vII=vII/len(tindM)
-                                #print('divide by len(tindM)')
-                                if varname=='currs':
-                                    uII=uII/len(tindM)
-                                if TempMeth0=='Yaverage' :
-                                    titlestr='Annual Average'
-                                elif TempMeth == 'YMaverage':
-                                    titlestr='%s %s average'%(year,calendar.month_name[month])
-                            elif TempMeth in ['Yintegral']:
-                                unitstr=unitstr.replace('d','y')
-                                titlestr='Annual Integral'
-                                #titlestr=unitstr
-                                if varname in primprodvars:
-                                    vII=vII/1000*12 #[mmolC/1000molC*12gC/molC]
-                                    unitstr=unitstr.replace('mmolC','gC')
-                                    titlestr='GPPR ['+unitstr+'] ('+str(tvec[i].year)+')'
-                                if varname=='hzg_medmac_denit_rate':
-                                    titlestr='Den. Rate ['+unitstr+'] ('+str(tvec[i].year)+')'
-
-                            if TempMeth in ['Maverage']:
-                                titlestr=str(calendar.month_name[months2plot[mi]])
-
-                            if varname!='currs':
-                                scalesuf=plot2Dmap(f,ax,clim,x[:,:],y[:,:],vII[:,:],varname,proj,setup,titlestr,plottopo,H[:,:],showparmer,unitstr,colmap,Nlev)
-                            else:
-                                scalesuf=plot2Dmap_Q(f,ax,clim,x[:,:],y[:,:],uII[:,:],vII[:,:],varname,proj,setup,titlestr,plottopo,H[:,:],showparmer,unitstr,colmap,Nlev)
+                        if varname!='currs':
+                            scalesuf=plot2Dmap(f,ax,clim,x[:,:],y[:,:],vII[:,:],varname,proj,setup,titlestr,plottopo,H[:,:],showparmer,unitstr,colmap,Nlev)
+                        else:
+                            scalesuf=plot2Dmap_Q(f,ax,clim,x[:,:],y[:,:],uII[:,:],vII[:,:],varname,proj,setup,titlestr,plottopo,H[:,:],showparmer,unitstr,colmap,Nlev)
                     
                     #f.text(0.5,0.96,suffix+longname+' ['+unitstr+'] ('+str(tvec[i].year)+')', horizontalalignment='center')
-                    f.text(left+(right-left)/2., 0.92, suffix + longname + '\n(' + str(tvec[i].year) + ')',
+                    f.text(left+(right-left)/2., 0.92, longname + '\n(' + str(tvec[i].year) + ')',
                            horizontalalignment='center',size=9)
                     if multiYfile:
-                        filename=fname.split('.nc')[0]+'_'+str(year)+'_varmap'+suffix+'_'+varname+tindsuf+'-'+setup+ scalesuf+'.png' #pdf
+                        filename=fname.split('.nc')[0]+'_'+str(year)+'_varmap_'+varname+tindsuf+'-'+setup+ scalesuf+'.png' #pdf
                     else:
-                        filename=fname.split('.'+str(year)+'.nc')[0]+'_'+str(year)+'_varmap'+suffix+'_'+varname+tindsuf+'-'+setup+ scalesuf+'.png' #pdf
+                        filename=fname.split('.'+str(year)+'.nc')[0]+'_'+str(year)+'_varmap_'+varname+tindsuf+'-'+setup+ scalesuf+'.png' #pdf
                 filename = fnclean(filename)
                 plt.savefig(filename,dpi=dpi)
                 print ('\nsaved:'+filename)
