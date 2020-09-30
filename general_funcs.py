@@ -283,6 +283,15 @@ def getproj(setup,projpath=os.path.dirname(os.path.realpath(__file__))):
                            urcrnrlat=55.1,
                            lat_0=52.0,
                            lon_0=5.)
+        elif setup=='Ems':
+            proj = Basemap(projection='lcc',
+                           resolution='f',
+                           llcrnrlon=6.0,
+                           llcrnrlat=53.1,
+                           urcrnrlon=8.0,
+                           urcrnrlat=54.3,
+                           lat_0=52.0,
+                           lon_0=5.)
         elif setup=='GBight':
             proj = Basemap(projection='lcc',
                            resolution='i',
