@@ -16,13 +16,16 @@ refdate=datetime.datetime(1960,1,1)
 #statnamelib={'ROTTMPT70'}
 
 def main():
-    merge=False;isoBGC=True;read=False
+    merge=False;isoBGC=False;read=True
     #merge = True; read = False
     #stations=['JMA_Norderelbe','JMA_Suederpiep','JMA_Westerhever']
     #stations=['Helgoland', 'SAmrum','Norderelbe','Norderney'] # 'Sylt',
     #stations=['T36','T26','T41','T8','T2','T22','T5','T12','T11']
-    #stations=['NOORDWK2','NOORDWK10','NOORDWK50','NOORDWK70','TERSLG4','TERSLG50','TERSLG70']
-    stations=['ROTTMPT50','ROTTMPT70']#['ROTTMPT5', 'ROTTMPT15', 'ROTTMPT30','ROTTMPT50']
+    #stations=['BOCHTVWTM','BOOMKDP','DANTZGT','DOOVBWT','GROOTGND']
+    stations=['HUIBGOT','MARSDND','ZOUTKPLZGT','ZUIDOLWOT']
+    #stations=['NOORDWK2'] #,'NOORDWK10','NOORDWK50','NOORDWK70'],
+    #stations=['TERSLG4','TERSLG10'] #'TERSLG50','TERSLG70']
+    #stations=['ROTTMPT3','ROTTMPT70'] #['ROTTMPT5', 'ROTTMPT15', 'ROTTMPT30','ROTTMPT50','ROTTMPT70']
     #stations = ['Helgoland', 'NOORDWK2', 'NOORDWK10', 'NOORDWK50', 'NOORDWK70', 'TERSLG4', 'TERSLG50', 'TERSLG70']
     # stations=['Helgoland','Sylt','SAmrum','Norderelbe','Norderney',
     #             'T36','T26','T41','T8','T2','T22','T5','T12','T11',
@@ -470,23 +473,23 @@ def read_justusMA(fin,fout,dims,lat,lon,station='-'):
 
 def read_opendapnc(fin_base,fout,dims,station='-'):
     vars={'CHL':'concentration_of_chlorophyll_in_water',
-          'DOC':'DOC',
+          #'DOC':'DOC',
           'NH4':'NH4',
-          'NO2':'NO2',
+          #'NO2':'NO2',
           'NO3':'NO3',
+          #'N': 'N',
+          #'NO3NO2': 'NO3NO2',
           'PO4':'PO4',
-          'POC':'POC',
-          'SD': 'secchi_depth',
+          #'P': 'P',
+          #'POC':'POC',
+          #'SD': 'secchi_depth',
           'SiO2':'SiO2',
-          'SPM':'concentration_of_suspended_matter_in_water'
+          #'SPM':'concentration_of_suspended_matter_in_water'
+          'SALT':'sea_water_salinity',
+          'KC': 'E'
           }
 
-    print ' finding bottom depth..',
-    # maxz=np.nan
-    maxz = get_botdepth(lon[0], lat[0], 'tree')
-    print (' found: %sN, %sE: %.1f m' % (lat[0], lon[0], maxz))
-
-    lon =-999.0; lat =-999.0
+    lon =-999.0; lat =-999.0 #these are retrieved from the raw files
     M=[];U=[];V=[]
 
     print 'variable:',
@@ -550,8 +553,8 @@ def read_opendapnc(fin_base,fout,dims,station='-'):
             lon=newlon
             lat=newlat
         else:
-            if lon!=newlon or lat!=newlat:
-                raise(ValueError('previous lon-lat pair (%s-%s) do not match with the new pair(%s-%s)'%(lon,lat,nowlon,newlat)))
+            if abs(lon-newlon)>0.05 or abs(lat-newlat)>0.05:
+                raise(ValueError('previous lon-lat pair (%s-%s) do not match with the new pair(%s-%s)'%(lon,lat,newlon,newlat)))
 
         nc.close()
     print ''
@@ -560,8 +563,14 @@ def read_opendapnc(fin_base,fout,dims,station='-'):
     tvec=[datetime.datetime(refdate.year,refdate.month,refdate.day,0,0,0)+datetime.timedelta(0,t_s) for t_s in tvec_s]
     create_ncfile(fout, lon, lat, Mv, V, V, U, dims, tvec,zvec,
                   climatology=False,refdate=refdate, missing_value=-99, notify=True)
-    #print 'file written:'+fout
+
+    print ' appending bottom depth..',
+    # maxz=np.nan
+    maxz = get_botdepth(lon, lat, 'tree')
+    print(' found: %sN, %sE: %.1f m' % (lat, lon, maxz))
     addncatt(fout, {'station': station, 'bottom_depth': maxz})
+
+    print 'file written:'+fout
 
 def read_SchlHolst(fin,fout,dims,lat,lon,station='-'):
     print ' finding bottom depth..',
@@ -886,10 +895,10 @@ def readstats(rootpath,stations,read):
             fin=os.path.join(rootpath,'BSH',station+'.csv')
             fout=os.path.join(rootpath,'BSH',station+'.nc')
             if read: read_bsh(fin,fout,dims,lat=np.array([coords[station][0]]),lon=np.array([coords[station][1]]),station=station)
-        elif station[0:6] in ['NOORDW','TERSLG','ROTTMP']:
+        elif station[0:6] in ['NOORDW','TERSLG','ROTTMP','BOCHTV','BOOMKD','DANTZG','DOOVBW','GROOTG','HUIBGO','MARSDN','ZOUTKP','ZUIDOL']:
             dims = {'t': 'time', 'z': 'depth', 'x': 'lon', 'y': 'lat'}
-            fin=os.path.join(rootpath,'Dutch','opendap','raw',station)
-            fout = os.path.join(rootpath, 'Dutch', 'opendap', 'merged', station+'.nc')
+            fin=os.path.join(rootpath,'Dutch','opendap_new','raw',station)
+            fout = os.path.join(rootpath, 'Dutch', 'opendap_new', 'merged', station+'.nc')
             if read: read_opendapnc(fin,fout,dims,station=station)
 
         fstats[station]=fout
