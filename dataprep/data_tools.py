@@ -6,6 +6,9 @@ import numpy as np
 import os
 from scipy import interpolate,interp
 
+from general_funcs import getproj
+#from postplib3D import getproj
+
 def get_colors(n,palette='GB'):
     import matplotlib.pyplot as plt
     # set the colormap (http://matplotlib.org/1.2.1/examples/pylab_examples/show_colormaps.html)
@@ -881,7 +884,6 @@ def get_botdepth(lon,lat,method='tree'):
     return depth
 
 def interpval2D(lats,lons,vals,lat,lon,method,domaintree=0):
-    from postplib3D import getproj
     from scipy.spatial import cKDTree
     import time
     import warnings
@@ -893,7 +895,8 @@ def interpval2D(lats,lons,vals,lat,lon,method,domaintree=0):
         lonsM,latsM=np.meshgrid(lons,lats)
 
     #convert lat-lons to cartesian coordinates
-    proj=getproj('NS')
+    #proj=getproj('NS')
+    proj=getproj('SNSext')
     x1,y1 = proj(lonsM,latsM)
     x2,y2 = proj(lon, lat)
 
@@ -911,7 +914,7 @@ def interpval2D(lats,lons,vals,lat,lon,method,domaintree=0):
         domaintree = cKDTree(xypairs)
         # print 'tree generated in:%.1f' %(time.time() - ts)
 
-    print (' Interpolating (%s)'%method,)
+    #print (' Interpolating (%s)'%method,)
     if method in ['NN','linear']:
         coords = np.asarray(zip(np.reshape(x1,x1.size),np.reshape(y1,y1.size)))
         if method=='NN':
@@ -944,7 +947,8 @@ def interp_2d_tree_p2(vals,domaintree,lon,lat,k=4,kmin=1):
     #lon,lat:  coordinates to be used for interpolation
     #k: number of cells to use for interpolation
 
-    dLi, gridindsLi = domaintree.query([lon, lat], k)
+    #dLi, gridindsLi = domaintree.query([lon, lat], k)
+    dLi, gridindsLi = domaintree.query(zip(lon, lat), k)
     wLi = 1.0 / dLi ** 2
 
     #remove the mask, if necessary
