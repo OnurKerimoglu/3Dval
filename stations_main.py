@@ -47,15 +47,14 @@ pathreg = {'onur': {#'GF-Mnm': '/home/onur/WORK/projects/2013/maecs/sns144-M1801
         'g260108': {
                     'GF-PPZZ-fS': '/work/gg0877/onur/simout-gpmeh/sns144-GPMEH-PPZZ-P190628-fSG97dChl/extract_skillC_sns144-GPMEH-PPZZ-P190628-fSG97dChl.2012_zSB.nc',
                     'GF-PPZZ-vS': '/work/gg0877/onur/simout-gpmeh/sns144-GPMEH-PPZZ-P190628-vSG97dChl/extract_skillC_sns144-GPMEH-PPZZ-P190628-vSG97dChl.2012_zSB.nc',
-                    'GF-ref': '/work/gg0877/onur/simout-gpmeh/sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223/extract_skillC_sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223.2010-2014_zSB.nc',
-                    'GF-R12': '/work/gg0877/onur/simout-gpmeh/sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223-R12/extract_skillC_sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223-R12.2013_zSB.nc',
-                    'GF-M12': '/work/gg0877/onur/simout-gpmeh/sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223-M12/extract_skillC_sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223-M12.2013_zSB.nc',
-                    'GF-W12': '/work/gg0877/onur/simout-gpmeh/sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223-W12/extract_skillC_sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223-W12.2013_06-08_zSB.nc',
+                    'GF-ref': '/work/ku0646/UBA/simout-sns/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillphysC_sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc.2015-2017_zSB.nc',
+                    'GF-old': '/work/gg0877/onur/simout-gpmeh/sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223/extract_skillC_sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223.2010-2014_zSB.nc',
                     'plotrootpath':'/work/gg0877/onur/simout-gpmeh/sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223/3Dval_stations_2012-2013_scens',
                     'pickledobspath': './',
                     'BGC':    '/work/gg0877/onur/obsdata/stations/individual/BGC/',
                     'BSH':    '/work/gg0877/onur/obsdata/stations/individual/BSH/',
-                    'cosyna': '/work/gg0877/onur/obsdata/stations/COSYNA/proc/nc'
+                    'cosyna': '/work/gg0877/onur/obsdata/stations/COSYNA/proc/nc',
+                    'InterReg':'/work/ku0646/UBA/obsdata/stations/InterReg'
                     },
          'newuser': {}
            }
@@ -65,7 +64,7 @@ def main(modtype,modfname,statsets,yint):
     # general
     user='g260108' #'onur' #
     vars_default=['temp','salt','DOs','DIN','DIP','Chl']
-    depthints={'surface':[0,10],'bottom':[10,0]} #for bottom, depthint is relative to bottom depth
+    depthints={'surface':[0,10]} #,'bottom':[10,0]} #for bottom, depthint is relative to bottom depth
     #timeint = [datetime.datetime(2012, 1, 1,0,0,0), datetime.datetime(2013, 12, 31,23,59,59)]
     timeint = [datetime.datetime(yint[0], 1, 1,0,0,0), datetime.datetime(yint[1], 12, 31,23,59,59)]
     # regarding observations.
@@ -79,6 +78,8 @@ def main(modtype,modfname,statsets,yint):
        vars=['temp','salt'] #,'DOs']
     elif len(statsets)==1 and statsets[0]=='BGC':
        vars=['DIN','DIP','Si','Chl']
+    elif len(statsets)==1 and statsets[0]=='InterReg':
+       vars=['salt','NO3','DIP','Si','Chl']
     else:
        vars=vars_default
  

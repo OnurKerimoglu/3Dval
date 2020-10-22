@@ -15,7 +15,8 @@ class Style:
     def __init__(self,opt='default'):
         if opt=='TSdefault':
             self.res = 300
-            self.figwh=[12, 10]
+            #self.figwh=[12, 10] #BG2020
+            self.figwh=[12, 15] #BG2020
             #self.col={'obs':'0.6','sim':['k','r','b','g']}
             self.col={'obs':'0.6','sim':['k','tomato','darkblue','deepskyblue']}
             self.line={'obs':'None','sim':['-','-','-','-']}

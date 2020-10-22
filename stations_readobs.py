@@ -81,6 +81,8 @@ def fill_stationdata_obs(file,statset,vars,timeint,depthints0,olf):
         vlib = {'t': 'time', 'x': 'lon', 'y': 'lat', 'z': 'depth', 'temp': 'temp', 'salt': 'sal','DOs': 'DOsat'}
     elif statset in ['BGC']:
         vlib = {'t': 'time', 'x': 'lon', 'y': 'lat', 'z': 'depth', 'Chl': 'chl', 'DIN': 'DIN', 'DIP': 'DIP', 'Si':'Si', 'NO3':'NO3', 'NH4':'NH4'}
+    elif statset in ['InterReg']:
+        vlib = {'t': 'time', 'x': 'lon', 'y': 'lat', 'z': 'depth', 'Chl': 'CHL', 'DIP': 'PO4', 'Si':'SiO2', 'NO3':'NO3', 'NH4':'NH4','salt':'SALT','KC':'KC'}
 
     #variables without depth dimension
     noZDvars = ['ssh']
