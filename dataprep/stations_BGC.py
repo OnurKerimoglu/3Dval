@@ -16,16 +16,16 @@ refdate=datetime.datetime(1960,1,1)
 #statnamelib={'ROTTMPT70'}
 
 def main():
-    merge=False;isoBGC=False;read=True
+    merge=False;isoBGC=True;read=False
     #merge = True; read = False
     #stations=['JMA_Norderelbe','JMA_Suederpiep','JMA_Westerhever']
     #stations=['Helgoland', 'SAmrum','Norderelbe','Norderney'] # 'Sylt',
     #stations=['T36','T26','T41','T8','T2','T22','T5','T12','T11']
-    #stations=['BOCHTVWTM','BOOMKDP','DANTZGT','DOOVBWT','GROOTGND']
-    stations=['HUIBGOT','MARSDND','ZOUTKPLZGT','ZUIDOLWOT']
+    #stations=['BOCHTVWTM','BOOMKDP','DANTZGT','DOOVBWT','GROOTGND'] #
+    #stations=['HUIBGOT','MARSDND','ZOUTKPLZGT','ZUIDOLWOT']
     #stations=['NOORDWK2'] #,'NOORDWK10','NOORDWK50','NOORDWK70'],
     #stations=['TERSLG4','TERSLG10'] #'TERSLG50','TERSLG70']
-    #stations=['ROTTMPT3','ROTTMPT70'] #['ROTTMPT5', 'ROTTMPT15', 'ROTTMPT30','ROTTMPT50','ROTTMPT70']
+    stations=['ROTTMPT3','ROTTMPT70'] #['ROTTMPT5', 'ROTTMPT15', 'ROTTMPT30','ROTTMPT50','ROTTMPT70']
     #stations = ['Helgoland', 'NOORDWK2', 'NOORDWK10', 'NOORDWK50', 'NOORDWK70', 'TERSLG4', 'TERSLG50', 'TERSLG70']
     # stations=['Helgoland','Sylt','SAmrum','Norderelbe','Norderney',
     #             'T36','T26','T41','T8','T2','T22','T5','T12','T11',
@@ -35,23 +35,23 @@ def main():
     #stations=['Norderney']
 
     rootpath='/home/onur/WORK/projects/GB/data/stations/individual'
+    dataset='InterReg'
     fstats=readstats(rootpath,stations,read)
-
     if merge:
         mergestats(rootpath,fstats)
 
     if isoBGC:
-        isolateBGC(rootpath,fstats)
+        isolate_convert_vars(rootpath,fstats,dataset)
 
-def isolateBGC(rootpath,fstats):
-    print 'Isolating'
-    vars = {'DIN': 'mmolN/m3', 'NO3': 'mmolN/m3', 'NH4': 'mmolN/m3',
+def isolate_convert_vars(rootpath,fstats,dataset):
+    print 'Isolating and Converting Units'
+    vars = {'DIN': 'mmolN/m3', 'NO3': 'mmolN/m3', 'NH4': 'mmolN/m3', 'KC':'1/m','SALT':'g/kg',
             'chl': 'mg/m3','DIP': 'mmolP/m3','Si': 'mmolSi/m3','zooC':'mmolC/m3'}
 
     # collect variables from files
     for station, fin in fstats.iteritems():
         print fin
-        fout = os.path.join(rootpath,'BGCfull',station+'.nc')
+        fout = os.path.join(rootpath,dataset,station+'.nc')
         nc = netCDF4.Dataset(fin)
         ncv = nc.variables
         # procedures specific to stations
@@ -147,9 +147,9 @@ def get_stat_varkeys(station):
         varkeys={'phyC':'phytoplankton','zooC':'copepods','chl':'chl-a','DIN':'DIN','DIP':'PO4','Si':'SiO4','NO3':'NO3','NH4':'NH4'}
     elif station in ['T36','T26','T41','T8','T2','T22','T5','T12','T11']:
         varkeys={'phyC':'','zooC':'','chl':'chl','DIN':'DIN','DIP':'DIP'}
-    elif station[0:6] in ['NOORDW', 'TERSLG','ROTTMP']:
+    elif station[0:6] in ['NOORDW', 'TERSLG','ROTTMP','BOCHTV','BOOMKD','DANTZG','DOOVBW','GROOTG','HUIBGO','MARSDN','ZOUTKP','ZUIDOL']:
         # measurements are NH4-N, NO3-N, NO2-N and PO4-P
-        varkeys={'phyC':'','zooC':'','chl':'CHL','DIN':'71.4*NH4+71.4*NO3+71*NO2','DIP':'32.285*PO4',
+        varkeys={'phyC':'','zooC':'','chl':'CHL','DIN':'71.4*NH4+71.4*NO3','DIP':'32.285*PO4', 'KC':'KC','SALT':'SALT', #+71*NO2
                  'SPM':'0.001*SPM','NH4':'71.4*NH4','NO3':'71.4*NO3','NO2':'71.4*NO2','PO4':'32.285*PO4',
                  'Si':'35.6*SiO2', 'SecchiDepth':'SD', 'DOC':'83.26*DOC','POC':'83.26*POC'}
         #measurements are NH4,NO3,NO2,PO4
@@ -276,7 +276,8 @@ def getfactvar(ncv,var):
         f=1.0
         realvar=var
     if realvar in ncv.keys():
-        v=np.squeeze(ncv[realvar][:])
+        #v=np.squeeze(ncv[realvar][:])
+        v=ncv[realvar][:]
         try:
             v.mask=False
         except:
