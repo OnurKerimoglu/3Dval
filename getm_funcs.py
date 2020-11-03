@@ -111,7 +111,8 @@ def get_getm_dom_vars(simf,simdomain=''):
     return (lons,lats,bat,ysl,xsl)
 
 #def get_getm_bathymetry_cropped(fname='/home/onur/WORK/projects/GB/data/topo/topo_area_sns.nc',setup='SNS'):
-def get_getm_bathymetry_cropped(fname='/pf/g/g260108/setups/3Dsetups/sns/Forcing/Topo/topo_area_sns.nc',setup='SNS'):
+#def get_getm_bathymetry_cropped(fname='/pf/g/g260108/setups/3Dsetups/sns/Forcing/Topo/topo_area_sns.nc',setup='SNS'):
+def get_getm_bathymetry_cropped(fname='/work/ku0646/g260105/IR/3Dsetups/sns/Forcing/Topo/topo_area_sns.nc',setup='SENS'):
     ncB=netCDF4.Dataset(fname)
     ncBv=ncB.variables
     #bathymetry from a topo file

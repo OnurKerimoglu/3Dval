@@ -17,9 +17,11 @@ import numpy as np
 import netCDF4,netcdftime,os
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-from matplotlib.colors import LogNorm
+import matplotlib.colors as colors
+#from matplotlib.colors import LogNorm, PowerNorm
 from getm_funcs import get_getm_bathymetry_cropped
 from general_funcs import fnclean,cm2inch,getproj,discrete_cmap_tuner
+import copy
 
 knownunits={'total_chlorophyll_calculator_result':'mg/m$^{3}$','GPM_phy_Chl':'mg/m$^{3}$',
             'total_NPPR_calculator_result':'mgC/m$^2$/d','GPM_phy_NPPR':'mgC/m$^2$/d',
@@ -32,7 +34,7 @@ primprodvars=['hzg_maecs_GPPR', 'hzg_maecs_NPPR','GPM_phy_NPPR','total_NPPR_calc
 cbarorient = 'horizontal'
 
 def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plottopo=True,datasource='GF'):
-
+    
     if mode=='singlepanel': #single panel plots (eg, 2013 study)
         years2plot=0 #[2012,2013] #[2000,2001,2002,2003,2004,2005]
         months2plot= [] #[9,10,11]
@@ -70,7 +72,7 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
     if ('Y' in TempMeth0) and ('M' in TempMeth0):
         ystr=TempMeth0.split('-')[0]
         years2plot = [int(ystr.split('Y')[1])]
-
+        
     multiYfile=True
     if os.path.basename(fname)[0:7]=='extract':
         multiYfile=False
@@ -81,7 +83,7 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
     print ('opening: '+fname)
     nc=netCDF4.Dataset(fname)
     ncv=nc.variables
-
+    
     #prepare a fname for the plot
     fnamedir=os.path.dirname(fname)
     plotdir=os.path.join(fnamedir,'varmaps')
@@ -136,7 +138,7 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
         if len(yeari[0])==0:
             raise ValueError('Specified year:'+str(year)+ ' not found in this data set')
         tvecY=tvec[yeari[0]]
-
+        
         #parse the TempMeth0
         if ('Y' in TempMeth0) and ('M' in TempMeth0):
             TempMeth='YMaverage'
@@ -165,7 +167,6 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
                 monthsY=[tvecY[ti].month for ti in range(0,len(tvecY))]
                 uniquemonths=np.unique(monthsY)
                 months2plot=uniquemonths
-
         if TempMeth in ['Yaverage','Yintegral']:
             #showparmer=True
             tind=1*[None]
@@ -211,7 +212,6 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
 
         if figw==0 or figh==0:
             figw=numcol*4.; figh=numrow*3
-
         print ('\n Specified Methods: T:'+TempMeth + ' V:'+VertMeth)
         print (str(len(days))+' scenes found. plotting:' +str(tind))
         for varno,varname in enumerate(varnames.keys()):
@@ -220,7 +220,7 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
                 clim=varnames[varname] #[0,]
             except:
                 clim=[varname+'mean']
-
+                
             #read the values from nc file
             if varname == 'currs':
                 if ('u' in ncv) and ('v' in ncv):
@@ -261,7 +261,12 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
                     #     scalesuf=plot2Dmap(f,ax,clim,x,y,vI,varname,proj,setup,titlestr,plottopo,H,cbarstr=unitstr)
                     #     filename=fname.split('.nc')[0]+'_'+str(year)+'_varmap'+'_'+varname+scalesuf+'.png' #pdf
                     if len(v.shape)!=3:
-                        v=v.squeeze()
+                        if VertMeth=='surf':
+                            vaux=v[:,-1,:,:]
+                        else:
+                            v=vaux
+                            
+                        v=vaux.squeeze()
                         if len(v.shape)!=3:
                             raise(Exception('expecting 3 dimensions in file. Dimensions found: %s'%v.shape))
                     if TempMeth=='snapshots':#directly plot the variable
@@ -303,7 +308,8 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
                                 uII=uII+uI
                                 vII=vII+vI
 
-                        if  TempMeth in ['Maverage','YMaverage', 'Yaverage']: #transform to temporal average
+                        if  TempMeth in ['Maverage','YMaverage', 'Yaverage']:
+                            #transform to temporal average
                             vII=vII/len(tindM)
                             #print('divide by len(tindM)')
                             if varname=='currs':
@@ -315,30 +321,24 @@ def do_2Dplotmap(fname, varnames,setup,VertMeth,TempMeth0,colmap,Nlev,mode,plott
                         elif TempMeth in ['Yintegral']:
                             unitstr=unitstr.replace('d','y')
                             titlestr='Annual Integral'
-                            #titlestr=unitstr
-                            if varname in primprodvars:
-                                vII=vII/1000*12 #[mmolC/1000molC*12gC/molC]
-                                unitstr=unitstr.replace('mmolC','gC')
-                                titlestr='GPPR ['+unitstr+'] ('+str(tvec[i].year)+')'
-                            if varname=='hzg_medmac_denit_rate':
-                                titlestr='Den. Rate ['+unitstr+'] ('+str(tvec[i].year)+')'
-
+                            
                         if TempMeth in ['Maverage']:
                             titlestr=str(calendar.month_name[months2plot[mi]])
-
-                        if varname!='currs':
+                        if varname!='currs':             
                             scalesuf=plot2Dmap(f,ax,clim,x[:,:],y[:,:],vII[:,:],varname,proj,setup,titlestr,plottopo,H[:,:],showparmer,unitstr,colmap,Nlev)
                         else:
                             scalesuf=plot2Dmap_Q(f,ax,clim,x[:,:],y[:,:],uII[:,:],vII[:,:],varname,proj,setup,titlestr,plottopo,H[:,:],showparmer,unitstr,colmap,Nlev)
                     
                     #f.text(0.5,0.96,suffix+longname+' ['+unitstr+'] ('+str(tvec[i].year)+')', horizontalalignment='center')
-                    f.text(left+(right-left)/2., 0.92, longname + '\n(' + str(tvec[i].year) + ')',
-                           horizontalalignment='center',size=9)
+                    #DT:
+                    f.text(left+(right-left)/2., 0.92, longname + '\n(' + str(tvec[i].year) + ') ' + titlestr,
+                           horizontalalignment='center',size=9)   
                     if multiYfile:
                         filename=fname.split('.nc')[0]+'_'+str(year)+'_varmap_'+varname+tindsuf+'-'+setup+ scalesuf+'.png' #pdf
                     else:
                         filename=fname.split('.'+str(year)+'.nc')[0]+'_'+str(year)+'_varmap_'+varname+tindsuf+'-'+setup+ scalesuf+'.png' #pdf
                 filename = fnclean(filename)
+                #plt.show()
                 plt.savefig(filename,dpi=dpi)
                 print ('\nsaved:'+filename)
                 #s=show()
@@ -486,7 +486,7 @@ def plot2Dmap_Q(f,ax,clim,x,y,u,v,varname,proj,setup,titlestr,plottopo,H,showpar
         cb.formatter.set_scientific(True)
         cb.formatter.set_powerlimits((-4, 4))
         cb.update_ticks()
-        scalesuf = '_CL_%.1f_%.1f' % (clim[0], clim[1])
+        scalesuf = '_CL_%.1f_%.1f' % (clim[0], clim[-1])
         scalesuf = scalesuf.replace('.0', '')
 
         # unitstr
@@ -503,16 +503,19 @@ def plot2Dmap_Q(f,ax,clim,x,y,u,v,varname,proj,setup,titlestr,plottopo,H,showpar
 
 #plot2Dmap(f,ax,clim,x,y,v,proj,titlestr,=titlestr) #[cmap='YlOrRd',cbarpos='right',cbarlabel='Depth [m]',showparmer='True'] not there: plottopo,H,varname,setup,
 def plot2Dmap(f,ax,clim,x,y,v,varname,proj,setup,titlestr,plottopo,H,showparmer=False,unitstr='',colmap='viridis',Nlev=7):
+    if len(clim)>2:
+        Nlev=len(clim)
+    
     #dim(latx)=dim(lonx)=98,139
     landgr = 0.8  # color of land
-
+    
     #mask the nan values
     v=np.ma.masked_array(v,mask=np.isnan(v))
 
     #plot
     maxval = np.max(np.max(v))
+    #maxval = np.min([clim[-1],np.max(np.max(v))])
     minval = np.min(np.min(v))
-    #print 'min:%s-max:%s'%(minval,maxval)
 
     if clim[0] == clim[-1]:
         clim=[np.floor(minval), np.ceil(maxval)]
@@ -528,6 +531,7 @@ def plot2Dmap(f,ax,clim,x,y,v,varname,proj,setup,titlestr,plottopo,H,showparmer=
         cmap = plt.get_cmap(colmap)
     else:
         logplot = False
+        
         cmap, extopt, cbt, intbounds, allbounds = discrete_cmap_tuner(clim, [minval, maxval], Nlev=Nlev, colmap=colmap,
                                                                       nancol='white')
         if clim[0]==-0.7 and clim[1]==0.7: cbt=[-0.7,-0.3,0.3,0.7]
@@ -537,21 +541,40 @@ def plot2Dmap(f,ax,clim,x,y,v,varname,proj,setup,titlestr,plottopo,H,showparmer=
         #clim=[1e-1,np.amax(v)] #[np.amax(v)*.8,np.amax(v)] #
         if clim[0]<1e0:
             clim[0]=1e0
-        pcf=proj.pcolormesh(x,y,v,cmap=cmap,vmin=clim[0], vmax=clim[1],norm=LogNorm(clim[0], clim[1]))
+        pcf=proj.pcolormesh(x,y,v,cmap=cmap,vmin=clim[0], vmax=clim[-1],norm=LogNorm(clim[0], clim[1]))
     else:
         #clim=[np.amin(v),np.amax(v)] #[np.amax(v)*.8,np.amax(v)] #
         #pcf=proj.pcolormesh(x,y,v,cmap=plt.get_cmap(colmap),vmin=clim[0], vmax=clim[1])
-        pcf = proj.pcolormesh(x, y, v.squeeze(), cmap = cmap, vmin=intbounds[0], vmax=intbounds[-1])
-
+        #if varname=='total_chlorophyll_calculator_result':
+            #pcf = proj.pcolormesh(x, y, v.squeeze(), cmap = cmap, vmin=intbounds[0], vmax=intbounds[-1], norm=norm)
+            
+        #else:
+        
+        if len(clim)>2:
+            bounds = clim
+            cbt2 = bounds
+            extend2=extopt
+            allbounds2 = bounds
+            spacing2 = 'uniform'
+            Nlev2=cmap.N
+            if maxval > clim[-1] * 1.05:
+                allbounds2 = allbounds2 + [allbounds2[-1] + cbt[-1]-cbt[-2]]
+                Nlev2=Nlev2+1
+            norm = mpl.colors.BoundaryNorm(allbounds2, Nlev2, False) 
+        else:
+            bounds = intbounds
+            norm = mpl.colors.BoundaryNorm(intbounds, cmap.N)
+            cbt2 = cbt
+            extend2=extopt
+            spacing2 = 'proportional'
+            allbounds2 = allbounds
+            
+        pcf = proj.pcolormesh(x, y, v.squeeze(), cmap = cmap, vmin=bounds[0], vmax=bounds[-1], norm=norm)
     if plottopo:
         proj.contour(x,y,H,colors=str(landgr),linewidths=0.5,levels=[5.0,10.,20.,30.,40.,50.,60.])
 
-    #cb=plt.colorbar(pcf)
-
-    plt.title(titlestr,size=9)
-
     #setup specific features
-    if setup in ['NSBS','NSBSfull','SNSfull','SNS','GBight','WadSea','Ems']:
+    if setup in ['NSBS','NSBSfull','SNSfull','SNS','SENS','GBight','WadSea','Ems']:
         #coastlines, etc
         #proj.drawcoastlines(color=(0.3,0.3,0.3),linewidth=0.5) #, resolution='h')
         proj.fillcontinents((landgr,landgr,landgr),lake_color=(landgr,landgr,landgr))
@@ -580,23 +603,27 @@ def plot2Dmap(f,ax,clim,x,y,v,varname,proj,setup,titlestr,plottopo,H,showparmer=
         ticks.append(clim[1])
         ticks=[1,5,10,20]
         cb.set_ticks(ticks, update_ticks=True)
-        scalesuf = '_CL_%d_%d_log'%(clim[0],clim[1])
+        scalesuf = '_CL_%d_%d_log'%(clim[0],clim[-1])
     else:
-        norm = mpl.colors.BoundaryNorm(intbounds, cmap.N)
+        
         cb = mpl.colorbar.ColorbarBase(cax, cmap=cmap,
                                         orientation=cbarorient,
                                         norm=norm,
-                                        boundaries=allbounds,
-                                        extend=extopt,
-                                        ticks=cbt,
+                                        boundaries=allbounds2,
+                                        extend=extend2,
+                                        ticks=cbt2,
                                         #ticks= cbt[0::2],
                                         #ticks= cbt[1:-1:2],
-                                        spacing='proportional')
+                                        spacing=spacing2)
         cb.formatter.set_scientific(True)
         cb.formatter.set_powerlimits((-4, 4))
-        cb.ax.tick_params(labelsize=10)
+        if len(clim)>2:
+            cb.ax.set_xticks
+            cb.ax.set_xticklabels(clim)
+        cb.ax.tick_params(labelsize=8)
+        #cb.ax.set_xticklabels(clim,rotation=45)
         cb.update_ticks()
-        scalesuf = '_CL_%.1f_%.1f'%(clim[0],clim[1])
+        scalesuf = '_CL_%.1f_%.1f'%(clim[0],clim[-1])
         scalesuf=scalesuf.replace('.0', '')
 
     #unitstr
@@ -605,9 +632,9 @@ def plot2Dmap(f,ax,clim,x,y,v,varname,proj,setup,titlestr,plottopo,H,showparmer=
     unitstr = unitstr.replace('mg-', 'mg')
     #print unitstr
     if unitstr != '':
-        cb.ax.set_title(unitstr, size=10.)
+        cb.ax.set_title(unitstr, size=8.)
     else:
-        cb.ax.set_title('[-]', size=10.)
+        cb.ax.set_title('[-]', size=8.)
 
     #cint=(clim[1]-clim[0])/5.
     #cb.locator = MultipleLocator(cint)
@@ -617,6 +644,7 @@ def plot2Dmap(f,ax,clim,x,y,v,varname,proj,setup,titlestr,plottopo,H,showparmer=
     return scalesuf
 
 if __name__=='__main__':
+    # DT: specify either 2 values (min and max) or more than 2 (colour bar bounds)
     varlib = {
         'kd490':[0,2],
         'MLD': [0, 50],
@@ -628,14 +656,14 @@ if __name__=='__main__':
         'currs': [0.0, 0.2],
         't2': [0, 20],
         'elev': [-1.0, 1.0],
-        'temp': [10, 20.],
-        'salt': [15, 33],
+        'temp': [10, 12.5],
+        'salt': [0, 30, 33, 34, 34.5, 35, 35.5, 36],#[15, 33],
         'sigma_t': [-1.0, 0.0],
         'sigma0': [-1.0, 0.0],
-        'EH_abioP_DIN': [0, 48],
+        'EH_abioP_DIN': [0, 6, 9, 12, 15, 30, 60, 120],#[0, 48],#
         'EH_abioP_DINO3': [0, 50],
         'EH_abioP_DINH4': [0, 5],
-        'EH_abioP_DIP': [0, 3.0],
+        'EH_abioP_DIP': [0, 0.3, 0.6, 1.2, 2.4, 4.0],#[0, 3.0],#
         'EH_abioP_DISi': [0, 45.0],
         'Chl2C':[0.02,0.04],
         'zoo2phy':[0.0,1.0],
@@ -647,7 +675,7 @@ if __name__=='__main__':
         'EH_abioP_O2_percSat':[50,100],
         'EH_abioP_o2o_pel':[0,50],
         'EH_abioS_o2o_brm':[0,50],
-        'total_chlorophyll_calculator_result':[0,10],
+        'total_chlorophyll_calculator_result':[0,1,2,4,8,16,32],#[0,10],#
         'total_NPPR_calculator_result':[400, 1400], # 1000 (mgC/m2/d) 300:Yintegral (gC/m2/y)
         'GPM_diat_C': [0., 20],
         'GPM_nf_C': [0., 20],
@@ -670,8 +698,8 @@ if __name__=='__main__':
     if len(sys.argv)>2:
         varnames=sys.argv[2].split(',')
     else:
-        #varnames = ['total_chlorophyll_calculator_result'] #, 'GPM_diat_C', 'GPM_nf_C', 'GPM_miczoo_C', 'GPM_meszoo_C']
-        varnames=['zoo2phy','fr_diatC','fr_meszooC']
+        varnames = ['total_chlorophyll_calculator_result'] #, 'GPM_diat_C', 'GPM_nf_C', 'GPM_miczoo_C', 'GPM_meszoo_C']
+        #varnames=['zoo2phy','fr_diatC','fr_meszooC']
         #varnames = ['EH_abioP_O2_percSa']
         #varnames = ['GPM_phy_Chl','GPM_phy_C','GPM_zoo_C']
         #varnames=['EH_abioP_DIN','EH_abioP_DIP']
@@ -717,7 +745,7 @@ if __name__=='__main__':
     if len(sys.argv) > 6:
         setup = sys.argv[6]
     else:
-        setup = 'WadSea'  # WadSea SNSfull GBight
+        setup = 'Ems' # 'SENS' # WadSea SNSfull GBight
         # setup='deep_lake'
 
     if len(sys.argv) > 7:

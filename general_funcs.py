@@ -87,8 +87,8 @@ def fnclean(fname):
 
 def discrete_cmap_tuner(clim,vallims,Nlev,colmap,nancol='white'):
 
-    cbt = np.linspace(clim[0], clim[1], Nlev)
-    cbtstep = cbt[1] - cbt[0]
+    cbt = np.linspace(clim[0], clim[-1], Nlev)
+    cbtstep = cbt[-1] - cbt[0]
     intbounds = list(cbt)
 
     cmap = discrete_cmap(Nlev - 1, colmap)
@@ -108,7 +108,7 @@ def discrete_cmap_tuner(clim,vallims,Nlev,colmap,nancol='white'):
             cmap.set_under((0.0, 0.0, 0.0))  # black
         elif colmap == 'viridis_r':
             cmap.set_under((1.0, 0.8, 0.2))  # light orange
-    if vallims[1] > clim[1] * 1.05:  # and clim[1]!=0:
+    if vallims[1] > clim[-1] * 1.05:  # and clim[1]!=0:
         extover = True
         allbounds = allbounds + [allbounds[-1] + cbtstep]
         # Nlev = Nlev + 1
@@ -286,10 +286,10 @@ def getproj(setup,projpath=os.path.dirname(os.path.realpath(__file__))):
         elif setup=='Ems':
             proj = Basemap(projection='lcc',
                            resolution='f',
-                           llcrnrlon=6.0,
-                           llcrnrlat=53.1,
-                           urcrnrlon=8.0,
-                           urcrnrlat=54.3,
+                           llcrnrlon=6.0296,
+                           llcrnrlat=52.8525,
+                           urcrnrlon=7.7006,
+                           urcrnrlat=53.9622,
                            lat_0=52.0,
                            lon_0=5.)
         elif setup=='GBight':
@@ -308,6 +308,15 @@ def getproj(setup,projpath=os.path.dirname(os.path.realpath(__file__))):
                        llcrnrlat=51.0, #51.2,
                        urcrnrlon=9.5,
                        urcrnrlat=58.0, #55.8,
+                       lat_0=52.0,
+                       lon_0=5.)
+        elif setup=='SENS':
+            proj=Basemap(projection='lcc',
+                       resolution='i',
+                       llcrnrlon=4.3,
+                       llcrnrlat=52.4, #51.2,
+                       urcrnrlon=9.3,
+                       urcrnrlat=56, #55.8,
                        lat_0=52.0,
                        lon_0=5.)
         elif setup == 'WadSea':
