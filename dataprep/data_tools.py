@@ -212,7 +212,10 @@ def plot_fields(lon,lat,vals,varnames,longnames,units,fname_out,proj,tv=[0],zv=[
 def mapon_container_tvec(Min):
     tvecAll=[]
     for i in range(len(Min)):
-        tvecAll.extend(Min[i][:,0])
+        try:
+            tvecAll.extend(Min[i][:,0])
+        except:
+            print 'bla 218: ',i,np.shape(Min),Min[i][1,0]
 
     tvec=np.unique(tvecAll)
     Mout=[None]*len(Min)
@@ -866,16 +869,18 @@ def create_nc(fname,dimvals,dimslist,vals,names,longnames,units,history='',refda
         print ('data written:'+fname)
 
 def get_botdepth(lon,lat,method='tree'):
-    topofile = '/home/onur/WORK/projects/GB/data/topo/topo_HR2.nc'
-    #topofile='/home/onur/WORK/projects/GB/data/topo/topo_GreaterNorthSea.nc'
+    import warnings
+    #topofile = '/home/onur/WORK/projects/GB/data/topo/topo_HR2.nc'
+    topofile='/work/ku0646/g260105/IR/3Dsetups/postprocess/topo_sns144_cut_C.nc'
+    topofile='./3Dsetups/postprocess/topo_sns144_cut_C.nc'
     if os.path.exists(topofile):
         nc=netCDF4.Dataset(topofile)
         #depths=nc.variables['depth_average'][:]
         #lats = nc.variables['lat'][:]
         #lons = nc.variables['lon'][:]
         depths = nc.variables['bathymetry'][:]
-        lats = nc.variables['latx'][:-1,:-1]
-        lons = nc.variables['lonx'][:-1,:-1]
+        lats = nc.variables['lat'][:-1,:-1]
+        lons = nc.variables['lon'][:-1,:-1]
         nc.close()
         depth = interpval2D(lats, lons, depths, lat, lon, method)
     else:
@@ -896,7 +901,7 @@ def interpval2D(lats,lons,vals,lat,lon,method,domaintree=0):
 
     #convert lat-lons to cartesian coordinates
     #proj=getproj('NS')
-    proj=getproj('SNSext')
+    proj=getproj('SNSfull')
     x1,y1 = proj(lonsM,latsM)
     x2,y2 = proj(lon, lat)
 
@@ -910,7 +915,7 @@ def interpval2D(lats,lons,vals,lat,lon,method,domaintree=0):
     if method == 'tree':
         xypairs = zip(x1.flat, y1.flat)
         # ts=time.time()
-        print (' creating a tree for interpolation, this can take a while..',)
+        print ' creating a tree for interpolation, this can take a while..',
         domaintree = cKDTree(xypairs)
         # print 'tree generated in:%.1f' %(time.time() - ts)
 
@@ -947,8 +952,8 @@ def interp_2d_tree_p2(vals,domaintree,lon,lat,k=4,kmin=1):
     #lon,lat:  coordinates to be used for interpolation
     #k: number of cells to use for interpolation
 
-    #dLi, gridindsLi = domaintree.query([lon, lat], k)
-    dLi, gridindsLi = domaintree.query(zip(lon, lat), k)
+    dLi, gridindsLi = domaintree.query([lon, lat], k)
+    #dLi, gridindsLi = domaintree.query(zip(lon, lat), k)
     wLi = 1.0 / dLi ** 2
 
     #remove the mask, if necessary

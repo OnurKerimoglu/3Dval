@@ -89,7 +89,7 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
 
             # if no plot is made, don't save an empty figure: to achieve this track whether any plot is made
             anyplotinfig = False
-
+            
             for varno,varname in enumerate(plotopts['varns']): #in each panel
 
                 #create a panel

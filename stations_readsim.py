@@ -33,6 +33,7 @@ def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,ob
     if simname[0:2] == 'GF':
         print('Accessing getm data')
         lons,lats,bat,ysl,xsl=get_getm_dom_vars(simf,simdomain)
+        print('bla 36: ',meth2D)
         if meth2D == 'pretree':
             proj = getproj(setup = 'SNSfull', projpath = os.path.dirname(os.path.realpath(__file__)))
             # proj = getproj(setup = 'NS', projpath = os.path.dirname(os.path.realpath(__file__)))
