@@ -16,6 +16,9 @@ import os,sys
 import warnings
 import datetime
 import numpy as np
+#home=os.getcwd()
+#sys.path.insert(1, home+'/3Dsetups/postprocess')
+#sys.path.insert(1, home+'/3Dval')
 import stations_readobs as SRO
 import stations_readsim as SRS
 import stations_plots as SP
@@ -56,13 +59,27 @@ pathreg = {'onur': {#'GF-Mnm': '/home/onur/WORK/projects/2013/maecs/sns144-M1801
                     'cosyna': '/work/gg0877/onur/obsdata/stations/COSYNA/proc/nc',
                     'InterReg':'/work/ku0646/UBA/obsdata/stations/InterReg'
                     },
+        'g260105': {
+                    'GF-PPZZ-fS': '/work/ku0646/g260105/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillC_sns144-GPMEH-PPZZ-P190628-fSG97dChl.2017_zSB.nc',
+                    'GF-PPZZ-vS': '/work/ku0646/g260105/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillC_sns144-GPMEH-PPZZ-P190628-vSG97dChl.2017_zSB.nc',
+                    'GF-PPZZ': '/work/ku0646/g260105/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillphysC_sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc.2015-2017_zSB.nc',
+                    'GF-ref': '/work/ku0646/g260105/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillphysC_sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc.2015-2017_zSB.nc',
+                    'GF-old': '/work/ku0646/g260105/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillC_sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223.2015-2017_zSB.nc',
+                    'plotrootpath':'/work/ku0646/g260105/IR/3Dval',
+                    'pickledobspath': './',
+                    'BGC':    '/work/ku0646/g260105/IR/stations/individual/BGC/',
+                    'BSH':    '/work/ku0646/g260105/IR/stations/individual/BSH/',
+                    'cosyna': '/work/ku0646/g260105/IR/stations/COSYNA/proc/nc',
+                    'InterReg':'/work/ku0646/g260105/IR/stations/InterReg/allNC'
+                    },
+        
          'newuser': {}
            }
 
 def main(modtype,modfname,statsets,yint):
     #PARAMETERS:
     # general
-    user='g260108' #'onur' #
+    user='g260105' # 'g260108' #'onur' #
     vars_default=['temp','salt','DOs','DIN','DIP','Chl']
     depthints={'surface':[0,10]} #,'bottom':[10,0]} #for bottom, depthint is relative to bottom depth
     #timeint = [datetime.datetime(2012, 1, 1,0,0,0), datetime.datetime(2013, 12, 31,23,59,59)]
@@ -89,14 +106,13 @@ def main(modtype,modfname,statsets,yint):
     #sims2plot=['GF-ref', 'GF-R12', 'GF-M12', 'GF-W12']
     #sims2plot= ['GF-PPZZ-fS', 'GF-PPZZ-vS']
     #sims2plot = ['GF-Mnm','GF-Mfc','GF-Mvc'] #'GF-c100','GF-ref'] #,'GF-M13R12','GF-M12R13']
-    readsimraw=False #i.e., if the pickle file should be ignored
-    readobsraw=False #i.e., if the pickle file should be ignored
+    readsimraw=True #i.e., if the pickle file should be ignored
+    readobsraw=True #i.e., if the pickle file should be ignored
     simdomain=''
     meth2D='pretree'
     #regarding plots:
     olf=4.0 #
     getmv='mean' #mean,3d
-    
     pathreg_u=pathreg[user]
     
     #READ OBSERVATIONS
@@ -124,7 +140,6 @@ if __name__=='__main__':
        modtype=sys.argv[1]
     else:
        modtype='GF-PPZZ'
-
     if len(sys.argv)>2:
        modfname=sys.argv[2]
     else:
