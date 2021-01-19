@@ -25,7 +25,7 @@ def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,ob
     # check if the pickledsim exist
     if (not readraw) and os.path.exists(pickledsimfile):
         print('Opening pickled sim file')
-        (sim,) = np.load(pickledsimfile)
+        (sim,) = np.load(pickledsimfile,allow_pickle=True)
         return sim
 
     # if pickledsim does not exist:

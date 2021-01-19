@@ -7,6 +7,8 @@ Created on Mon Jun  12 12:10 2017
 """
 import os
 import numpy as np
+import numpy.ma as ma
+import cftime
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from general_funcs import getproj,format_date_axis
@@ -218,7 +220,13 @@ def get_skillscores(obs,sim,timeint):
     skills={}
     skills['n']=len(o)
     from scipy.stats import pearsonr
-    r, p = pearsonr(s, o)
+
+    if len(tind)>1:
+        r, p = pearsonr(s, o)
+    else:
+        r=np.nan
+        p=np.nan
+
     if p < 0.001:
         pstr = '***'
     elif p < 0.01:
@@ -267,6 +275,7 @@ def plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,id,ax,times,values,timeint
     else:
         if sno==-1:
             raise(Exception('Simulation # must be provided (sno)'))
+        # h, = ax.plot(cftime.num2pydate(times[tind],units=days), values[tind], linestyle=S.line['sim'][sno], marker=S.marker['sim'][sno], lw=S.lw['sim'][sno], color=S.col['sim'][sno], mfc=S.col['sim'][sno], mec=S.col['sim'][sno], markersize=1,label=id)
         h, = ax.plot(times[tind], values[tind], linestyle=S.line['sim'][sno], marker=S.marker['sim'][sno], lw=S.lw['sim'][sno], color=S.col['sim'][sno], mfc=S.col['sim'][sno], mec=S.col['sim'][sno], markersize=1,label=id)
     hset.append(h)
     idset.append(id)

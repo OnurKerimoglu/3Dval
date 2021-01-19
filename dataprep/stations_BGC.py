@@ -37,8 +37,12 @@ def main():
     #stations=['Norderney_2','Wesermuendung','JaBu','Bork']
     #stations=['BOCHTVWTM','BOOMKDP','DANTZGT','DOOVBWT','GROOTGND'] #
     #stations=['BOCHTVWTM','BOOMKDP','DANTZGT','DOOVBWT','GROOTGND','HUIBGOT','MARSDND','ROTTMPT3','ROTTMPT70','TERSLG10','TERSLG4','ZUIDOLWOT','ZOUTKPLZGT']
-    #stations=['SchlHolst2','Nney','Wesermuendung','JaBu','Bork','BOCHTVWTM','BOOMKDP','DANTZGT','DOOVBWT','GROOTGND','HUIBGOT','MARSDND','ROTTMPT3','ROTTMPT70','TERSLG10','TERSLG4','ZUIDOLWOT','ZOUTKPLZGT']
-    stations=['Nney']
+    stations=['SchlHolst2','Nney','Wesermuendung','JaBu','Bork','BOCHTVWTM','BOOMKDP','DANTZGT','DOOVBWT','GROOTGND','HUIBGOT',
+              'MARSDND','ROTTMPT3','ROTTMPT70','TERSLG10','TERSLG4','ZUIDOLWOT','ZOUTKPLZGT']
+    # stations=['BOCHTVWTM','BOOMKDP','DANTZGT','DOOVBWT','GROOTGND','HUIBGOT',
+    #             'MARSDND','ROTTMPT3','ROTTMPT70','TERSLG10','TERSLG4','ZUIDOLWOT','ZOUTKPLZGT']
+    # stations=['Nney','NOORDW','TERSLG','ROTTMP','BOCHTV','BOOMKD','DANTZG','DOOVBW','GROOTG','HUIBGO','MARSDN','ZOUTKP',
+    #           'ZUIDOL']
     #rootpath='/home/onur/WORK/projects/GB/data/stations/individual'
     rootpath=home+'/stations/InterReg'
     dataset='InterReg'
@@ -64,7 +68,7 @@ def isolate_convert_vars(rootpath,fstats,dataset):
         print('Reading: ' + station,)
 
         varkeys = get_stat_varkeys(station)
-        M = []; V = []; U = []; lats = []; lons = [];
+        M = []; V = []; U = []; lats = []; lons = []
         M, V, U, lats, lons = getvar_fromstat(M, V, U, lats, lons, station, ncv, vars, varkeys,merge_statvar=False,keepZD=True)
         if hasattr(nc, 'station'):
             stationstr=nc.station
@@ -141,11 +145,11 @@ def mergestats(rootpath,fstats):
 
 def get_stat_varkeys(station):
     if station== 'Bork':
-        varkeys={'DOC':'DOC','Ntotal':'N','PO4':'DIP','Salz n.LF':'SALT','Seston':'TSM','Gluehverlust':'LOI','Pges':'P','Silikat':'SiO2','Nitrat':'NO3','Amon':'NH4','Nitrit':'NO2','Wassertemp.':'T'}
+        varkeys={'DOC':'DOC','Ntotal':'N','PO4':'DIP','Salz n.LF':'SALT','Seston':'TSM','Gluehverlust':'LOI','Pges':'P','Silikat':'Si','Nitrat':'NO3','Amon':'NH4','Nitrit':'NO2','Wassertemp.':'T'}
     elif station== 'Norderney':
         varkeys={'phyC':'','zooC':'','chl':'CPHL','DIN':'DIN','DIP':'PHOS','Si':'SLCA', 'NH4':'AMON','NO3':'NTRA'}
     elif station== 'Nney':
-        varkeys={'CPHL':'chl','DIN':'DIN','Phosphat':'DIP','DOC':'DOC','Silikat':'SiO2', 'Ammonium':'NH4','Nitrat':'NO3','N':'N','P':'P','Temperatur':'T','Salzgeh. nach Leitfaehigkeit':'SALT','Seston Trockengew.':'TSM','Gluehverlust':'LOI','Secci-Sichttiefe':'zS'}
+        varkeys={'CPHL':'chl','DIN':'DIN','Phosphat':'DIP','DOC':'DOC','Silikat':'Si', 'Ammonium':'NH4','Nitrat':'NO3','N':'N','P':'P','Temperatur':'T','Salzgeh. nach Leitfaehigkeit':'SALT','Seston Trockengew.':'TSM','Gluehverlust':'LOI','Secci-Sichttiefe':'zS'}
     elif station=='JaBu':
         varkeys={'Chlorophyll-a total Ethanol':'chl','DOC':'DOC','Gluehverlust Seston':'LOI','Abfiltrierbare_Stoffe (Seston)':'TSM','Salinitaet Sonde':'SALT',
                  'ortho P':'DIP','P total':'P','NH4N':'NH4','NO2N':'NO2','NO3N':'NO3','N total':'N',
@@ -172,6 +176,8 @@ def get_stat_varkeys(station):
                  'Si':'35.6*SiO2', 'SecchiDepth':'SD', 'DOC':'83.26*DOC','POC':'83.26*POC'}
         #measurements are NH4,NO3,NO2,PO4
         #varkeys = {'phyC': '', 'zooC': '', 'chl': 'CHL', 'DIN': '55.43*NH4+16.13*NO3+21.74*NO2', 'DIP':'10.56*PO4'}
+    else:
+        varkeys={}
     return varkeys
 
 def getvar_fromstat(M,V,U,lat,lon,station,ncv,vars,varkeys,merge_statvar=False,keepZD=False,yearint=[0,0],zint=[0,0]):
@@ -603,7 +609,7 @@ def read_dutchcsv(rootpath,fin,fin2,fout,dims,station='-'):
         'NO3':'NO3',
         'POC':'POC',
         'SALNTT':'SALT',
-        'SiO2':'SiO2',
+        'SiO2':'Si',
         'T':'T',
         'TN':'N',
         'TP':'P',
@@ -673,6 +679,7 @@ def read_dutchcsv(rootpath,fin,fin2,fout,dims,station='-'):
     M=[None]*numvars #chl,amon,din,ntra,ntri,phos,ntot,ptot,slca,doc,tsm,loi,zs
     U=[None]*numvars
     V=[None]*numvars
+    D=[None]*numvars
 
     conversion_factor={
         'CHLFa':1,
@@ -717,6 +724,16 @@ def read_dutchcsv(rootpath,fin,fin2,fout,dims,station='-'):
         'ZICHT':'m',
         'ZS':'g/m3'
             }
+
+    depth_key={
+        'BODM':maxz-1,
+        'HALVWTKL':maxz*0.5,
+        'NAP':0,
+        'NVT': np.nan,
+        'SPRONGLG':maxz*0.5,
+        'WATSGL':3
+            }
+
     secs=np.ndarray((numrows,1)) #seconds
     length_station=-1
     for r in np.arange(numrows):
@@ -742,63 +759,72 @@ def read_dutchcsv(rootpath,fin,fin2,fout,dims,station='-'):
     
     for varno,var in enumerate(uvars):
         vari=np.array([headers[r]==var for r in range(len(headers))])
-        vari2=np.where(vari)[0]
-        M[varno]=np.ndarray((rr,2))
+        vari2=np.asscalar(np.where(vari)[0])
+        M[varno]=np.ndarray((rr,3))
+        D[varno]=np.ndarray((rr,1))
         conv_fac2=conversion_factor[var]
         #print 'bla 744: ',vari2,var,varkeys[var],conv_fac2
         kk=0
         for r in varr2:
             M[varno][kk,0] = secs[r]
+            M[varno][kk,1] = depth_key[RD[r].split(';')[3]]
+            # D[varno][kk,0] = depth_key[RD[r].split(';')[3]]
             val=RD[r].split(';')[vari2]
             
             val=val.replace('\n','')
                 
             if val=='' or '\n' in val:
-                M[varno][kk,1]=np.nan
+                M[varno][kk,2]=np.nan
             else:
                 try:
                     if val[0]=='<':
-                        M[varno][kk,1]=0.0
+                        M[varno][kk,2]=0.0
                     else:
-                        M[varno][kk,1]=float(val)*conv_fac2
+                        M[varno][kk,2]=float(val)*conv_fac2
                 except:
                         #print 'bla 757!'  
                         M[varno][kk,:]=np.nan
             kk+=1
         M[varno]=M[varno][np.invert(np.isnan(M[varno][:,1])),:]
+        M[varno]=M[varno][np.invert(np.isnan(M[varno][:,2])),:]
                     
     if TSM_switch==True and LOI_switch==True:
         
-        M[-2]=np.ndarray((numrow,2))
+        M[-2]=np.ndarray((numrows,3))
         V[-2]='PIM'
         U[-2]='g/m3'
         
-        for r in range(numrow):
+        for r in range(numrows):
             try:
                 M[-2][r,0]=M[TSM_index][r,0]
-                M[-2][r,1]=M[TSM_index][r,1]*(1-0.01*M[LOI_index][r,1])
+                M[-2][r,1]=M[TSM_index][r,1]
+                M[-2][r,2]=M[TSM_index][r,2]*(1-0.01*M[LOI_index][r,2])
             except:
                 M[-2][r,:]=np.nan
-                
+
         M[-2]=M[-2][np.invert(np.isnan(M[-2][:,1])),:]
+        M[-2]=M[-2][np.invert(np.isnan(M[-2][:,2])),:]
         
-        M[-1]=np.ndarray((numrow,2))
+        M[-1]=np.ndarray((numrows,3))
         V[-1]='POM'
         U[-1]='g/m3'
         
-        for r in range(numrow):
+        for r in range(numrows):
             try:
                 M[-1][r,0]=M[TSM_index][r,0]
-                M[-1][r,1]=M[TSM_index][r,1]*0.01*M[LOI_index][r,1]
+                M[-1][r,1]=M[TSM_index][r,1]
+                M[-1][r,2]=M[TSM_index][r,2]*0.01*M[LOI_index][r,2]
             except:
                 M[-1][r,:]=np.nan
-    
+
         M[-1]=M[-1][np.invert(np.isnan(M[-1][:,1])),:]
+        M[-1]=M[-1][np.invert(np.isnan(M[-1][:,2])),:]
     
-    Mv,tvec_s=mapon_container_tvec(M) #map all vars on along a container time vector
+    # Mv,tvec_s=mapon_container_tvec(M) #map all vars on along a container time vector
+    Mv, tvec_s, zvec = mapon_container_tzvec(M)  # map all vars along a container time/z vector
     tvec=[datetime.datetime(refdate.year,refdate.month,refdate.day,0,0,0)+datetime.timedelta(0,t_s) for t_s in tvec_s]
     #create_ncfile(fout,lon,lat,tvec,-1,Mv,V,V,U,dims,refdate=refdate,missing_value=-99,notify=True)
-    create_ncfile(fout, lon, lat, Mv, V, V, U, dims, tvec, zvec=-1, climatology=False,
+    create_ncfile(fout, lon, lat, Mv, V, V, U, dims, tvec, zvec, climatology=False,
                   refdate=refdate, missing_value=-99, notify=True)
     #print 'file written:'+fout
     addncatt(fout, {'station': station, 'bottom_depth': maxz})
@@ -981,7 +1007,7 @@ def read_Nney(rootpath,fin,fin2,fin3,fout,dims,lat,lon,station='-'):
     numcolO=len(headers)
     print 'CHL:'+ str(numrow)+' lines,'+str(numcolO)+' columns. ',
 
-    M[0]=np.ndarray((numrow,2)) #seconds,chl
+    M[0]=np.ndarray((numrow,3)) #seconds,chl
     for  r in np.arange(0,numrow):
         years=int(RD[r].split(';')[1].split('.')[2])
         months=int(RD[r].split(';')[1].split('.')[1])
@@ -990,10 +1016,11 @@ def read_Nney(rootpath,fin,fin2,fin3,fout,dims,lat,lon,station='-'):
         mins=int(RD[r].split(';')[2].split(':')[1])
         deltadate=datetime.datetime(years,months,days,hours,mins)- refdate
         M[0][r,0] = 86400*deltadate.days +deltadate.seconds
-        M[0][r,1]=float(RD[r].split(';')[4]) if RD[r].split(';')[4]!='' else np.nan
+        M[0][r,2]=float(RD[r].split(';')[4]) if RD[r].split(';')[4]!='' else np.nan
 
     #get rid of empty lines
-    M[0]=M[0][np.invert(np.isnan(M[0][:,1])),:]
+    M[0][:,1]=0
+    M[0]=M[0][np.invert(np.isnan(M[0][:,2])),:]
     U[0]='mg/m3'
     V[0]='chl'
     
@@ -1032,6 +1059,10 @@ def read_Nney(rootpath,fin,fin2,fin3,fout,dims,lat,lon,station='-'):
         #vari=np.array([varar[r][0]==var for r in range(len(varar))])
         vari=np.array([varar[r]==var for r in range(len(varar))])
         vari2=np.where(vari)[0]
+        if len(vari2)==1:
+            vari2=vari2[0]
+        else:
+            print 'bla 1038!'
         secsV=secs
         #RD=[None]*len(secsV)
         
@@ -1054,24 +1085,25 @@ def read_Nney(rootpath,fin,fin2,fin3,fout,dims,lat,lon,station='-'):
             #U[kk]=var.split('[')[1][0:-1]
             U[kk]=var.split('[')[1].split(']')[0]
             V[kk]=varaux
-            M[kk]=np.ndarray((numrow,2)) #seconds,var
+            M[kk]=np.ndarray((numrow,3)) #seconds,var
             print varaux +':'+str(numrow)+' lines,'+str(numcolO)+' columns. '
             
             for  r in range(numrow):
                 M[kk][r,0] = secsV[r]
                 val=RDraw[r].split(';')[vari2]
                 if val=='' or '\n' in val:
-                    M[kk][r,1]=np.nan
+                    M[kk][r,2]=np.nan
                 else:
                     try:
                         if val[0]=='<':
-                            M[kk][r,1]=0.0
+                            M[kk][r,2]=0.0
                         else:
-                            M[kk][r,1]=float(val)
+                            M[kk][r,2]=float(val)
                     except:
                             print 'bla 854!'
             #get rid of empty lines
-            M[kk]=M[kk][np.invert(np.isnan(M[kk][:,1])),:]
+            M[kk][:,1]=0
+            M[kk]=M[kk][np.invert(np.isnan(M[kk][:,2])),:]
 
     #read nut
     with open(fin3, 'rb') as csvfile:
@@ -1100,7 +1132,10 @@ def read_Nney(rootpath,fin,fin2,fin3,fout,dims,lat,lon,station='-'):
     for varno,var in enumerate(uvars):
         vari=np.array([varar[r]==var for r in range(len(varar))])
         vari2=np.where(vari)[0]
-            
+        if len(vari2)==1:
+            vari2=vari2[0]
+        else:
+            print 'bla 1110!'
         numrow=len(RDraw2)
         
         varn=var.split('[')[0][0:-1]
@@ -1109,7 +1144,7 @@ def read_Nney(rootpath,fin,fin2,fin3,fout,dims,lat,lon,station='-'):
             varaux = varkeys[varn]
             U[kk]=var.split('[')[1].split(']')[0]
             V[kk]=varaux
-            M[kk]=np.ndarray((numrow,2)) #seconds,var
+            M[kk]=np.ndarray((numrow,3)) #seconds,var
             print varaux +':'+str(numrow)+' lines,'+str(numcolO)+' columns. '
             if varaux=='TSM':
                 TSM_index=kk
@@ -1122,50 +1157,54 @@ def read_Nney(rootpath,fin,fin2,fin3,fout,dims,lat,lon,station='-'):
                 M[kk][r,0] = secsV[r]
                 val=RDraw2[r].split(';')[vari2]
                 if val=='' or '\n' in val:
-                    M[kk][r,1]=np.nan
+                    M[kk][r,2]=np.nan
                 else:
                     try:
                         if val[0]=='<':
-                            M[kk][r,1]=0.0
+                            M[kk][r,2]=0.0
                         else:
-                            M[kk][r,1]=float(val)
+                            M[kk][r,2]=float(val)
                     except:
                             print 'bla 915!'
             #get rid of empty lines
-            M[kk]=M[kk][np.invert(np.isnan(M[kk][:,1])),:]
+            M[kk][:,1]=0
+            M[kk]=M[kk][np.invert(np.isnan(M[kk][:,2])),:]
 
     if TSM_switch==True and LOI_switch==True:
-        M[kk+1]=np.ndarray((numrow,2))
+        M[kk+1]=np.ndarray((numrow,3))
         V[kk+1]='PIM'
         U[kk+1]='g/m3'
         
         for r in range(numrow):
             try:
                 M[kk+1][r,0]=M[TSM_index][r,0]
-                M[kk+1][r,1]=M[TSM_index][r,1]*(1-0.01*M[LOI_index][r,1])
+                M[kk+1][r,2]=M[TSM_index][r,2]*(1-0.01*M[LOI_index][r,2])
             except:
                 M[kk+1][r,:]=np.nan
-                
-        M[kk+1]=M[kk+1][np.invert(np.isnan(M[kk+1][:,1])),:]
-        
-        M[kk+2]=np.ndarray((numrow,2))
+
+        M[kk+1][:,1] = 0
+        M[kk+1]=M[kk+1][np.invert(np.isnan(M[kk+1][:,2])),:]
+
+        M[kk+2]=np.ndarray((numrow,3))
         V[kk+2]='POM'
         U[kk+2]='g/m3'
         
         for r in range(numrow):
             try:
                 M[kk+2][r,0]=M[TSM_index][r,0]
-                M[kk+2][r,1]=M[TSM_index][r,1]*0.01*M[LOI_index][r,1]
+                M[kk+2][r,2]=M[TSM_index][r,2]*0.01*M[LOI_index][r,2]
             except:
                 M[kk+2][r,:]=np.nan
-    
-        M[kk+2]=M[kk+2][np.invert(np.isnan(M[kk+2][:,1])),:]
+
+        M[kk+1][:,2] = 0
+        M[kk+2]=M[kk+2][np.invert(np.isnan(M[kk+2][:,2])),:]
     
     #write in a ncdf file:
-    Mv,tvec_s=mapon_container_tvec(M) #map all vars on along a container time vector
+    # Mv,tvec_s=mapon_container_tvec(M) #map all vars on along a container time vector
+    Mv, tvec_s, zvec = mapon_container_tzvec(M)  # map all vars along a container time/z vector
     tvec=[datetime.datetime(refdate.year,refdate.month,refdate.day,0,0,0)+datetime.timedelta(0,t_s) for t_s in tvec_s]
     #create_ncfile(fout,lon,lat,tvec,-1,Mv,V,V,U,dims,refdate=refdate,missing_value=-99,notify=True)
-    create_ncfile(fout, lon, lat, Mv, V, V, U, dims, tvec, zvec=-1, climatology=False,
+    create_ncfile(fout, lon, lat, Mv, V, V, U, dims, tvec, zvec, climatology=False,
                   refdate=refdate, missing_value=-99, notify=True)
     #print 'file written:'+fout
     addncatt(fout, {'station': station, 'bottom_depth': maxz})
@@ -1231,60 +1270,62 @@ def read_JaBu(rootpath,fin,fout,dims,lat,lon,station='-'):
                 unitout='umol/l'
             V[kk]=varaux
             U[kk]=unitout
-            M[kk]=np.ndarray((numrow,2))
-            
+            M[kk]=np.ndarray((numrow,3))
+            M[kk][:,1]=0
             for r in range(numrow):
                 M[kk][r,0] = secs[r]
                 val=RD[r].split(';')[vari2[-1]]
                 if val=='' or '\n' in val:
-                    M[kk][r,1]=np.nan
+                    M[kk][r,2]=np.nan
                 else:
                     try:
                         if val[0]=='<':
-                            M[kk][r,1]=0.0
+                            M[kk][r,2]=0.0
                         else:
-                            M[kk][r,1]=float(val)
+                            M[kk][r,2]=float(val)
                     except:
                             print 'bla 932!'
-            M[kk]=M[kk][np.invert(np.isnan(M[kk][:,1])),:]   
+            M[kk]=M[kk][np.invert(np.isnan(M[kk][:,2])),:]
             kk=kk+1
             
-    M[kk]=np.ndarray((numrow,2))
+    M[kk]=np.ndarray((numrow,3))
+    M[kk][:,1]=0
     V[kk]='PIM'
     U[kk]='g/m3'
     
     for r in range(numrow):
         try:
             M[kk][r,0]=M[TSM_index][r,0]
-            M[kk][r,1]=M[TSM_index][r,1]*(1-0.01*M[LOI_index][r,1])
+            M[kk][r,2]=M[TSM_index][r,2]*(1-0.01*M[LOI_index][r,2])
         except:
             M[kk][r,:]=np.nan
             
-    M[kk]=M[kk][np.invert(np.isnan(M[kk][:,1])),:]   
+    M[kk]=M[kk][np.invert(np.isnan(M[kk][:,2])),:]
+
     
-    print 'bla 1051: ',np.shape(M),kk+1
-    
-    M[kk+1]=np.ndarray((numrow,2))
+    M[kk+1]=np.ndarray((numrow,3))
+    M[kk+1][:,1]=0
     V[kk+1]='POM'
     U[kk+1]='g/m3'
     
     for r in range(numrow):
         try:
             M[kk+1][r,0]=M[TSM_index][r,0]
-            M[kk+1][r,1]=M[TSM_index][r,1]*0.01*M[LOI_index][r,1]
+            M[kk+1][r,2]=M[TSM_index][r,2]*0.01*M[LOI_index][r,2]
         except:
             M[kk+1][r,:]=np.nan
             
-    M[kk+1]=M[kk+1][np.invert(np.isnan(M[kk+1][:,1])),:]   
+    M[kk+1]=M[kk+1][np.invert(np.isnan(M[kk+1][:,2])),:]
     
-    Mv,tvec_s=mapon_container_tvec(M) #map all vars on along a container time vector
+    # Mv,tvec_s=mapon_container_tvec(M) #map all vars on along a container time vector
+    Mv, tvec_s, zvec = mapon_container_tzvec(M)  # map all vars along a container time/z vector
     tvec=[datetime.datetime(refdate.year,refdate.month,refdate.day,0,0,0)+datetime.timedelta(0,t_s) for t_s in tvec_s]
     #create_ncfile(fout,lon,lat,tvec,-1,Mv,V,V,U,dims,refdate=refdate,missing_value=-99,notify=True)
-    create_ncfile(fout, lon, lat, Mv, V, V, U, dims, tvec, zvec=-1, climatology=False,
+    create_ncfile(fout, lon, lat, Mv, V, V, U, dims, tvec, zvec, climatology=False,
                   refdate=refdate, missing_value=-99, notify=True)
     #print 'file written:'+fout
     addncatt(fout, {'station': station, 'bottom_depth': maxz})
-    
+
 def read_Bork(rootpath,fin,fout,dims,lat,lon,station='-'):
     print ' finding bottom depth..',
     maxz = get_botdepth(lon[0], lat[0], 'tree')
@@ -1353,59 +1394,63 @@ def read_Bork(rootpath,fin,fout,dims,lat,lon,station='-'):
             
             V[kk]=varaux
             U[kk]=unitout
-            M[kk]=np.ndarray((numrow,2))
-            
+            M[kk]=np.ndarray((numrow,3))
+            M[kk][:,1]=0
+
             for r in range(numrow):
                 M[kk][r,0] = secs[r]
                 val=RD[r].split(';')[vari2[-1]]
                 if val=='' or '\n' in val or val=='not measured':
-                    M[kk][r,1]=np.nan
+                    M[kk][r,2]=np.nan
                 else:
                     try:
                         if val[0]=='<':
-                            M[kk][r,1]=0.0
+                            M[kk][r,2]=0.0
                         else:
-                            M[kk][r,1]=float(val)
+                            M[kk][r,2]=float(val)
                     except:
                             print 'bla 932: ',val
-            M[kk]=M[kk][np.invert(np.isnan(M[kk][:,1])),:]   
+            M[kk]=M[kk][np.invert(np.isnan(M[kk][:,2])),:]
             kk=kk+1
             
-    M[kk]=np.ndarray((numrow,2))
+    M[kk]=np.ndarray((numrow,3))
+    M[kk][:,1]=0
     V[kk]='PIM'
     U[kk]='g/m3'
     
     for r in range(numrow):
         try:
             M[kk][r,0]=M[TSM_index][r,0]
-            M[kk][r,1]=M[TSM_index][r,1]*(1-0.01*M[LOI_index][r,1])
+            M[kk][r,2]=M[TSM_index][r,2]*(1-0.01*M[LOI_index][r,2])
         except:
             M[kk][r,:]=np.nan
             
-    M[kk]=M[kk][np.invert(np.isnan(M[kk][:,1])),:]   
+    M[kk]=M[kk][np.invert(np.isnan(M[kk][:,2])),:]
     
     kk=kk+1
-    M[kk]=np.ndarray((numrow,2))
+    M[kk]=np.ndarray((numrow,3))
+    M[kk][:,1]=0
     V[kk]='P0M'
     U[kk]='g/m3'
     
     for r in range(numrow):
         try:
             M[kk][r,0]=M[TSM_index][r,0]
-            M[kk][r,1]=M[TSM_index][r,1]*0.01*M[LOI_index][r,1]
+            M[kk][r,2]=M[TSM_index][r,2]*0.01*M[LOI_index][r,2]
         except:
             M[kk][r,:]=np.nan
             
-    M[kk]=M[kk][np.invert(np.isnan(M[kk][:,1])),:]   
+    M[kk]=M[kk][np.invert(np.isnan(M[kk][:,2])),:]
             
-    Mv,tvec_s=mapon_container_tvec(M) #map all vars on along a container time vector
+    # Mv,tvec_s=mapon_container_tvec(M) #map all vars on along a container time vector
+    Mv, tvec_s, zvec = mapon_container_tzvec(M)  # map all vars along a container time/z vector
     tvec=[datetime.datetime(refdate.year,refdate.month,refdate.day,0,0,0)+datetime.timedelta(0,t_s) for t_s in tvec_s]
     #create_ncfile(fout,lon,lat,tvec,-1,Mv,V,V,U,dims,refdate=refdate,missing_value=-99,notify=True)
-    create_ncfile(fout, lon, lat, Mv, V, V, U, dims, tvec, zvec=-1, climatology=False,
+    create_ncfile(fout, lon, lat, Mv, V, V, U, dims, tvec, zvec, climatology=False,
                   refdate=refdate, missing_value=-99, notify=True)
     #print 'file written:'+fout
     addncatt(fout, {'station': station, 'bottom_depth': maxz})
-    
+
 def read_Wesermuendung(rootpath,fin,fout,dims,lat,lon,station='-'):
     varkeys=get_stat_varkeys('Wesermuendung')
     
@@ -1487,66 +1532,71 @@ def read_Wesermuendung(rootpath,fin,fout,dims,lat,lon,station='-'):
                 
                 V[kk]=varaux
                 U[kk]=unitout
-                M2[kk]=np.ndarray((numrow,2))
-                
+                M2[kk]=np.ndarray((numrow,3))
+                M2[kk][:,1]=0
+
                 for r in range(numrow):
                     M2[kk][r,0] = secs[r]
                     if substatname[r]==statid[si]:
                         val=RD[r].split(';')[vari2[-1]]
                         if val=='' or '\n' in val:
-                            M2[kk][r,1]=np.nan
+                            M2[kk][r,2]=np.nan
                         else:
                             try:
                                 if val[0]=='<':
-                                    M2[kk][r,1]=0.0
+                                    M2[kk][r,2]=0.0
                                 else:
-                                    M2[kk][r,1]=float(val)
+                                    M2[kk][r,2]=float(val)
+                                    if kk==14 and float(val)>40:
+                                        print 'bla'
                             except:
                                     print 'bla 932!'
                     else:
-                        M2[kk][r,1]=np.nan
+                        M2[kk][r,2]=np.nan
                             
-                M2[kk]=M2[kk][np.invert(np.isnan(M2[kk][:,1])),:]   
+                M2[kk]=M2[kk][np.invert(np.isnan(M2[kk][:,2])),:]
                 kk=kk+1
                 
-        M2[kk]=np.ndarray((numrow,2))
+        M2[kk]=np.ndarray((numrow,3))
+        M2[kk][:,1]=0
         V[kk]='PIM'
         U[kk]='g/m3'
         
         for r in range(numrow):
             try:
                 M2[kk][r,0]=M2[TSM_index][r,0]
-                M2[kk][r,1]=M2[TSM_index][r,1]*(1-0.01*M2[LOI_index][r,1])
+                M2[kk][r,2]=M2[TSM_index][r,2]*(1-0.01*M2[LOI_index][r,2])
             except:
                 M2[kk][r,:]=np.nan
                 
-        M2[kk]=M2[kk][np.invert(np.isnan(M2[kk][:,1])),:]
+        M2[kk]=M2[kk][np.invert(np.isnan(M2[kk][:,2])),:]
               
         #print 'bla 1190: ',np.shape(M2),kk+1
-        M2[kk+1]=np.ndarray((numrow,2))
+        M2[kk+1]=np.ndarray((numrow,3))
+        M2[kk+1][:,1]=0
         V[kk+1]='POM'
         U[kk+1]='g/m3'
         
         for r in range(numrow):
             try:
                 M2[kk+1][r,0]=M2[TSM_index][r,0]
-                M2[kk+1][r,1]=M2[TSM_index][r,1]*0.01*M2[LOI_index][r,1]
+                M2[kk+1][r,2]=M2[TSM_index][r,2]*0.01*M2[LOI_index][r,2]
             except:
                 M2[kk+1][r,:]=np.nan
                 
-        M2[kk+1]=M2[kk+1][np.invert(np.isnan(M2[kk+1][:,1])),:]
+        M2[kk+1]=M2[kk+1][np.invert(np.isnan(M2[kk+1][:,2])),:]
         
         
-        Mv,tvec_s=mapon_container_tvec(M2) #map all vars on along a container time vector
+        # Mv,tvec_s=mapon_container_tvec(M2) #map all vars on along a container time vector
+        Mv, tvec_s, zvec = mapon_container_tzvec(M2)  # map all vars along a container time/z vector
         tvec=[datetime.datetime(refdate.year,refdate.month,refdate.day,0,0,0)+datetime.timedelta(0,t_s) for t_s in tvec_s]
         #create_ncfile(fout,lon,lat,tvec,-1,Mv,V,V,U,dims,refdate=refdate,missing_value=-99,notify=True)
         lon2=np.array([lon[si]])
         lat2=np.array([lat[si]])
-        create_ncfile(fout[si], lon2, lat2, Mv, V, V, U, dims, tvec, zvec=-1, climatology=False,
+        create_ncfile(fout[si], lon2, lat2, Mv, V, V, U, dims, tvec, zvec, climatology=False,
                     refdate=refdate, missing_value=-99, notify=True)
         #print 'file written:'+fout
         addncatt(fout[si], {'station': station, 'bottom_depth': maxz})
-        
 
 def read_SchlHolst2(fin,fout,dims,station='-'):
     #better not modify this variable:
@@ -1560,9 +1610,9 @@ def read_SchlHolst2(fin,fout,dims,station='-'):
              }
     
     stations_ln={
-        '220017':'Eider west. Fliegenplate',
-        '220057':'Hoernum/Vortrapptief',
-        '220006':'Suedl. Amrum',
+        '220017':'Eider_west_Fliegenplate',
+        '220057':'Hoernum_Vortrapptief',
+        '220006':'Suedl_Amrum',
         '220051':'Buesum',
         '220052':'Suederpiep',
         '220065':'Norderelbe'
@@ -1585,7 +1635,7 @@ def read_SchlHolst2(fin,fout,dims,station='-'):
         'Nitrit-N':'NO2',
         'Salzgehalt':'SALT',
         'Sichttiefe':'zS',
-        'Silikat-Si':'SiO2',
+        'Silikat-Si':'Si',
         'o-Phosphat-P':'PO4'
         }
     
@@ -1646,22 +1696,27 @@ def read_SchlHolst2(fin,fout,dims,station='-'):
         maxz = get_botdepth(lon[0], lat[0], 'tree')
         print ' found: %sN, %sE: %.1f m' % (lat[0], lon[0], maxz)
         
-        fout2=os.path.join(fout,si+'.nc')
+        fout2=os.path.join(fout,stations_ln[si]+'.nc')
         
         stati=np.array([RDraw[r].split(';')[0]==si for r in range(numrow)])
         stati2=np.where(stati)[0]
         
         if np.sum(stati)>0:
-            Mraw[sic]=np.ndarray((numrow,2))
+            Mraw[sic]=np.ndarray((numrow,3))
             Varraw[sic]=[None]*numrow
             for r0,r1 in enumerate(np.where(stati)[0]):
                 Mraw[sic][r0,0]=secs[r1]
+                try:
+                    Mraw[sic][r0,1]=RDraw[r1].split(';')[5]
+                except:
+                    Mraw[sic][r0,1]=np.nan
                 
                 val=RDraw[r1].split(';')[9]
-                Mraw[sic][r0,1]=val
+                Mraw[sic][r0,2]=val
                 Varraw[sic][r0]=RDraw[r1].split(';')[6]
-            
+
             Mraw[sic]=Mraw[sic][np.invert(np.isnan(Mraw[sic][:,1])),:]
+            Mraw[sic]=Mraw[sic][np.invert(np.isnan(Mraw[sic][:,2])),:]
             
             varar=np.unique(Varraw[sic])
             varar=filter(None,varar)
@@ -1673,7 +1728,7 @@ def read_SchlHolst2(fin,fout,dims,station='-'):
                 vari=np.array([Varraw[sic][r]==var for r in range(len(Varraw[sic]))])
                 laux=len(np.where(vari)[0])
                 
-                M[varc]=np.ndarray((len(vari),2))
+                M[varc]=np.ndarray((len(vari),3))
                 
                 V[varc]=varkeys[var]
                 U[varc]=varunits[var]
@@ -1684,22 +1739,23 @@ def read_SchlHolst2(fin,fout,dims,station='-'):
                     val=Mraw[sic][r1,:]
                     #if val[0]<0:
                         #print 'bla 1687: ',val[0]
-                    val[1]=val[1]*conv_fac2
+                    val[2]=val[2]*conv_fac2
                     M[varc][r0,:]=val
                 
                 M[varc]=M[varc][0:laux,:]
                 
-            Mv,tvec_s=mapon_container_tvec(M) #map all vars on along a container time vector
+            # Mv,tvec_s=mapon_container_tvec(M) #map all vars on along a container time vector
             #if sic==2:
-            #print 'bla 1692: ',tvec_s
+            Mv, tvec_s, zvec = mapon_container_tzvec(M)  # map all vars along a container time/z vector
             tvec=[datetime.datetime(refdate.year,refdate.month,refdate.day,0,0,0)+datetime.timedelta(0,t_s) for t_s in tvec_s]
             #create_ncfile(fout,lon,lat,tvec,-1,Mv,V,V,U,dims,refdate=refdate,missing_value=-99,notify=True)
-            create_ncfile(fout2, lon, lat, Mv, V, V, U, dims, tvec, zvec=-1, climatology=False,
+            create_ncfile(fout2, lon, lat, Mv, V, V, U, dims, tvec, zvec, climatology=False,
                         refdate=refdate, missing_value=-99, notify=True)
             #print 'file written:'+fout
-            addncatt(fout2, {'station': station, 'bottom_depth': maxz})
+            addncatt(fout2, {'station': stations_ln[si], 'bottom_depth': maxz})
         else:
             print 'station not found in file!\n'
+
 def read_helgoland(dims, rootpath, fout, lat, lon, station='-'):
 
     #read_newhelgoland()
@@ -1791,6 +1847,7 @@ def combine_helgoland(dims,rootpath, fout,lat,lon,MV=-99,station='-'):
                   refdate=refdate, missing_value=MV, notify=True)
     addncatt(fout, {'station': station, 'bottom_depth': maxz})
 
+
 def addncatt (fout,atts):
     nc=netCDF4.Dataset(fout,'a')
     for attkey,attval in atts.items():
@@ -1829,31 +1886,39 @@ def readstats(rootpath,stations,read):
 
     fstats=collections.OrderedDict({})
     for sno,station in enumerate(stations):
+        Germanpathin='German'
+        Germanpathout='allNC'
+        Dutchpathin='Dutch'
+        Dutchpathout='allNC'
 
         print('Reading:'+station)
         if station=='Bork':
-            fin=os.path.join(rootpath,'German','Bork_W_1_1994-2019.CSV')
-            fout=os.path.join(rootpath, 'German', 'Bork.nc')
+            dims={'t':'time','z':'depth','x':'lon','y':'lat'}
+            fin=os.path.join(rootpath,Germanpathin,'Bork_W_1_1994-2019.CSV')
+            fout=os.path.join(rootpath,Germanpathout, 'Bork.nc')
             if read: read_Bork(rootpath,fin, fout,dims,lat=np.array([coords[station][0]]),lon=np.array([coords[station][1]]),station='Bork')
         elif station=='Helgoland':
             #fin=
             fout=os.path.join(rootpath, 'Helgoland', 'Helgoland.nc')
             if read: read_helgoland(dims, rootpath, fout, lat=np.array([coords[station][0]]),lon=np.array([coords[station][1]]),station='Helgoland')
         elif station=='JaBu':
-            fin=os.path.join(rootpath,'German','JaBu_W_1_chem_f_Projekt_2009-19.CSV')
-            fout=os.path.join(rootpath, 'German', 'JaBu.nc')
+            dims={'t':'time','z':'depth','x':'lon','y':'lat'}
+            fin=os.path.join(rootpath,Germanpathin,'JaBu_W_1_chem_f_Projekt_2009-19.CSV')
+            fout=os.path.join(rootpath, Germanpathout, 'JaBu.nc')
             if read: read_JaBu(rootpath,fin, fout,dims,lat=np.array([coords[station][0]]),lon=np.array([coords[station][1]]),station='JaBu')
         elif station=='Norderney':
             fin=os.path.join(rootpath,'Norderney','Nney_W_2_1999-2014_chl.csv')
             fout=os.path.join(rootpath, 'Norderney', 'Norderney.nc')
             if read: read_norderney(rootpath,fin, fout,dims,lat=np.array([coords[station][0]]),lon=np.array([coords[station][1]]),station='Norderney')
         elif station=='Nney':
-            fin=os.path.join(rootpath,'German','Nney_W_2_chem_f_Projekt_1999-18.CSV')
-            fin2=os.path.join(rootpath,'German','Chlorophyll1_Nney_W_2_1999-19.CSV')
-            fin3=os.path.join(rootpath,'German','Nney_W_2_chem_f_Projekt_1999-18_tab2.CSV')
-            fout=os.path.join(rootpath, 'German', 'Nney.nc')
+            dims={'t':'time','z':'depth','x':'lon','y':'lat'}
+            fin=os.path.join(rootpath,Germanpathin,'Nney_W_2_chem_f_Projekt_1999-18.CSV')
+            fin2=os.path.join(rootpath,Germanpathin,'Chlorophyll1_Nney_W_2_1999-19.CSV')
+            fin3=os.path.join(rootpath,Germanpathin,'Nney_W_2_chem_f_Projekt_1999-18_tab2.CSV')
+            fout=os.path.join(rootpath, Germanpathout, 'Nney.nc')
             if read: read_Nney(rootpath,fin, fin2, fin3, fout,dims,lat=np.array([coords[station][0]]),lon=np.array([coords[station][1]]),station='Nney')
         elif station== 'SAmrum':
+            dims={'t':'time','x':'lon','y':'lat'}
             fin=os.path.join(rootpath,'SchlHolst','DIN-DIP-Chl-220006-220065-2000-2014_SAmrum.csv')
             fout=os.path.join(rootpath, 'SchlHolst', 'SAmrum.nc')
             if read: read_SchlHolst(fin,fout,dims,lat=np.array([coords[station][0]]),lon=np.array([coords[station][1]]),station='S.Amrum')
@@ -1870,8 +1935,9 @@ def readstats(rootpath,stations,read):
             fout=os.path.join(rootpath, 'justusMA','Sylt_2009-2013.nc')
             if read: read_sylt(fin, fout,dims,lat=np.array([coords['Sylt'][0]]),lon=np.array([coords['Sylt'][1]]),fno=2,station='Sylt')
         elif station=='SchlHolst2':
-            fin=os.path.join(rootpath,'German','JMP-EUNOSAT_Data_North_Sea_Schleswig-Holstein_2015-2017.CSV')
-            fout=os.path.join(rootpath, 'German')
+            dims={'t':'time','z':'depth','x':'lon','y':'lat'}
+            fin=os.path.join(rootpath,Germanpathin,'JMP-EUNOSAT_Data_North_Sea_Schleswig-Holstein_2015-2017.CSV')
+            fout=os.path.join(rootpath, Germanpathout)
             if read: read_SchlHolst2(fin,fout,dims,station='SchlHolst2')
         elif station=='Sylt':
             fout=os.path.join(rootpath,'justusMA','Sylt_1973-2013.nc')
@@ -1881,11 +1947,12 @@ def readstats(rootpath,stations,read):
             fout = os.path.join(rootpath, 'justusMA', stname+'.nc')
             if read: read_justusMA(fin, fout, dims, lat=np.array([coords[stname][0]]), lon=np.array([coords[stname][1]]),station=stname)
         elif station=='Wesermuendung':
+            dims={'t':'time','z':'depth','x':'lon','y':'lat'}
             fout=[None]*3
-            fin=os.path.join(rootpath,'German','Wesermuendung2008-2019_fuer_Projekt.CSV')
-            fout[0]=os.path.join(rootpath, 'German', 'WeMu_W1.nc')
-            fout[1]=os.path.join(rootpath, 'German', 'WeMu_W2.nc')
-            fout[2]=os.path.join(rootpath, 'German', 'Wu_KU-W1.nc')
+            fin=os.path.join(rootpath,Germanpathin,'Wesermuendung2008-2019_fuer_Projekt.CSV')
+            fout[0]=os.path.join(rootpath, Germanpathout, 'WeMu_W1.nc')
+            fout[1]=os.path.join(rootpath, Germanpathout, 'WeMu_W2.nc')
+            fout[2]=os.path.join(rootpath, Germanpathout, 'Wu_KU-W1.nc')
             if read: read_Wesermuendung(rootpath,fin, fout, dims,lat=np.array([coords[station][i] for i in range(0,3)]),lon=np.array([coords[station][i] for i in range(3,6)]),station='Wesermuendung')
         elif station== 'Norderelbe':
             fin=os.path.join(rootpath,'SchlHolst','DIN-DIP-Chl-220006-220065-2000-2014_Norderelbe.csv')
@@ -1897,11 +1964,11 @@ def readstats(rootpath,stations,read):
             fout=os.path.join(rootpath,'BSH',station+'.nc')
             if read: read_bsh(fin,fout,dims,lat=np.array([coords[station][0]]),lon=np.array([coords[station][1]]),station=station)
         elif station[0:6] in ['NOORDW','TERSLG','ROTTMP','BOCHTV','BOOMKD','DANTZG','DOOVBW','GROOTG','HUIBGO','MARSDN','ZOUTKP','ZUIDOL']:
-            #dims = {'t': 'time', 'z': 'depth', 'x': 'lon', 'y': 'lat'}
+            dims = {'t': 'time', 'z': 'depth', 'x': 'lon', 'y': 'lat'}
             #fin=os.path.join(rootpath,'Dutch','opendap_new','raw',station)
-            fin=os.path.join(rootpath,'Dutch','Monitoring_data_crosstable.CSV')
-            fin2=os.path.join(rootpath,'Dutch','Monitoring_station_description.CSV')
-            fout = os.path.join(rootpath, 'Dutch', station+'.nc')
+            fin=os.path.join(rootpath,Dutchpathin,'Monitoring_data_crosstable.CSV')
+            fin2=os.path.join(rootpath,Dutchpathin,'Monitoring_station_description.CSV')
+            fout = os.path.join(rootpath,Dutchpathout, station+'.nc')
             #if read: read_opendapnc(fin,fout,dims,station=station)
             if read: read_dutchcsv(rootpath,fin,fin2,fout,dims,station=station)
 

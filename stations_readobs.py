@@ -105,7 +105,9 @@ def fill_stationdata_obs(file,statset,vars,timeint,depthints0,olf):
     else: #assume that all are surface depths
         depth=-9999*np.ones(1)
     time_num = ncf.variables[vlib['t']][:]
-    time = netCDF4.num2date(time_num, ncf.variables[vlib['t']].getncattr('units'))
+    time = netCDF4.num2date(time_num, ncf.variables[vlib['t']].getncattr('units'),
+                        only_use_cftime_datetimes=False,
+                        only_use_python_datetimes=True)
     #for ti,t in enumerate(time):
     #    print(str(time_num[ti])+' '+ str(t)+' '+str(type(t)))# find the max_depth, if necessary
     

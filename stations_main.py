@@ -15,7 +15,9 @@ python3.5 stations_main.py GF-PPZZ simfname.nc
 import os,sys
 import warnings
 import datetime
+# import cftime
 import numpy as np
+import numpy.ma as ma
 #home=os.getcwd()
 #sys.path.insert(1, home+'/3Dsetups/postprocess')
 #sys.path.insert(1, home+'/3Dval')
@@ -29,6 +31,8 @@ importlib.reload(SRO)
 importlib.reload(SRS)
 importlib.reload(SP)
 
+only_use_cftime_dateimes=False
+only_use_python_datetime=True
 pathreg = {'onur': {#'GF-Mnm': '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1_TS_12-13_zSB.nc',
                     #'GF-Mfc': '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1-AHm2-c06/extract_Mphysred_sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1-AHm2-c06.12-13_zSB.nc',
                     #'GF-Mvc': '/home/onur/WORK/projects/2013/maecs/sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1-AHm2-c06-Ec01/extract_MphysTS_sns144-M180109-nFpBpr-Pbg2017-B180106-vsdetp4b1-AHm2-c06-Ec01.12-13_zSB.nc',
@@ -60,17 +64,17 @@ pathreg = {'onur': {#'GF-Mnm': '/home/onur/WORK/projects/2013/maecs/sns144-M1801
                     'InterReg':'/work/ku0646/UBA/obsdata/stations/InterReg'
                     },
         'g260105': {
-                    'GF-PPZZ-fS': '/work/ku0646/g260105/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillC_sns144-GPMEH-PPZZ-P190628-fSG97dChl.2017_zSB.nc',
-                    'GF-PPZZ-vS': '/work/ku0646/g260105/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillC_sns144-GPMEH-PPZZ-P190628-vSG97dChl.2017_zSB.nc',
-                    'GF-PPZZ': '/work/ku0646/g260105/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillphysC_sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc.2015-2017_zSB.nc',
-                    'GF-ref': '/work/ku0646/g260105/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillphysC_sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc.2015-2017_zSB.nc',
-                    'GF-old': '/work/ku0646/g260105/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillC_sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223.2015-2017_zSB.nc',
-                    'plotrootpath':'/work/ku0646/g260105/IR/3Dval',
+                    'GF-PPZZ-fS': '/home/daniel/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillC_sns144-GPMEH-PPZZ-P190628-fSG97dChl.2017_zSB.nc',
+                    'GF-PPZZ-vS': '/home/daniel/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillC_sns144-GPMEH-PPZZ-P190628-vSG97dChl.2017_zSB.nc',
+                    'GF-PPZZ': '/home/daniel/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillphysC_sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc.2015-2017_zSB.nc',
+                    'GF-ref': '/home/daniel/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillphysC_sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc.2015-2017_zSB.nc',
+                    'GF-old': '/home/daniel/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillC_sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223.2015-2017_zSB.nc',
+                    'plotrootpath':'/home/daniel/IR/3Dval',
                     'pickledobspath': './',
-                    'BGC':    '/work/ku0646/g260105/IR/stations/individual/BGC/',
-                    'BSH':    '/work/ku0646/g260105/IR/stations/individual/BSH/',
-                    'cosyna': '/work/ku0646/g260105/IR/stations/COSYNA/proc/nc',
-                    'InterReg':'/work/ku0646/g260105/IR/stations/InterReg/allNC'
+                    'BGC':    '/home/daniel/IR/stations/individual/BGC/',
+                    'BSH':    '/home/daniel/IR/stations/individual/BSH/',
+                    'cosyna': '/home/daniel/IR/stations/COSYNA/proc/nc',
+                    'InterReg':'/home/daniel/IR/stations/InterReg/allNC'
                     },
         
          'newuser': {}
@@ -79,7 +83,7 @@ pathreg = {'onur': {#'GF-Mnm': '/home/onur/WORK/projects/2013/maecs/sns144-M1801
 def main(modtype,modfname,statsets,yint):
     #PARAMETERS:
     # general
-    user='g260105' # 'g260108' #'onur' #
+    user='g260105' #
     vars_default=['temp','salt','DOs','DIN','DIP','Chl']
     depthints={'surface':[0,10]} #,'bottom':[10,0]} #for bottom, depthint is relative to bottom depth
     #timeint = [datetime.datetime(2012, 1, 1,0,0,0), datetime.datetime(2013, 12, 31,23,59,59)]

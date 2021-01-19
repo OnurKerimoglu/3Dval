@@ -260,7 +260,7 @@ def getproj(setup,projpath=os.path.dirname(os.path.realpath(__file__))):
     if os.path.isfile(pickledproj):
         print ('opening an existing projection: '+ pickledproj)
         #if a projection exists, just load it (fast)
-        (proj,) = np.load(pickledproj, encoding='latin1')
+        (proj,) = np.load(pickledproj, encoding='latin1', allow_pickle=True)
     else:
         from mpl_toolkits.basemap import Basemap
         import pickle

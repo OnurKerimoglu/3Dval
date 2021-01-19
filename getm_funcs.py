@@ -51,7 +51,9 @@ def get_getm_dataF(simf,varns,ysl,xsl,getmv='mean',modtype='GF-PPZZ'):
                 simdata[varn]=-1*simdata[varn]
     #add time
     time_num = ncf.variables[vlib['t']][:]
-    simtime = netCDF4.num2date(time_num, ncf.variables[vlib['t']].getncattr('units'))
+    simtime = netCDF4.num2date(time_num, ncf.variables[vlib['t']].getncattr('units'),
+                        only_use_cftime_datetimes=False,
+                        only_use_python_datetimes=True)
     ncf.close()
     return (simdata,simtime)
 
