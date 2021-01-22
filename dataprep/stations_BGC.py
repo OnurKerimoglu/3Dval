@@ -145,7 +145,7 @@ def mergestats(rootpath,fstats):
 
 def get_stat_varkeys(station):
     if station== 'Bork':
-        varkeys={'DOC':'DOC','Ntotal':'N','PO4':'DIP','Salz n.LF':'SALT','Seston':'TSM','Gluehverlust':'LOI','Pges':'P','Silikat':'Si','Nitrat':'NO3','Amon':'NH4','Nitrit':'NO2','Wassertemp.':'T'}
+        varkeys={'DOC':'DOC','Ntotal':'N','PO4':'DIP','Salz n.LF':'SALT','Seston':'TSM','Gluehverlust':'LOI','Pges':'P','Silikat':'Si','Nitrat':'NO3','Amon':'NH4','Nitrit':'NO2','Wassertemp.':'T','Chloro_gesamt':'chl'}
     elif station== 'Norderney':
         varkeys={'phyC':'','zooC':'','chl':'CPHL','DIN':'DIN','DIP':'PHOS','Si':'SLCA', 'NH4':'AMON','NO3':'NTRA'}
     elif station== 'Nney':
@@ -1326,18 +1326,45 @@ def read_JaBu(rootpath,fin,fout,dims,lat,lon,station='-'):
     #print 'file written:'+fout
     addncatt(fout, {'station': station, 'bottom_depth': maxz})
 
-def read_Bork(rootpath,fin,fout,dims,lat,lon,station='-'):
+def read_Bork(rootpath,fin1,fin2,fout,dims,lat,lon,station='-'):
     print ' finding bottom depth..',
     maxz = get_botdepth(lon[0], lat[0], 'tree')
     varkeys=get_stat_varkeys('Bork')
     
     print ' found: %sN, %sE: %.1f m' % (lat[0], lon[0], maxz)
 
-    M=[None]*14 #chl,amon,din,ntra,ntri,phos,ntot,ptot,slca,doc,tsm,loi,zs
-    U=[None]*14
-    V=[None]*14
+    M=[None]*15 #chl,amon,din,ntra,ntri,phos,ntot,ptot,slca,doc,tsm,loi,zs
+    U=[None]*15
+    V=[None]*15
 
-    with open(fin, 'rb') as csvfile:
+    with open(fin2, 'rb') as csvfile:
+        RD=csvfile.readlines()
+    headers=RD[0].split(';')
+    del RD[0]
+    del RD[0]
+    numrow=len(RD)
+
+    numcolO=len(headers)
+
+    V[0] = 'chl'
+    U[0] = 'mg/m3'
+    M[0] = np.ndarray((numrow, 3))
+    secs=np.ndarray((numrow,1)) #seconds
+    for  r in np.arange(numrow):
+        years=int(RD[r].split(';')[1].split('.')[2])
+        months=int(RD[r].split(';')[1].split('.')[1])
+        days=int(RD[r].split(';')[1].split('.')[0])
+        #hours=int(RDraw[r].split(',')[2].split(':')[0])
+        #mins=int(RDraw[r].split(',')[2].split(':')[1])
+        #deltadate=datetime.datetime(years,months,days,hours,mins)- refdate
+        deltadate=datetime.date(years,months,days)- datetime.date(refdate.year,refdate.month,refdate.day)
+        M[0][r]=86400*deltadate.days +deltadate.seconds
+        M[0][r,2]=float(RD[r].split(';')[4]) if RD[r].split(';')[4]!='' else np.nan
+
+    M[0]=M[0][np.invert(np.isnan(M[0][:,2])),:]
+    M[0][:, 1] = 0
+
+    with open(fin1, 'rb') as csvfile:
         RD=csvfile.readlines()
     headers=RD[0].split(';')
     del RD[0]
@@ -1372,7 +1399,7 @@ def read_Bork(rootpath,fin,fout,dims,lat,lon,station='-'):
             unitaux=''
         allunits[r]=unitaux
         
-    kk=0
+    kk=1
     LOI_switch=False
     TSM_switch=False
     for varno,var in enumerate(uvars):
@@ -1894,9 +1921,10 @@ def readstats(rootpath,stations,read):
         print('Reading:'+station)
         if station=='Bork':
             dims={'t':'time','z':'depth','x':'lon','y':'lat'}
-            fin=os.path.join(rootpath,Germanpathin,'Bork_W_1_1994-2019.CSV')
+            fin1=os.path.join(rootpath,Germanpathin,'Bork_W_1_1994-2019.CSV')
+            fin2=os.path.join(rootpath,Germanpathin,'Chlorophyll1_Bork_W_1_2008-19.CSV')
             fout=os.path.join(rootpath,Germanpathout, 'Bork.nc')
-            if read: read_Bork(rootpath,fin, fout,dims,lat=np.array([coords[station][0]]),lon=np.array([coords[station][1]]),station='Bork')
+            if read: read_Bork(rootpath, fin1, fin2, fout,dims,lat=np.array([coords[station][0]]),lon=np.array([coords[station][1]]),station='Bork')
         elif station=='Helgoland':
             #fin=
             fout=os.path.join(rootpath, 'Helgoland', 'Helgoland.nc')
