@@ -37,7 +37,7 @@ def get_dcsm_dataF(simf,vars,dcsmv='surface'):
                 var[var.mask] = np.nan  # transform the masked values to nan, such that intp will result in nan if any cell is nan
             if varn=='DIN' and units=='(gN/m3)':
                 conv_factor=1000/14 #1000mg/g*1mmolN/14gN -> mmolN/m3
-            elif varn=='PO4' and units=='(gP/m3)':
+            elif varn=='DIP' and units=='(gP/m3)':
                 conv_factor = 1000 / 31  # 1000mg/g*1mmolP/31gP -> mmolP/m3
             elif varn=='Si' and units=='(gSi/m3)':
                 conv_factor = 1000 / 28  # 1000mg/g*1mmolP/28gP -> mmolSi/m3
