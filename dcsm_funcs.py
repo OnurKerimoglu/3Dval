@@ -27,13 +27,24 @@ def get_dcsm_dataF(simf,vars,dcsmv='surface'):
     for varn in vars:
         # attempt to retrieve the variable
         varF, success = get_var_from_ncf(vlib[varn], ncf)
+        conv_factor=1.0
         if success:
             varF=ncf.variables[vlib[varn]][:]
+            units=ncf.variables[vlib[varn]].units
             if len(varF.shape) == 2:
                 var = varF[:, :]
             if np.ma.is_masked(var):
                 var[var.mask] = np.nan  # transform the masked values to nan, such that intp will result in nan if any cell is nan
-            simdata[varn] = var
+            if varn=='DIN' and units=='(gN/m3)':
+                conv_factor=1000/14 #1000mg/g*1mmolN/14gN -> mmolN/m3
+            elif varn=='PO4' and units=='(gP/m3)':
+                conv_factor = 1000 / 31  # 1000mg/g*1mmolP/31gP -> mmolP/m3
+            elif varn=='Si' and units=='(gSi/m3)':
+                conv_factor = 1000 / 28  # 1000mg/g*1mmolP/28gP -> mmolSi/m3
+            elif varn=='OXY' and units=='(g/m3)':
+                #!! is it O (atomic weight 16) or O2 (molecular weight: 32)? assume O (16)
+                conv_factor = 1000 / 16  # 1000mg/g*1mmolO/16gO -> mmolO2/m3
+            simdata[varn] = var*conv_factor
             # multiply depth with -1
             if varn == 'z':
                 simdata[varn] = -1 * simdata[varn]
