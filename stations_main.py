@@ -46,10 +46,13 @@ pathreg = {'onur': {#'GF-Mnm': '/home/onur/WORK/projects/2013/maecs/sns144-M1801
                     #'GF-PPZZ': '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-P190529-fSG97dChl/extract_skillC_sns144-GPMEH-P190529-fSG97dChl.2012-2013_zSB.nc',
                     'GF-3DFnew': '/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-G191216-Fnew3-PPZZSi-P191220-vS/extract_skillC_sns144-GPMEH-G191216-Fnew3-PPZZSi-P191220-vS.2011_zSB.nc',
                     'plotrootpath':'/home/onur/WORK/projects/2013/gpmeh/sns144-GPMEH-G191216-Fnew3-PPZZSi-P191220-vS/',
+                    'DCSM':'/home/onur/WORK/projects/InterregA/model-comparison/DCSM-FM_2021-01-27/DCSM-FM_0_5nm_waq_0000_2012-2014_his.nc',
+                    'plotrootpath':'/home/onur/WORK/projects/InterregA/model-comparison/',
                     'pickledobspath': './',
                     'BGC':    '/home/onur/WORK/projects/GB/data/stations/individual/BGC/',
                     'BSH':    '/home/onur/WORK/projects/GB/data/stations/individual/BSH/',
-                    'cosyna': '/home/onur/WORK/projects/GB/data/stations/COSYNA/proc/nc'
+                    'cosyna': '/home/onur/WORK/projects/GB/data/stations/COSYNA/proc/nc',
+                    'InterReg':'/home/onur/WORK/projects/GB/data/stations/InterReg/allNC'
                    },
         'g260108': {
                     'GF-PPZZ-fS': '/work/gg0877/onur/simout-gpmeh/sns144-GPMEH-PPZZ-P190628-fSG97dChl/extract_skillC_sns144-GPMEH-PPZZ-P190628-fSG97dChl.2012_zSB.nc',
@@ -61,7 +64,7 @@ pathreg = {'onur': {#'GF-Mnm': '/home/onur/WORK/projects/2013/maecs/sns144-M1801
                     'BGC':    '/work/gg0877/onur/obsdata/stations/individual/BGC/',
                     'BSH':    '/work/gg0877/onur/obsdata/stations/individual/BSH/',
                     'cosyna': '/work/gg0877/onur/obsdata/stations/COSYNA/proc/nc',
-                    'InterReg':'/work/ku0646/UBA/obsdata/stations/InterReg'
+                    'InterReg':'/work/ku0646/UBA/obsdata/stations/InterReg/allNC'
                     },
         'g260105': {
                     'GF-PPZZ-fS': '/home/daniel/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillC_sns144-GPMEH-PPZZ-P190628-fSG97dChl.2017_zSB.nc',
@@ -83,16 +86,17 @@ pathreg = {'onur': {#'GF-Mnm': '/home/onur/WORK/projects/2013/maecs/sns144-M1801
 def main(modtype,modfname,statsets,yint):
     #PARAMETERS:
     # general
-    user='g260105' #
+    user='onur' #g260105,g260108
     vars_default=['temp','salt','DOs','DIN','DIP','Chl']
     depthints={'surface':[0,10]} #,'bottom':[10,0]} #for bottom, depthint is relative to bottom depth
     #timeint = [datetime.datetime(2012, 1, 1,0,0,0), datetime.datetime(2013, 12, 31,23,59,59)]
     timeint = [datetime.datetime(yint[0], 1, 1,0,0,0), datetime.datetime(yint[1], 12, 31,23,59,59)]
     # regarding observations.
     if len(statsets)==0:
-       statsets = ['cosyna', 'BSH', 'BGC']
-    #stations = ['Ems', 'Deutsche Bucht','NBII']
-    #stations = ['Cuxhaven','HPA-Elbe']
+       #statsets = ['cosyna', 'BSH', 'BGC']
+       statsets = ['InterReg']
+       #stations = ['Ems', 'Deutsche Bucht','NBII']
+       #stations = ['Cuxhaven','HPA-Elbe']
     stations=[]
     if len(statsets)==1 and statsets[0]=='cosyna':
        #vars=['DOs']
@@ -100,13 +104,14 @@ def main(modtype,modfname,statsets,yint):
     elif len(statsets)==1 and statsets[0]=='BGC':
        vars=['DIN','DIP','Si','Chl']
     elif len(statsets)==1 and statsets[0]=='InterReg':
-       vars=['salt','NO3','DIP','Si','Chl']
+       vars=['salt','DIN','DIP','Si','Chl']
     else:
        vars=vars_default
  
     # regarding simulations.
     #only if modfname==''
-    sims2plot=['GF-ref']
+    #sims2plot=['GF-ref']
+    sims2plot = ['DCSM']
     #sims2plot=['GF-ref', 'GF-R12', 'GF-M12', 'GF-W12']
     #sims2plot= ['GF-PPZZ-fS', 'GF-PPZZ-vS']
     #sims2plot = ['GF-Mnm','GF-Mfc','GF-Mvc'] #'GF-c100','GF-ref'] #,'GF-M13R12','GF-M12R13']

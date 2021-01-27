@@ -11,6 +11,7 @@ import numpy as np
 import warnings
 
 from getm_funcs import get_getm_dom_vars,get_getm_dataF
+from dcsm_funcs import get_dcsm_dataF,structure_dcsm_data
 from general_funcs import interpval2D,get_2Dtree,getproj
 
 def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,obs,vars,getmv,modtype):
@@ -33,7 +34,6 @@ def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,ob
     if simname[0:2] == 'GF':
         print('Accessing getm data')
         lons,lats,bat,ysl,xsl=get_getm_dom_vars(simf,simdomain)
-        print('bla 36: ',meth2D)
         if meth2D == 'pretree':
             proj = getproj(setup = 'SNSfull', projpath = os.path.dirname(os.path.realpath(__file__)))
             # proj = getproj(setup = 'NS', projpath = os.path.dirname(os.path.realpath(__file__)))
@@ -41,6 +41,9 @@ def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,ob
         else:
             raise (Exception('unknown spatial method for extracting values from GETM'))
         simdata,simtime = get_getm_dataF(simf,vars,ysl,xsl,getmv=getmv,modtype=modtype)
+    elif simname[0:4] == 'DCSM':
+        print('Accessing DCSM data')
+        simdata, simtime, lons, lats, maxz_sim, StInds = get_dcsm_dataF(simf, vars)
 
     #fill the data in correct structure
     sim = {}
@@ -52,9 +55,9 @@ def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,ob
         maxz_obs= obs[station]['bottom_depth']
         if (simname[0:2] == 'GF') and (meth2D == 'pretree'):
             sdata = interp_simdata_on_station(station,simdata,simtime,proj,domaintree,bat,lon,lat,maxz_obs,timeint,depthints,vars)
-        elif simname[0:5] == 'SCHISM':
-            #sdata =get_station_data_schism() #TODO: RICHARD
-            raise(Exception('not yet implemented'))
+        elif simname[0:6] == 'DCSM':
+            #sdata = structure_dcsm_data(station,simf,lon,lat,maxz_obs,timeint,depthints,vars)
+            sdata = structure_dcsm_data(station,lon,lat,maxz_obs,timeint,depthints,vars,simdata,simtime,lons,lats,maxz_sim,StInds)
         else:
             raise (Exception('unknown spatial method for extracting values from simulation'))
         sim[station] = sdata
@@ -69,7 +72,7 @@ def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,ob
 
 def interp_simdata_on_station(station,simdata,time,proj,domaintree,bat,lon,lat,maxz_obs,timeint,depthints,vars,quickzfind=True):
 
-    vardims={'temp':'3D','salt':'3D','DOs':'3D','ssh':'2D','DIN':'3D','DIP':'3D','Si':'3D','NO3':'3D','NH4':'NH4','Chl':'3D'}
+    vardims={'ssh':'2D','temp':'3D','salt':'3D','DO':'3D','DOs':'3D','DIN':'3D','DIP':'3D','Si':'3D','NO3':'3D','NH4':'NH4','Chl':'3D'}
     # maybe no need to check if other conditions are not satisfied
     XY_in=False
     z_in=True #assume z_in is ok by default
