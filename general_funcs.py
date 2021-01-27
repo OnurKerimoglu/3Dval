@@ -409,3 +409,26 @@ def interpval2D(lats,lons,vals,lat,lon,method,proj,domaintree=0):
         val=interp_2d_tree(vals, domaintree, x2, y2, k=4, kmin=1)
 
     return val
+
+def get_var_from_ncf(varn_vl,ncf):
+    #if '+' exists (eg., DIN=DINO3+DINH4); operate
+
+    if '+' in varn_vl:
+        varn_vl_list=varn_vl.split('+')
+        varF=0
+        success = True
+        for varn_vl_i in varn_vl_list:
+            varFi,success_i=get_var_from_ncf(varn_vl_i,ncf)
+            varF=varF+varFi
+            if not success_i: #if any of the additive variables can not be retrieved, assume failure
+                success=False
+    else:
+        if varn_vl in ncf.variables:
+            varF = ncf.variables[varn_vl][:]
+            success=True
+        else:
+            varF=0
+            success = False
+            raise(Warning('requested variable not found:'+varn_vl))
+
+    return(varF,success)

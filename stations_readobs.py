@@ -82,7 +82,7 @@ def fill_stationdata_obs(file,statset,vars,timeint,depthints0,olf):
     elif statset in ['BGC']:
         vlib = {'t': 'time', 'x': 'lon', 'y': 'lat', 'z': 'depth', 'Chl': 'chl', 'DIN': 'DIN', 'DIP': 'DIP', 'Si':'Si', 'NO3':'NO3', 'NH4':'NH4'}
     elif statset in ['InterReg']:
-        vlib = {'t': 'time', 'x': 'lon', 'y': 'lat', 'z': 'depth', 'Chl': 'chl', 'DIP': 'DIP', 'Si':'Si', 'NO3':'NO3', 'NH4':'NH4','salt':'SALT','KC':'KC'}
+        vlib = {'t': 'time', 'x': 'lon', 'y': 'lat', 'z': 'depth', 'Chl': 'chl', 'DIP': 'DIP', 'Si':'Si', 'NO3':'NO3', 'NH4':'NH4','DIN':'DIN','salt':'SALT','KC':'KC'}
 
     #variables without depth dimension
     noZDvars = ['ssh']
@@ -105,9 +105,13 @@ def fill_stationdata_obs(file,statset,vars,timeint,depthints0,olf):
     else: #assume that all are surface depths
         depth=-9999*np.ones(1)
     time_num = ncf.variables[vlib['t']][:]
-    time = netCDF4.num2date(time_num, ncf.variables[vlib['t']].getncattr('units'),
-                        only_use_cftime_datetimes=False,
-                        only_use_python_datetimes=True)
+    # default netCDF4
+    time = netCDF4.num2date(time_num, ncf.variables[vlib['t']].getncattr('units'))
+    # to use in combinaton with cftime lib:
+    # simtime = netCDF4.num2date(time_num, ncf.variables[vlib['t']].getncattr('units'),
+    #                           only_use_cftime_datetimes=False,
+    #                           only_use_python_datetimes=True)
+
     #for ti,t in enumerate(time):
     #    print(str(time_num[ti])+' '+ str(t)+' '+str(type(t)))# find the max_depth, if necessary
     

@@ -8,7 +8,6 @@ Created on Mon Jun  12 12:10 2017
 import os
 import numpy as np
 import numpy.ma as ma
-import cftime
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from general_funcs import getproj,format_date_axis

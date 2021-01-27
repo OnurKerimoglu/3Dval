@@ -7,6 +7,8 @@ provides functions relevant to getm simulations
 import netCDF4
 import numpy as np
 
+from general_funcs import get_var_from_ncf
+
 def get_getm_dataF(simf,varns,ysl,xsl,getmv='mean',modtype='GF-PPZZ'):
     vlib = {'t': 'time', 'z': 'depth'}
 
@@ -51,34 +53,15 @@ def get_getm_dataF(simf,varns,ysl,xsl,getmv='mean',modtype='GF-PPZZ'):
                 simdata[varn]=-1*simdata[varn]
     #add time
     time_num = ncf.variables[vlib['t']][:]
-    simtime = netCDF4.num2date(time_num, ncf.variables[vlib['t']].getncattr('units'),
-                        only_use_cftime_datetimes=False,
-                        only_use_python_datetimes=True)
+    # default netCDF4
+    simtime = netCDF4.num2date(time_num, ncf.variables[vlib['t']].getncattr('units'))
+    # to use in combinaton with cftime lib:
+    # simtime = netCDF4.num2date(time_num, ncf.variables[vlib['t']].getncattr('units'),
+    #                           only_use_cftime_datetimes=False,
+    #                           only_use_python_datetimes=True)
+
     ncf.close()
     return (simdata,simtime)
-
-def get_var_from_ncf(varn_vl,ncf):
-    #if '+' exists (eg., DIN=DINO3+DINH4); operate
-
-    if '+' in varn_vl:
-        varn_vl_list=varn_vl.split('+')
-        varF=0
-        success = True
-        for varn_vl_i in varn_vl_list:
-            varFi,success_i=get_var_from_ncf(varn_vl_i,ncf)
-            varF=varF+varFi
-            if not success_i: #if any of the additive variables can not be retrieved, assume failure
-                success=False
-    else:
-        if varn_vl in ncf.variables:
-            varF = ncf.variables[varn_vl][:]
-            success=True
-        else:
-            varF=0
-            success = False
-            raise(Warning('requested variable not found:'+varn_vl))
-
-    return(varF,success)
 
 def get_getm_dom_vars(simf,simdomain=''):
     dominfo_found=False
