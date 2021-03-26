@@ -96,12 +96,12 @@ def get_getm_dom_vars(simf,simdomain=''):
     return (lons,lats,bat,ysl,xsl)
 
 #def get_getm_bathymetry_cropped(fname='/home/onur/WORK/projects/GB/data/topo/topo_area_sns.nc',setup='SNS'):
-#def get_getm_bathymetry_cropped(fname='/pf/g/g260108/setups/3Dsetups/sns/Forcing/Topo/topo_area_sns.nc',setup='SNS'):
-def get_getm_bathymetry_cropped(fname='/work/ku0646/g260105/IR/3Dsetups/sns/Forcing/Topo/topo_area_sns.nc',setup='SENS'):
+def get_getm_bathymetry_cropped(fname='/work/ku0646/UBA/Forcing/sns/Topo/topo_area_sns.nc',setup='SNS'):
+#def get_getm_bathymetry_cropped(fname='/work/ku0646/g260105/IR/3Dsetups/sns/Forcing/Topo/topo_area_sns.nc',setup='SENS'):
     ncB=netCDF4.Dataset(fname)
     ncBv=ncB.variables
     #bathymetry from a topo file
-    if setup=='SNS':
+    if setup in ['SNS']:
         lonx=ncBv['lonx'][4:-1,1:-1] #this should be [95,138]
         latx=ncBv['latx'][4:-1,1:-1] #this should be [95,138]
         H = ncBv['bathymetry'][4:-1,1:-1] #this should be [94,137])
@@ -109,7 +109,7 @@ def get_getm_bathymetry_cropped(fname='/work/ku0646/g260105/IR/3Dsetups/sns/Forc
         lonx = ncBv['lonx'][:, :]  # this should be [732,562]
         latx = ncBv['latx'][:, :]  # this should be [732,562]
         H = ncBv['bathymetry'][:, :]  # this should be [731,561])
-
+    print(setup)
     lonc = 0.25 * (lonx[:-1, :-1] + lonx[:-1, 1:] + lonx[1:, :-1] + lonx[1:, 1:])
     latc = 0.25 * (latx[:-1, :-1] + latx[:-1, 1:] + latx[1:, :-1] + latx[1:, 1:])
     topo={'H':H,'latc':latc, 'lonc':lonc,'latx':latx, 'lonx':lonx,'Hunit':ncBv['bathymetry'].units} #,'A':A}
