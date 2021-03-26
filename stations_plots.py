@@ -107,14 +107,13 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
                 hset = []; idset = []  #list of handles (needed for legend)
 
                 #plot obs
+                monsuf=''
                 if obs[station][varname]['presence']:
                     # limit the months to include
                     months2keep = [] #[7, 8]
                     if len(months2keep)>0:
                         monsuf='_M'+'-'.join(map(str,months2keep))
                         obs[station][varname][layer] = stationdata_filter_time(obs[station][varname][layer],months2keep)
-                    else:
-                        monsuf=''
                     hset,idset,anyplotinax,anyplotinfig = plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,'obs',ax,
                                                                         obs[station][varname][layer]['time'],
                                                                         obs[station][varname][layer]['value'],
@@ -123,7 +122,8 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
                 for simno,simname in enumerate(plotopts['sims2plot']): #enumerate(simset.keys()):
                     if simset[simname][station][varname]['presence']:
                         if 'GF-' in simname:
-                            simnameleg=simname.replace('GF','sim')
+                            #simnameleg=simname.replace('GF','sim')
+                            simnameleg=simname.replace('GF','GPM')
                         else:
                             simnameleg=simname
                         hset,idset,anyplotinax,anyplotinfig = plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,simnameleg,ax,
@@ -133,14 +133,14 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
                         # annotate skill scores
                         if (obs[station][varname]['presence']) and (simset[simname][station][varname]['presence']):
                             skills=get_skillscores(obs[station][varname][layer],simset[simname][station][varname][layer],timeint)
-                            if (simno==0) and (skills['n'] != 0):
+                            if (simno<2) and (skills['n'] != 0):
                                 if (len(plotopts['sims2plot']) - 0) == 1:
-                                    y = 1.05
+                                    x =0
                                 else:
-                                    y = 1.08 - 0.12 * simno
-                                plt.text(1.0, y, r'$B^*$:%3.2f, $\rho$:%3.2f, $n$:%d'
+                                    x = 0.5 * simno
+                                plt.text(x, 1.08, r'$B^*$:%3.2f, $\rho$:%3.2f, $n$:%d'
                                         %(np.round(skills['B*'] * 100) / 100, np.round(skills['r'] * 100) / 100, skills['n']),
-                                        fontsize=9, ha='right',va='center', transform=ax.transAxes, color=S.col['sim'][simno])
+                                        fontsize=8, ha='left',va='center', transform=ax.transAxes, color=S.col['sim'][simno])
 
                 #ylabel:varname, unit
                 if varname in varlongnames.keys():
