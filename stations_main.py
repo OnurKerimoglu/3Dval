@@ -55,11 +55,11 @@ pathreg = {'onur': {#'GF-Mnm': '/home/onur/WORK/projects/2013/maecs/sns144-M1801
                     'InterReg':'/home/onur/WORK/projects/GB/data/stations/InterReg/allNC'
                    },
         'g260108': {
-                    'GF-PPZZ-fS': '/work/gg0877/onur/simout-gpmeh/sns144-GPMEH-PPZZ-P190628-fSG97dChl/extract_skillC_sns144-GPMEH-PPZZ-P190628-fSG97dChl.2012_zSB.nc',
-                    'GF-PPZZ-vS': '/work/gg0877/onur/simout-gpmeh/sns144-GPMEH-PPZZ-P190628-vSG97dChl/extract_skillC_sns144-GPMEH-PPZZ-P190628-vSG97dChl.2012_zSB.nc',
-                    'GF-ref': '/work/ku0646/UBA/simout-sns/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillphysC_sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc.2015-2017_zSB.nc',
-                    'GF-old': '/work/gg0877/onur/simout-gpmeh/sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223/extract_skillC_sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223.2010-2014_zSB.nc',
-                    'plotrootpath':'/work/gg0877/onur/simout-gpmeh/sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223/3Dval_stations_2012-2013_scens',
+                    'GF-IR': '/work/ku0646/UBA/simout-sns/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillphysC_sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc.2015-2017_zSB.nc',
+                    'GF-ref': '/work/ku0646/UBA/simout-sns/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-ICGEMO-CS/extract_skillMphysC_sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-ICGEMO-CS.2012-2014_S10.nc',
+                    'DCSM':'/work/ku0646/UBA/simout-deltares/DCSM-FM_2021-01-27/DCSM-FM_0_5nm_waq_0000_2012-2014_his.nc',
+                    'plotrootpath':'/work/ku0646/UBA/simout-deltares/DCSM-FM_2021-01-27/',
+                    #'plotrootpath': '/work/ku0646/UBA/simout-sns/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-ICGEMO-CS/',
                     'pickledobspath': './',
                     'BGC':    '/work/gg0877/onur/obsdata/stations/individual/BGC/',
                     'BSH':    '/work/gg0877/onur/obsdata/stations/individual/BSH/',
@@ -86,7 +86,7 @@ pathreg = {'onur': {#'GF-Mnm': '/home/onur/WORK/projects/2013/maecs/sns144-M1801
 def main(modtype,modfname,statsets,yint):
     #PARAMETERS:
     # general
-    user='onur' #g260105,g260108
+    user='g260108' #g260105,g260108,onur
     vars_default=['temp','salt','DOs','DIN','DIP','Chl']
     depthints={'surface':[0,10]} #,'bottom':[10,0]} #for bottom, depthint is relative to bottom depth
     #timeint = [datetime.datetime(2012, 1, 1,0,0,0), datetime.datetime(2013, 12, 31,23,59,59)]
@@ -110,13 +110,13 @@ def main(modtype,modfname,statsets,yint):
  
     # regarding simulations.
     #only if modfname==''
-    #sims2plot=['GF-ref']
-    sims2plot = ['DCSM']
+    sims2plot=['GF-ref', 'DCSM']
+    #sims2plot = ['DCSM']
     #sims2plot=['GF-ref', 'GF-R12', 'GF-M12', 'GF-W12']
     #sims2plot= ['GF-PPZZ-fS', 'GF-PPZZ-vS']
     #sims2plot = ['GF-Mnm','GF-Mfc','GF-Mvc'] #'GF-c100','GF-ref'] #,'GF-M13R12','GF-M12R13']
-    readsimraw=True #i.e., if the pickle file should be ignored
-    readobsraw=True #i.e., if the pickle file should be ignored
+    readsimraw=False #i.e., if the pickle file should be ignored
+    readobsraw=False #i.e., if the pickle file should be ignored
     simdomain=''
     meth2D='pretree'
     #regarding plots:
@@ -163,6 +163,6 @@ if __name__=='__main__':
        yints=sys.argv[4].split(',')
        yint=[np.int(y) for y in yints]
     else:
-       yint=[2012,2013]
+       yint=[2012,2014]
 
     main(modtype,modfname,statsets,yint)
