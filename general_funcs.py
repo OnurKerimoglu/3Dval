@@ -429,6 +429,7 @@ def get_var_from_ncf(varn_vl,ncf):
         else:
             varF=0
             success = False
-            raise(Warning('requested variable not found:'+varn_vl))
+            #raise(Warning('requested variable not found:'+varn_vl))
+            print('Warning: requested variable not found:'+varn_vl)
 
     return(varF,success)
