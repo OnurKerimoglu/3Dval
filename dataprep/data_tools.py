@@ -679,8 +679,8 @@ def create_ncfile(fname,lon,lat,vals,names,longnames,units,dims,tvec=[0],zvec=[0
             ncvar.longname=longnames[varno]
 
     nc.sync()
-    nc.institution = 'Helmholtz-Zentrum Geesthacht'
-    nc.contact = 'onur.kerimoglu@hzg.de'
+    nc.institution = 'ICBM Uni. Oldenburg'
+    nc.contact = 'onur.kerimoglu@uol.de'
     nc.history = str(datetime.datetime.now()) + ': first creation'
     nc.close()
     if notify:
@@ -749,8 +749,8 @@ def create_ncfile_0D(fname,tvec,zvec,vals,names,longnames,units,lats,lons,dims,c
             ncvar.lon=lons[varno]
 
     nc.sync()
-    nc.institution='Helmholtz-Zentrum Geesthacht'
-    nc.contact = 'onur.kerimoglu@hzg.de'
+    nc.institution='ICBM Uni. Oldenburg'
+    nc.contact = 'onur.kerimoglu@uol.de'
     nc.history=str(datetime.datetime.now())+': first creation'
     nc.close()
     if notify:
@@ -857,8 +857,8 @@ def create_nc(fname,dimvals,dimslist,vals,names,longnames,units,history='',refda
     nc.sync()
 
     #GLOBAL ATTRIBUTES
-    nc.institution = 'Helmholtz-Zentrum Geesthacht'
-    nc.contact = 'onur.kerimoglu@hzg.de'
+    nc.institution = 'ICBM Uni. Oldenburg'
+    nc.contact = 'onur.kerimoglu@uol.de'
     if history=='':
         nc.history = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M")) + '- first creation'
     else:
