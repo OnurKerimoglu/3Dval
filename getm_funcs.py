@@ -36,7 +36,14 @@ def get_getm_dataF(simf,varns,ysl,xsl,getmv='mean',modtype='GF-PPZZ'):
     varnsnew=varns+['z']
     for varn in varnsnew:
         #attempt to retrieve the variable
-        varF,success = get_var_from_ncf(vlib[varn], ncf)
+        if varn in ncf.variables.keys():
+            varn_real = varn
+        else:
+            if varn in vlib.keys():
+                varn_real=vlib[varn]
+            else:
+                raise(Exception('variable %s neither in file, nor in variable name dictionary'%varn))
+        varF,success = get_var_from_ncf(varn_real, ncf)
         if success:
             #varF=ncf.variables[vlib[varn]][:]
             if len(varF.shape)==2:
