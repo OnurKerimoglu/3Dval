@@ -859,10 +859,9 @@ def create_nc(fname,dimvals,dimslist,vals,names,longnames,units,history='',refda
     #GLOBAL ATTRIBUTES
     nc.institution = 'ICBM Uni. Oldenburg'
     nc.contact = 'onur.kerimoglu@uol.de'
-    if history=='':
-        nc.history = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M")) + '- first creation'
-    else:
-        nc.history = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M")) + '-'+ history
+    nc.date_created = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
+    if history!='':
+        nc.history = history
 
     nc.close()
     if notify:
