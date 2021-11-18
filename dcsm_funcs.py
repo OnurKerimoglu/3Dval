@@ -67,6 +67,27 @@ def get_dcsm_dataF(simf,vars,dcsmv='surface'):
     for stno in range(0,len(ncf.variables['station_name'])):
         ststr=ncf.variables['station_name'][stno, :].tostring()
         stname=str(ststr.decode('ascii').strip().strip('\x00'))
+        if stname=='Nney_W_2':
+            stname='Nney'
+        elif stname=='Bork_W_1':
+            stname='Bork'
+        elif stname=='JaBu_W_1':
+            stname='JaBu'
+        elif stname=='WeMu_W_1':
+            stname='WeMu'
+        elif stname=='220065':
+            stname='Norderelbe'
+        elif stname=='220052_S':
+            stname='Suederpiep'
+        elif stname=='220052_B':
+            stname='Buesum'
+        elif stname=='220057':
+            stname='Hoernum_Vortrapptief'
+        elif stname=='220006':
+            stname='Suedl_Amrum'
+        elif stname=='220065':
+            stname='Norderelbe'
+            
         StInd[stname]=stno
         StInd[stname.encode()]=stno #convert to byte class
 

@@ -67,17 +67,23 @@ pathreg = {'onur': {#'GF-Mnm': '/home/onur/WORK/projects/2013/maecs/sns144-M1801
                     'InterReg':'/work/ku0646/UBA/obsdata/stations/InterReg/allNC'
                     },
         'g260105': {
-                    'GF-PPZZ-fS': '/home/daniel/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillC_sns144-GPMEH-PPZZ-P190628-fSG97dChl.2017_zSB.nc',
-                    'GF-PPZZ-vS': '/home/daniel/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillC_sns144-GPMEH-PPZZ-P190628-vSG97dChl.2017_zSB.nc',
-                    'GF-PPZZ': '/home/daniel/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillphysC_sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc.2015-2017_zSB.nc',
-                    'GF-ref': '/home/daniel/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillphysC_sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc.2015-2017_zSB.nc',
-                    'GF-old': '/home/daniel/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillC_sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223.2015-2017_zSB.nc',
-                    'plotrootpath':'/home/daniel/IR/3Dval',
+                    #'GF-PPZZ-fS': '/home/daniel/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillC_sns144-GPMEH-PPZZ-P190628-fSG97dChl.2017_zSB.nc',
+                    #'GF-PPZZ-vS': '/home/daniel/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillC_sns144-GPMEH-PPZZ-P190628-vSG97dChl.2017_zSB.nc',
+                    #'GF-PPZZ': '/home/daniel/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillphysC_sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc.2015-2017_zSB.nc',
+                    'GF-v0': '/work/ku0646/g260105/IR/Harmonization/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-ICGEMO-CS/extract_skillMphysC_sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-ICGEMO-CS.2014_S10.nc',
+                    'GF-v1': '/work/ku0646/g260105/IR/Harmonization/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-ICGEMO-CS-rivWS/extract_skillMphysC_sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-ICGEMO-CS-rivWS.2014_S10.nc',
+                    'GF-v2': '/work/ku0646/g260105/IR/Harmonization/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-ICGEMO-CS-rivWS-siltNE/extract_skillMphysC_sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-ICGEMO-CS-rivWS-siltNE.2014_S10.nc',
+                    'GF-v3': '/work/ku0646/g260105/IR/Harmonization/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-ICGEMO-CS-rivWS-siltNEcor/extract_skillMphysC_sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-ICGEMO-CS-rivWS-siltNEcor.2014_S10.nc',
+                    'GF-v4': '/work/ku0646/g260105/IR/Harmonization/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-ICGEMO-CS-rivWS-siltNEcor-newBC/extract_skillMphysC_sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-ICGEMO-CS-BCdcsmP-rivWS.2014_S10.nc',
+                    'DCSM': '/work/ku0646/g260105/IR/Harmonization/DCSM/DCSM-FM_0_5nm_waq_0000_2014_his_filtered.nc',
+                    #'GF-old': '/home/daniel/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillC_sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223.2015-2017_zSB.nc',
+                    'plotrootpath':'/work/ku0646/g260105/IR/Harmonization/',
                     'pickledobspath': './',
                     'BGC':    '/home/daniel/IR/stations/individual/BGC/',
                     'BSH':    '/home/daniel/IR/stations/individual/BSH/',
                     'cosyna': '/home/daniel/IR/stations/COSYNA/proc/nc',
-                    'InterReg':'/home/daniel/IR/stations/InterReg/allNC'
+                    #'InterReg':'/work/ku0646/g260105/IR/stations/InterReg/allNC'
+                    'InterReg':'/work/ku0646/g260105/IR/Harmonization/allNC'
                     },
         
          'newuser': {}
@@ -86,7 +92,7 @@ pathreg = {'onur': {#'GF-Mnm': '/home/onur/WORK/projects/2013/maecs/sns144-M1801
 def main(modtype,modfname,statsets,yint):
     #PARAMETERS:
     # general
-    user='g260108' #g260105,g260108,onur
+    user='g260105' #g260105,g260108,onur
     vars_default=['temp','salt','DOs','DIN','DIP','Chl']
     depthints={'surface':[0,10]} #,'bottom':[10,0]} #for bottom, depthint is relative to bottom depth
     #timeint = [datetime.datetime(2012, 1, 1,0,0,0), datetime.datetime(2013, 12, 31,23,59,59)]
@@ -110,7 +116,8 @@ def main(modtype,modfname,statsets,yint):
  
     # regarding simulations.
     #only if modfname==''
-    sims2plot=['GF-ref', 'DCSM']
+    sims2plot=['DCSM','GF-v0','GF-v1','GF-v4']
+    #sims2plot=['GF-v0','GF-v4']
     #sims2plot = ['DCSM']
     #sims2plot=['GF-ref', 'GF-R12', 'GF-M12', 'GF-W12']
     #sims2plot= ['GF-PPZZ-fS', 'GF-PPZZ-vS']
@@ -163,6 +170,6 @@ if __name__=='__main__':
        yints=sys.argv[4].split(',')
        yint=[np.int(y) for y in yints]
     else:
-       yint=[2012,2014]
+       yint=[2014,2014]
 
     main(modtype,modfname,statsets,yint)

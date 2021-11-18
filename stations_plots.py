@@ -22,7 +22,7 @@ class Style:
             self.col={'obs':'0.6','sim':['k','tomato','darkblue','deepskyblue']}
             self.line={'obs':'None','sim':['-','-','-','-']}
             self.marker={'obs':'o','sim':['None','None','None','None']}
-            self.lw={'obs':1,'sim':[1,2,1,1]}
+            self.lw={'obs':1,'sim':[1,1,1,1]}
 
 def stations_plots(plotopts,obs,sim,plotrootpath,statsets,stations,timeint,depthints):
     fnamecode= '_%s-%s' %(timeint[0].year, timeint[1].year)
@@ -38,12 +38,12 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
     #variables to plot, definitions
     varlongnames={'temp':'Temperature', 'salt':'Salinity', 'DOs':'O2 sat.', 'DIN':'DIN', 'DIP':'DIP', 'Chl':'Chl'}
     varunits={'temp':u'\N{DEGREE SIGN}C', 'salt':'g/kg', 'DOs':'%', 'DIN':'$\mu$MN', 'NH4':'$\mu$MN', 'NO3':'$\mu$MN', 'Si':'$\mu$MSi', 'DIP':'$\mu$MP', 'Chl':'mg/m$^3$'}
-    varlims_offshore={'temp':[0,20],'salt':[28,35],'NH4':[0,20],'NO3':[0,60],'DIN':[0,50],
+    varlims_offshore={'temp':[0,20],'salt':[28,35.5],'NH4':[0,20],'NO3':[0,60],'DIN':[0,50],
                       'DIP':[0,2.1], 'Si':[0,50],'Chl':[0,20]}
     varticks_offshore={'temp':[0,5,10,15,20],'salt':[29,31,33,35],
                        'NH4': [0,5,10,15,20],'NO3': [0,10,20,30,40,50],'DIN': [0,10,20,30,40,50],
                        'DIP': [0,0.5,1.0,1.5,2.0],'Si': [0,10,20,30,40,50], 'Chl': [0,5,10,15,20]}
-    varlims_coastal = {'temp': [-1.0, 22.], 'salt': [0, 30],'NH4':[0,50],'NO3':[0,350], 'DIN': [0, 350],
+    varlims_coastal = {'temp': [-1.0, 22.], 'salt': [0, 35],'NH4':[0,50],'NO3':[0,350], 'DIN': [0, 350],
                        'DIP': [0, 3.5], 'Si':[0, 250], 'Chl': [0, 40]}
     varticks_coastal = {'temp': [0, 5, 10, 15, 20], 'salt': [0,10,20,30],
                         'NH4': [0,10,20,30,40,50],'NO3':[0,100,200,300],'DIN':[0,100,200,300],
@@ -69,7 +69,8 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
 
     for stationno,station in enumerate(stations):
         print ('  '+station)
-        if station in ['Cuxhaven','HPA-Elbe', 'Norderelbe']:
+        if station in ['BOCHTVWTM', 'Bork', 'Buesum', 'DOOVBWT', 'GROOTGND', 'HUIBGOT', 'MARSDND', 'Norderelbe',  'Wesermuendung','ZUIDOLWOT']:
+            print('coastal')
             varticks = varticks_coastal
             varlims = varlims_coastal
         else:

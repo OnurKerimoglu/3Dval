@@ -45,14 +45,12 @@ def readobs(paths,readraw,statsets,stations,timeint,depthints,vars,olf):
         for statset in statsets:
             print('Filling obs. dataset:%s' % statset)
             obs = looppath_fill_stationdata_obs({}, paths, statset, stations, timeint, depthints,vars,olf)
-
     return obs
 
 def looppath_fill_stationdata_obs(obs,paths,statset,stations,timeint,depthints,vars,olf):
     # olf: factor of standard deviation around the mean  within which the values will be kept
 
     obspath = paths[statset]
-
     # if stations to include are not specified,
     if len(stations) == 0:
         # get lists of available data
@@ -135,7 +133,6 @@ def fill_stationdata_obs(file,statset,vars,timeint,depthints0,olf):
 
     # check if dates are in
     tind=np.where((time>=timeint[0]) * (time<=timeint[1]))[0]
-
     # check if depths are in
     if list(depth) != [-9999]:
         depthintmin=np.nanmin([dint[0] for dint in depthints.values()]) #find the minimum lower lim of depthints
