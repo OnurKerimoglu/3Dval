@@ -18,7 +18,9 @@ plottopo=False
 cbarorient='horizontal'
 figuresize=(20,5)
 dpi=120
-dir_obs='/home/onur/WORK/projects/ICG-EMO/data/Assessment-area-validation/reprocessed_ICES/'
+#dir_obs='/home/onur/WORK/projects/ICG-EMO/data/Assessment-area-validation/reprocessed_ICES/'
+#dir_obs='/work/ku0646/g260105/IR/stations/InterReg/allNC/'
+dir_obs='/work/ku0646/UBA/obsdata/reprocessed_ICES/'
 unitkeys = {'Chl': '$\mu g/l$', 'DIN': '$\mu MN$', 'DIP': '$\mu MP$'}
 prettytitle = {'Chl': 'Summer Chl-a', 'DIP': 'Winter DIP', 'DIN': 'Winter DIN'}
 par_bounds_ref = {'Chl': [0,11,1], 'DIN':[0,55,5], 'DIP':[0,1.1,0.1]}
@@ -52,8 +54,11 @@ def main(ncfile,varns,simid,plfpath):
             par_bounds = par_bounds_comp
             cmap = copy.copy(mpl.cm.get_cmap("bwr"))
             extopt = 'neither'
-
-        var=np.squeeze(ncv[varn][0,:,:])
+        
+        if ncv[varn].ndim > 2:
+            var=np.squeeze(ncv[varn][0,:,:])
+        else:
+            var=np.squeeze(ncv[varn][:,:])
 
         bounds = np.array([i for i in np.arange(par_bounds[0], par_bounds[1], par_bounds[2])])
         norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
@@ -150,17 +155,19 @@ if __name__=='__main__':
     else:
         #ncfile = '/home/onur/WORK/projects/ICG-EMO/data/GPM/CS/CS_09-14.nc'
         #ncfile = '/home/onur/WORK/projects/ICG-EMO/data/GPM/CS/CS_09-14-PERCDIF-HS1_09-14-REL-CS_09-14.nc'
-        ncfile = '/home/onur/WORK/projects/ICG-EMO/data/GPM/HS1/HS1_09-14-PERCDIF-HS2_09-14-REL-CS_09-14.nc'
+        #ncfile = '/home/onur/WORK/projects/ICG-EMO/data/GPM/HS1/HS1_09-14-PERCDIF-HS2_09-14-REL-CS_09-14.nc'
+        ncfile = '/work/ku0646/g260105/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-ICGEMO-CS-BCdcsmP-rivWS/extract_skillCS_sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-ICGEMO-CS-BCdcsmP-rivWS.2014-avgout.nc'
 
     if len(sys.argv) > 2:
         varns = [sys.argv[2].split(',')[0]]
     else:
         varns = ['Chl','DIN','DIP']
+        #varns = ['Chl']
 
     if len(sys.argv) > 3:
         simid = sys.argv[3]
     else:
-        simid = 'comp'  # ref,comp
+        simid =  'ref' # 'comp'  # ref,comp
 
     if len(sys.argv) > 4:
         plfpath = os.path.join(os.path.dirname(ncfile), sys.argv[4])
