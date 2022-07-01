@@ -31,7 +31,7 @@ def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,ob
 
     # if pickledsim does not exist:
     #collect all info that's needed to extract data from each station in the loop
-    if simname[0:2] == 'GF':
+    if simname[0:2] == 'GF' or simname[0:3] == 'SNS':
         print('Accessing getm data')
         lons,lats,bat,ysl,xsl=get_getm_dom_vars(simf,simdomain)
         if meth2D == 'pretree':
@@ -53,7 +53,7 @@ def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,ob
         lon = obs[station]['lon']
         lat = obs[station]['lat']
         maxz_obs= obs[station]['bottom_depth']
-        if (simname[0:2] == 'GF') and (meth2D == 'pretree'):
+        if (simname[0:2] == 'GF' or simname[0:3] == 'SNS') and (meth2D == 'pretree'):
             sdata = interp_simdata_on_station(station,simdata,simtime,proj,domaintree,bat,lon,lat,maxz_obs,timeint,depthints,vars)
         elif simname[0:6] == 'DCSM':
             #sdata = structure_dcsm_data(station,simf,lon,lat,maxz_obs,timeint,depthints,vars)
@@ -72,7 +72,8 @@ def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,ob
 
 def interp_simdata_on_station(station,simdata,time,proj,domaintree,bat,lon,lat,maxz_obs,timeint,depthints,vars,quickzfind=True):
 
-    vardims={'ssh':'2D','temp':'3D','salt':'3D','DO':'3D','DOs':'3D','DIN':'3D','DIP':'3D','Si':'3D','NO3':'3D','NH4':'NH4','Chl':'3D'}
+    vardims={'ssh':'2D','temp':'3D','salt':'3D','DO':'3D','DOs':'3D','DIN':'3D','DIP':'3D','Si':'3D','NO3':'3D','NH4':'NH4','Chl':'3D',
+             'Cyanobacteria':'3D','Diatoms':'3D','Dinoflagellates':'3D','Flagellates':'3D','Phaeocystis':'3D','other':'3D'}
     # maybe no need to check if other conditions are not satisfied
     XY_in=False
     z_in=True #assume z_in is ok by default
@@ -82,11 +83,14 @@ def interp_simdata_on_station(station,simdata,time,proj,domaintree,bat,lon,lat,m
     varfound={}
     for varn in vars:
         varfound[varn] = True if varn in simdata.keys() else False
-
+        
     # get zmax, see if it's a finite value (np.nan) means it's outside the domain, or interpolation can't be done
     if any(varfound.values()):
         #maxz = interp_2d_tree(bat, domaintree, lon, lat)
-        maxz = interpval2D(0, 0, bat, lat, lon, 'pretree', proj, domaintree)
+        #print('bla 90!')
+        #print(np.shape(bat),np.shape(lat),np.shape(lon))
+        maxz = np.nan
+        #maxz = interpval2D(0, 0, bat, lat, lon, 'pretree', proj, domaintree)
         if not np.isnan(maxz): XY_in = True
         # If the diff between  maxz with maxz_obs too large (=?), throw a warning
         if (not np.isnan(maxz_obs)) and (abs(maxz - maxz_obs) > 10):

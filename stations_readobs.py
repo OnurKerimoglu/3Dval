@@ -26,7 +26,8 @@ def readobs(paths,readraw,statsets,stations,timeint,depthints,vars,olf):
         #check if the pickledobs exist
         if (not readraw) and os.path.exists(pickledobsfile):
            print('Opening pickled obs file')
-           (obs,) = np.load(pickledobsfile)
+           print(pickledobsfile)
+           (obs,) = np.load(pickledobsfile,allow_pickle=True)
            # filter requested stations?
            return obs
 
@@ -81,6 +82,9 @@ def fill_stationdata_obs(file,statset,vars,timeint,depthints0,olf):
         vlib = {'t': 'time', 'x': 'lon', 'y': 'lat', 'z': 'depth', 'Chl': 'chl', 'DIN': 'DIN', 'DIP': 'DIP', 'Si':'Si', 'NO3':'NO3', 'NH4':'NH4'}
     elif statset in ['InterReg']:
         vlib = {'t': 'time', 'x': 'lon', 'y': 'lat', 'z': 'depth', 'Chl': 'chl', 'DIP': 'DIP', 'Si':'Si', 'NO3':'NO3', 'NH4':'NH4','DIN':'DIN','salt':'SALT','KC':'KC'}
+    elif statset in ['InterRegFG']:
+        vlib = {'t': 'time', 'x': 'lon', 'y': 'lat', 'z': 'depth', 'Chl': 'chl', 'DIP': 'DIP', 'Si':'Si', 'NO3':'NO3', 'NH4':'NH4','DIN':'DIN','salt':'SALT','KC':'KC','Cyanobacteria':'Cyanobacteria','Diatoms':'Diatoms','Dinoflagellates':'Dinoflagellates',
+                'Flagellates':'Flagellates','Phaeocystis':'Phaeocystis','other':'other'}
 
     #variables without depth dimension
     noZDvars = ['ssh']
@@ -88,7 +92,6 @@ def fill_stationdata_obs(file,statset,vars,timeint,depthints0,olf):
     #open the data set
     ncf = netCDF4.Dataset(file,'r')
     station=ncf.station
-
     # reading metadata of station
     lon = ncf.variables[vlib['x']][:][0]
     lat = ncf.variables[vlib['y']][:][0]
@@ -104,11 +107,11 @@ def fill_stationdata_obs(file,statset,vars,timeint,depthints0,olf):
         depth=-9999*np.ones(1)
     time_num = ncf.variables[vlib['t']][:]
     # default netCDF4
-    time = netCDF4.num2date(time_num, ncf.variables[vlib['t']].getncattr('units'))
+    #time = netCDF4.num2date(time_num, ncf.variables[vlib['t']].getncattr('units'))
     # to use in combinaton with cftime lib:
-    # simtime = netCDF4.num2date(time_num, ncf.variables[vlib['t']].getncattr('units'),
-    #                           only_use_cftime_datetimes=False,
-    #                           only_use_python_datetimes=True)
+    time = netCDF4.num2date(time_num, ncf.variables[vlib['t']].getncattr('units'),
+                              only_use_cftime_datetimes=False,
+                              only_use_python_datetimes=True)
 
     #for ti,t in enumerate(time):
     #    print(str(time_num[ti])+' '+ str(t)+' '+str(type(t)))# find the max_depth, if necessary
@@ -116,7 +119,8 @@ def fill_stationdata_obs(file,statset,vars,timeint,depthints0,olf):
     try:
         maxz=ncf.bottom_depth
     except:
-        maxz = get_botdepth(lon, lat)
+        print('DT: bottom depth not found! bypassed!')
+        maxz = np.nan # get_botdepth(lon, lat)
 
     # update the bottom depthint
     depthints = depthints0.copy()
