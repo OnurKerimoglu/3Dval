@@ -82,7 +82,10 @@ def fill_stationdata_obs(file,statset,vars,timeint,depthints0,olf):
     elif statset in ['BGC']:
         vlib = {'t': 'time', 'x': 'lon', 'y': 'lat', 'z': 'depth', 'Chl': 'chl', 'DIN': 'DIN', 'DIP': 'DIP', 'Si':'Si', 'NO3':'NO3', 'NH4':'NH4'}
     elif statset in ['InterReg']:
-        vlib = {'t': 'time', 'x': 'lon', 'y': 'lat', 'z': 'depth', 'Chl': 'chl', 'DIP': 'DIP', 'Si':'Si', 'NO3':'NO3', 'NH4':'NH4','salt':'SALT','KC':'KC'}
+        vlib = {'t': 'time', 'x': 'lon', 'y': 'lat', 'z': 'depth', 'Chl': 'chl', 'DIP': 'DIP', 'Si':'Si', 'NO3':'NO3', 'NH4':'NH4','DIN':'DIN','salt':'SALT','KC':'KC'}
+    elif statset in ['InterRegFG']:
+        vlib = {'t': 'time', 'x': 'lon', 'y': 'lat', 'z': 'depth', 'Chl': 'chl', 'DIP': 'DIP', 'Si':'Si', 'NO3':'NO3', 'NH4':'NH4','DIN':'DIN','salt':'SALT','KC':'KC','Cyanobacteria':'Cyanobacteria','Diatoms':'Diatoms','Dinoflagellates':'Dinoflagellates',
+                'Flagellates':'Flagellates','Phaeocystis':'Phaeocystis','other':'other'}
 
     #variables without depth dimension
     noZDvars = ['ssh']

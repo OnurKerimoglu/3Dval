@@ -7,6 +7,8 @@ provides functions relevant to getm simulations
 import netCDF4
 import numpy as np
 
+from general_funcs import get_var_from_ncf
+
 def get_getm_dataF(simf,varns,ysl,xsl,getmv='mean',modtype='GF-PPZZ'):
     vlib = {'t': 'time', 'z': 'depth'}
 
@@ -21,7 +23,7 @@ def get_getm_dataF(simf,varns,ysl,xsl,getmv='mean',modtype='GF-PPZZ'):
     elif modtype == 'GF-PZ':
         vlibfabm={'DOs':'EH_abioP_O2_percSat','DIN':'EH_abioP_DINO3+EH_abioP_DINH4','NO3':'EH_abioP_DINO3','NH4':'EH_abioP_DINH4','DIP':'EH_abioP_DIP','Si':'EH_abioP_DISi','Chl':'GPM_phy_Chl'}
     elif modtype=='GF-PPZZ':
-        vlibfabm={'DOs':'EH_abioP_O2_percSat','DIN':'EH_abioP_DINO3+EH_abioP_DINH4','NO3':'EH_abioP_DINO3','NH4':'EH_abioP_DINH4','DIP':'EH_abioP_DIP','Si':'EH_abioP_DISi','Chl':'total_chlorophyll_calculator_result'}
+        vlibfabm={'DOs':'EH_abioP_O2_percSat','DIN':'EH_abioP_DINO3+EH_abioP_DINH4','NO3':'EH_abioP_DINO3','NH4':'EH_abioP_DINH4','DIP':'EH_abioP_DIP','Si':'EH_abioP_DISi','Chl':'total_chlorophyll_calculator_result','Diatoms':'GPM_diat_C','Flagellates':'GPM_nf_C','Phaeocystis':'GPM_pha_C','Dinoflagellates':'GPM_mixo_C'}
     vlib.update(vlibfabm)
 
     try:
@@ -34,7 +36,14 @@ def get_getm_dataF(simf,varns,ysl,xsl,getmv='mean',modtype='GF-PPZZ'):
     varnsnew=varns+['z']
     for varn in varnsnew:
         #attempt to retrieve the variable
-        varF,success = get_var_from_ncf(vlib[varn], ncf)
+        if varn in ncf.variables.keys():
+            varn_real = varn
+        else:
+            if varn in vlib.keys():
+                varn_real=vlib[varn]
+            else:
+                raise(Exception('variable %s neither in file, nor in variable name dictionary'%varn))
+        varF,success = get_var_from_ncf(varn_real, ncf)
         if success:
             #varF=ncf.variables[vlib[varn]][:]
             if len(varF.shape)==2:
@@ -51,34 +60,15 @@ def get_getm_dataF(simf,varns,ysl,xsl,getmv='mean',modtype='GF-PPZZ'):
                 simdata[varn]=-1*simdata[varn]
     #add time
     time_num = ncf.variables[vlib['t']][:]
+    # default netCDF4
+    #simtime = netCDF4.num2date(time_num, ncf.variables[vlib['t']].getncattr('units'))
+    # to use in combinaton with cftime lib:
     simtime = netCDF4.num2date(time_num, ncf.variables[vlib['t']].getncattr('units'),
-                        only_use_cftime_datetimes=False,
-                        only_use_python_datetimes=True)
+                              only_use_cftime_datetimes=False,
+                              only_use_python_datetimes=True)
+
     ncf.close()
     return (simdata,simtime)
-
-def get_var_from_ncf(varn_vl,ncf):
-    #if '+' exists (eg., DIN=DINO3+DINH4); operate
-
-    if '+' in varn_vl:
-        varn_vl_list=varn_vl.split('+')
-        varF=0
-        success = True
-        for varn_vl_i in varn_vl_list:
-            varFi,success_i=get_var_from_ncf(varn_vl_i,ncf)
-            varF=varF+varFi
-            if not success_i: #if any of the additive variables can not be retrieved, assume failure
-                success=False
-    else:
-        if varn_vl in ncf.variables:
-            varF = ncf.variables[varn_vl][:]
-            success=True
-        else:
-            varF=0
-            success = False
-            raise(Warning('requested variable not found:'+varn_vl))
-
-    return(varF,success)
 
 def get_getm_dom_vars(simf,simdomain=''):
     dominfo_found=False
@@ -113,12 +103,12 @@ def get_getm_dom_vars(simf,simdomain=''):
     return (lons,lats,bat,ysl,xsl)
 
 #def get_getm_bathymetry_cropped(fname='/home/onur/WORK/projects/GB/data/topo/topo_area_sns.nc',setup='SNS'):
-#def get_getm_bathymetry_cropped(fname='/pf/g/g260108/setups/3Dsetups/sns/Forcing/Topo/topo_area_sns.nc',setup='SNS'):
-def get_getm_bathymetry_cropped(fname='/work/ku0646/g260105/IR/3Dsetups/sns/Forcing/Topo/topo_area_sns.nc',setup='SENS'):
+def get_getm_bathymetry_cropped(fname='/home/daniel/IR/Bathymetry/topo_area_sns.nc',setup='SNS'):
+#def get_getm_bathymetry_cropped(fname='/work/ku0646/g260105/IR/3Dsetups/sns/Forcing/Topo/topo_area_sns.nc',setup='SENS'):
     ncB=netCDF4.Dataset(fname)
     ncBv=ncB.variables
     #bathymetry from a topo file
-    if setup=='SNS':
+    if setup in ['SNS']:
         lonx=ncBv['lonx'][4:-1,1:-1] #this should be [95,138]
         latx=ncBv['latx'][4:-1,1:-1] #this should be [95,138]
         H = ncBv['bathymetry'][4:-1,1:-1] #this should be [94,137])
