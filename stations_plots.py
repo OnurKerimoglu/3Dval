@@ -8,7 +8,8 @@ Created on Mon Jun  12 12:10 2017
 import os
 import numpy as np
 import numpy.ma as ma
-import cftime
+# import cftime
+import datetime
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
@@ -24,7 +25,7 @@ class Style:
             self.figwh=[12, 15] #BG2020
             #self.col={'obs':'0.6','sim':['k','r','b','g']}
             self.col={'obs':'0.6','sim':['k','tomato','deepskyblue','darkblue']}
-            self.line={'obs':'None','sim':['-','-','-','-']}
+            self.line={'obs':'None','sim':['-','-','--','-']}
             self.marker={'obs':'o','sim':['None','None','None','None']}
             self.lw={'obs':1,'sim':[1,1,1,1]}
 
@@ -291,7 +292,8 @@ def stationdata_filter_time(din,months2keep):
 
 def get_skillscores(obs,sim,timeint):
     #reduce time
-    tind = np.where((obs['time'] >= timeint[0]) * (obs['time'] <= timeint[1]))[0]
+    # tind = np.where((obs['time'] >= timeint[0]) * (obs['time'] <= timeint[1]))[0]
+    tind = np.where((np.array(obs['time']) >= timeint[0]) * (np.array(obs['time']) <= timeint[1]))[0]
     t,o,s=match_time(obs['time'][tind], obs['value'][tind], sim['time'],sim['value'])
 
     # calculate statistics:
@@ -363,7 +365,6 @@ def plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,id,ax,times,values,timeint
     return (hset, idset, anyplotinax, anyplotinfig)
 
 def markstatonmap(ax, proj, station, lon,lat,maxz):
-    print(type(proj))
     tx, ty = proj(lon, lat)
     proj.plot(tx, ty, 'r.', markersize=5, marker='d')
     #plt.text(tx, ty + 8000, ' ($z_{max}$=%s)'%maxz, size=10.0, horizontalalignment='center', verticalalignment='bottom', color='black',backgroundcolor='white')

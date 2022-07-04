@@ -6,7 +6,7 @@ provides functions relevant to dcsm (deltares) simulations
 
 import netCDF4
 import numpy as np
-
+import datetime
 from general_funcs import get_var_from_ncf
 
 def get_dcsm_dataF(simf,vars,dcsmv='surface'):
@@ -58,11 +58,11 @@ def get_dcsm_dataF(simf,vars,dcsmv='surface'):
     time_num = ncf.variables[vlib['t']][:]
     #default netCDF4
     units=ncf.variables[vlib['t']].getncattr('units').replace('minutes','seconds')
-    simtime = netCDF4.num2date(time_num, units)
+    # simtime = netCDF4.num2date(time_num, units)
     #to use in combinaton with cftime lib:
-    #simtime = netCDF4.num2date(time_num, units,
-    #                           only_use_cftime_datetimes=False,
-    #                           only_use_python_datetimes=True)
+    simtime = netCDF4.num2date(time_num, units,
+                              only_use_cftime_datetimes=False,
+                              only_use_python_datetimes=True)
 
     lons=ncf.variables['station_x_coordinate'][:]
     lats = ncf.variables['station_y_coordinate'][:]

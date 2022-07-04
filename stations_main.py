@@ -103,7 +103,8 @@ pathreg = {'onur': {#'GF-Mnm': '/home/onur/WORK/projects/2013/maecs/sns144-M1801
                     'GF-v4.3': '/media/daniel/DATAPART1/Harmonization/v4.3/extract_skillMphysC_sns144-GPMEH-G200124-Fnew3-PPPMZZ-vS-ICGEMO-CS-BCdcsmP-rivWS-zmh3.2014_S10.nc',
                     'GF-v4.4': '/media/daniel/DATAPART1/Harmonization/v4.4/extract_skillMphysC_sns144-GPMEH-G200124-Fnew3-PPPMZZ-vS-ICGEMO-CS-BCdcsmP-rivWS-zmh4.2014_S10.nc',
                     'GF-v4.6': '/media/daniel/DATAPART1/Harmonization/v4.6/extract_skillMphysC_sns144-GPMEH-G200124-Fnew3-PPPMZZ-vS-ICGEMO-CS-BCdcsmP-rivWS.2015-2017_S10.nc',
-                    'GF-v4.6.2': '/media/daniel/DATAPART1/Harmonization/v4.6.2/extract_skillMphysC_sns144-GPMEH-G200124-Fnew3-PPPMZZ-vS-ICGEMO-CS-BCdcsmP-rivWS-2.2014-2017_S10.nc',
+                    'GF-v4.7.1': '/media/daniel/DATAPART1/Harmonization/v4.7.1/extract_skillMphysC_sns144-GPMEH-G200124-Fnew3-PPPMZZ-vS-ICGEMO-CS-BCdcsmP-rivWS-2.2014-2017_S10.nc',
+                    'GF-v4.7.2': '/media/daniel/DATAPART1/Harmonization/v4.7.2/extract_skillMphysC_sns144-GPMEH-G200124-Fnew3-PPPMZZ-vS-ICGEMO-CS-BCdcsmP-rivWS-2t.2014-2017_S10.nc',
                     'SNS-GPM': '/media/daniel/DATAPART1/Harmonization/v3/extract_skillMphysC_sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-ICGEMO-CS-BCdcsmP-rivWS.2014-2016_S10.nc',
                     'DCSM': '/media/daniel/DATAPART1/Harmonization/DCSM/DCSM-FM_0_5nm_waq_0000_2014-2017_his_PhytoBiomass.nc',
                     #'GF-old': '/home/daniel/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillC_sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223.2015-2017_zSB.nc',
@@ -154,7 +155,7 @@ def main(modtype,modfname,statsets,yint):
     #only if modfname==''
     #sims2plot=['DCSM','SNS-GPM']
     #sims2plot=['SNS-GPM']
-    sims2plot=['GF-v4.1','GF-v4.6','GF-v4.6.2']
+    sims2plot=['DCSM','GF-v4.7.1','GF-v4.7.2']
     #sims2plot = ['GF-v3-jt3','GF-v3-bat','GF-v3-sat']
     #sims2plot=['GF-ref', 'GF-R12', 'GF-M12', 'GF-W12']
     #sims2plot= ['GF-PPZZ-fS', 'GF-PPZZ-vS']

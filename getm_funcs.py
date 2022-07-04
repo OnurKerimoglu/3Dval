@@ -6,6 +6,7 @@ provides functions relevant to getm simulations
 
 import netCDF4
 import numpy as np
+import datetime
 
 from general_funcs import get_var_from_ncf
 
@@ -61,8 +62,8 @@ def get_getm_dataF(simf,varns,ysl,xsl,getmv='mean',modtype='GF-PPZZ'):
     #add time
     time_num = ncf.variables[vlib['t']][:]
     # default netCDF4
-    #simtime = netCDF4.num2date(time_num, ncf.variables[vlib['t']].getncattr('units'))
-    # to use in combinaton with cftime lib:
+    # simtime = netCDF4.num2date(time_num, ncf.variables[vlib['t']].getncattr('units'))
+    # to use in combinaton with datetime lib:
     simtime = netCDF4.num2date(time_num, ncf.variables[vlib['t']].getncattr('units'),
                               only_use_cftime_datetimes=False,
                               only_use_python_datetimes=True)

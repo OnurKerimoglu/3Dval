@@ -8,6 +8,7 @@ import os
 import pickle
 import numpy as np
 import netCDF4
+import datetime
 from general_funcs import get_botdepth
 
 def readobs(paths,readraw,statsets,stations,timeint,depthints,vars,olf):
@@ -26,7 +27,7 @@ def readobs(paths,readraw,statsets,stations,timeint,depthints,vars,olf):
         #check if the pickledobs exist
         if (not readraw) and os.path.exists(pickledobsfile):
            print('Opening pickled obs file')
-           (obs,) = np.load(pickledobsfile)
+           (obs,) = np.load(pickledobsfile,allow_pickle=True)
            # filter requested stations?
            return obs
 
@@ -45,7 +46,6 @@ def readobs(paths,readraw,statsets,stations,timeint,depthints,vars,olf):
         for statset in statsets:
             print('Filling obs. dataset:%s' % statset)
             obs = looppath_fill_stationdata_obs({}, paths, statset, stations, timeint, depthints,vars,olf)
-
     return obs
 
 def looppath_fill_stationdata_obs(obs,paths,statset,stations,timeint,depthints,vars,olf):
