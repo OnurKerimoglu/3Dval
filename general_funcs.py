@@ -7,11 +7,13 @@ provides general functions useful for multiple modules
 import os,sys
 import numpy as np
 import datetime
+import warnings
 import netCDF4
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from scipy.spatial import cKDTree
 from scipy import interpolate
+import cartopy.crs as ccrs
 #import time
 
 def cm2inch(*tupl):
@@ -255,6 +257,107 @@ def get_stats(V):
         Vstats[v]=stats
     return Vstats
 
+# DT: obsolete after moving away from basemap
+# def getproj(setup,projpath=os.path.dirname(os.path.realpath(__file__))):
+#     pickledproj=os.path.join(projpath,'proj_'+setup+'.pickle')
+#     if os.path.isfile(pickledproj):
+#         print ('opening an existing projection: '+ pickledproj)
+#         #if a projection exists, just load it (fast)
+#         (proj,) = np.load(pickledproj, encoding='latin1', allow_pickle=True)
+#     else:
+#         from mpl_toolkits.basemap import Basemap
+#         import pickle
+#         from pyproj import Proj
+#         print ('projecting for: '+ setup)
+#         if setup=='SNSfull':
+#             proj=Basemap(projection='lcc',
+#                        resolution='i',
+#                        llcrnrlon=0.0,
+#                        llcrnrlat=51.0, #51.2,
+#                        urcrnrlon=9.5,
+#                        urcrnrlat=56.0, #55.8,
+#                        lat_0=52.0,
+#                        lon_0=5.)
+#             proj2 = Proj(proj='eqc', lat_0=52., lon_0=5.)
+#         elif setup=='WadSea':
+#             proj = Basemap(projection='lcc',
+#                            resolution='i',
+#                            llcrnrlon=6.2,
+#                            llcrnrlat=53.2,
+#                            urcrnrlon=9.3,
+#                            urcrnrlat=55.1,
+#                            lat_0=52.0,
+#                            lon_0=5.)
+#             proj2 = Proj(proj='eqc', lat_0=52., lon_0=5.)
+#         elif setup=='Ems':
+#             proj = Basemap(projection='lcc',
+#                            resolution='f',
+#                            llcrnrlon=6.0296,
+#                            llcrnrlat=52.8525,
+#                            urcrnrlon=7.7006,
+#                            urcrnrlat=53.9622,
+#                            lat_0=52.0,
+#                            lon_0=5.)
+#             proj2 = Proj(proj='eqc', lat_0=52., lon_0=5.)
+#         elif setup=='GBight':
+#             proj = Basemap(projection='lcc',
+#                            resolution='i',
+#                            llcrnrlon=4,
+#                            llcrnrlat=52.9,
+#                            urcrnrlon=9.7,
+#                            urcrnrlat=55.6,
+#                            lat_0=52.0,
+#                            lon_0=5.)
+#             proj2 = Proj(proj='eqc', lat_0=52., lon_0=5.)
+#         elif setup=='SNSext':
+#             proj=Basemap(projection='lcc',
+#                        resolution='i',
+#                        llcrnrlon=0.0,
+#                        llcrnrlat=51.0, #51.2,
+#                        urcrnrlon=9.5,
+#                        urcrnrlat=58.0, #55.8,
+#                        lat_0=52.0,
+#                        lon_0=5.)
+#             proj2 = Proj(proj='eqc', lat_0=52., lon_0=5.)
+#         elif setup=='SENS':
+#             proj=Basemap(projection='lcc',
+#                        resolution='i',
+#                        llcrnrlon=4.3,
+#                        llcrnrlat=52.4, #51.2,
+#                        urcrnrlon=9.3,
+#                        urcrnrlat=56, #55.8,
+#                        lat_0=52.0,
+#                        lon_0=5.)
+#             proj2 = Proj(proj='eqc', lat_0=52., lon_0=5.)
+#         elif setup == 'WadSea':
+#             proj = Basemap(projection='lcc',
+#                            resolution='i',
+#                            llcrnrlon=6.2,
+#                            llcrnrlat=53.2,  # 51
+#                            urcrnrlon=9.3,
+#                            urcrnrlat=55.1,
+#                            lat_0=52.0,
+#                            lon_0=5.)
+#             proj2 = Proj(proj='eqc', lat_0=52., lon_0=5.)
+#         elif setup=='CuxBusHel':
+#             proj=Basemap(projection='lcc',
+#                        resolution='i',
+#                        llcrnrlon=7.7,
+#                        llcrnrlat=53.5, #51
+#                        urcrnrlon=9.2,
+#                        urcrnrlat=54.3,
+#                        lat_0=52.0,
+#                        lon_0=5.)
+#             proj2 = Proj(proj='eqc', lat_0=52., lon_0=5.)
+#         else:
+#             raise (Exception('unknown setup:' + setup + '. cannot produce projection.'))
+#
+#         #pickle for later use:
+#         f=open(pickledproj,'wb')
+#         pickle.dump((proj,),f) #,protocol=-1
+#         f.close()
+#     return proj
+
 def getproj(setup,projpath=os.path.dirname(os.path.realpath(__file__))):
     pickledproj=os.path.join(projpath,'proj_'+setup+'.pickle')
     if os.path.isfile(pickledproj):
@@ -262,84 +365,11 @@ def getproj(setup,projpath=os.path.dirname(os.path.realpath(__file__))):
         #if a projection exists, just load it (fast)
         (proj,) = np.load(pickledproj, encoding='latin1', allow_pickle=True)
     else:
-        from mpl_toolkits.basemap import Basemap
         import pickle
-        print ('projecting for: '+ setup)
-        if setup=='SNSfull':
-            proj=Basemap(projection='lcc',
-                       resolution='i',
-                       llcrnrlon=0.0,
-                       llcrnrlat=51.0, #51.2,
-                       urcrnrlon=9.5,
-                       urcrnrlat=56.0, #55.8,
-                       lat_0=52.0,
-                       lon_0=5.)
-        elif setup=='WadSea':
-            proj = Basemap(projection='lcc',
-                           resolution='i',
-                           llcrnrlon=6.2,
-                           llcrnrlat=53.2,
-                           urcrnrlon=9.3,
-                           urcrnrlat=55.1,
-                           lat_0=52.0,
-                           lon_0=5.)
-        elif setup=='Ems':
-            proj = Basemap(projection='lcc',
-                           resolution='f',
-                           llcrnrlon=6.0296,
-                           llcrnrlat=52.8525,
-                           urcrnrlon=7.7006,
-                           urcrnrlat=53.9622,
-                           lat_0=52.0,
-                           lon_0=5.)
-        elif setup=='GBight':
-            proj = Basemap(projection='lcc',
-                           resolution='i',
-                           llcrnrlon=4,
-                           llcrnrlat=52.9,
-                           urcrnrlon=9.7,
-                           urcrnrlat=55.6,
-                           lat_0=52.0,
-                           lon_0=5.)
-        elif setup=='SNSext':
-            proj=Basemap(projection='lcc',
-                       resolution='i',
-                       llcrnrlon=0.0,
-                       llcrnrlat=51.0, #51.2,
-                       urcrnrlon=9.5,
-                       urcrnrlat=58.0, #55.8,
-                       lat_0=52.0,
-                       lon_0=5.)
-        elif setup=='SENS':
-            proj=Basemap(projection='lcc',
-                       resolution='i',
-                       llcrnrlon=4.3,
-                       llcrnrlat=52.4, #51.2,
-                       urcrnrlon=9.3,
-                       urcrnrlat=56, #55.8,
-                       lat_0=52.0,
-                       lon_0=5.)
-        elif setup == 'WadSea':
-            proj = Basemap(projection='lcc',
-                           resolution='i',
-                           llcrnrlon=6.2,
-                           llcrnrlat=53.2,  # 51
-                           urcrnrlon=9.3,
-                           urcrnrlat=55.1,
-                           lat_0=52.0,
-                           lon_0=5.)
-        elif setup=='CuxBusHel':
-            proj=Basemap(projection='lcc',
-                       resolution='i',
-                       llcrnrlon=7.7,
-                       llcrnrlat=53.5, #51
-                       urcrnrlon=9.2,
-                       urcrnrlat=54.3,
-                       lat_0=52.0,
-                       lon_0=5.)
-        else:
-            raise (Exception('unknown setup:' + setup + '. cannot produce projection.'))
-
+        from pyproj import Proj
+        # DT: technically, "setup" is no longer needed. In pyproj, we use Plate Carree, and the lower left and
+        # upper right corners are not used, as they are defined in the specific routines, e.g. via cartopy.
+        proj = Proj(proj='eqc', lat_0=52., lon_0=5., lat_ts=52)
         #pickle for later use:
         f=open(pickledproj,'wb')
         pickle.dump((proj,),f) #,protocol=-1
@@ -377,6 +407,7 @@ def interpval2D(lats,lons,vals,lat,lon,method,proj,domaintree=0):
 
     # convert lat-lons to cartesian coordinates
     x2,y2 = proj(lon,lat)
+
 
     if method=='pretree':
         if not isinstance(domaintree,int):  #p2: istype(domaintree,'integer'):

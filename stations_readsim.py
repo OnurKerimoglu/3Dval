@@ -9,7 +9,7 @@ import os
 import pickle
 import numpy as np
 import warnings
-
+import datetime
 from getm_funcs import get_getm_dom_vars,get_getm_dataF
 from dcsm_funcs import get_dcsm_dataF,structure_dcsm_data
 from general_funcs import interpval2D,get_2Dtree,getproj
@@ -83,14 +83,11 @@ def interp_simdata_on_station(station,simdata,time,proj,domaintree,bat,lon,lat,m
     varfound={}
     for varn in vars:
         varfound[varn] = True if varn in simdata.keys() else False
-        
+
     # get zmax, see if it's a finite value (np.nan) means it's outside the domain, or interpolation can't be done
     if any(varfound.values()):
         #maxz = interp_2d_tree(bat, domaintree, lon, lat)
-        #print('bla 90!')
-        #print(np.shape(bat),np.shape(lat),np.shape(lon))
-        maxz = np.nan
-        #maxz = interpval2D(0, 0, bat, lat, lon, 'pretree', proj, domaintree)
+        maxz = interpval2D(0, 0, bat, lat, lon, 'pretree', proj, domaintree)
         if not np.isnan(maxz): XY_in = True
         # If the diff between  maxz with maxz_obs too large (=?), throw a warning
         if (not np.isnan(maxz_obs)) and (abs(maxz - maxz_obs) > 10):

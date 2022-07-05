@@ -8,6 +8,7 @@ import os
 import pickle
 import numpy as np
 import netCDF4
+import datetime
 from general_funcs import get_botdepth
 
 def readobs(paths,readraw,statsets,stations,timeint,depthints,vars,olf):
@@ -26,7 +27,6 @@ def readobs(paths,readraw,statsets,stations,timeint,depthints,vars,olf):
         #check if the pickledobs exist
         if (not readraw) and os.path.exists(pickledobsfile):
            print('Opening pickled obs file')
-           print(pickledobsfile)
            (obs,) = np.load(pickledobsfile,allow_pickle=True)
            # filter requested stations?
            return obs
@@ -52,6 +52,7 @@ def looppath_fill_stationdata_obs(obs,paths,statset,stations,timeint,depthints,v
     # olf: factor of standard deviation around the mean  within which the values will be kept
 
     obspath = paths[statset]
+
     # if stations to include are not specified,
     if len(stations) == 0:
         # get lists of available data
@@ -92,6 +93,7 @@ def fill_stationdata_obs(file,statset,vars,timeint,depthints0,olf):
     #open the data set
     ncf = netCDF4.Dataset(file,'r')
     station=ncf.station
+
     # reading metadata of station
     lon = ncf.variables[vlib['x']][:][0]
     lat = ncf.variables[vlib['y']][:][0]
@@ -106,21 +108,16 @@ def fill_stationdata_obs(file,statset,vars,timeint,depthints0,olf):
     else: #assume that all are surface depths
         depth=-9999*np.ones(1)
     time_num = ncf.variables[vlib['t']][:]
-    # default netCDF4
-    #time = netCDF4.num2date(time_num, ncf.variables[vlib['t']].getncattr('units'))
-    # to use in combinaton with cftime lib:
     time = netCDF4.num2date(time_num, ncf.variables[vlib['t']].getncattr('units'),
-                              only_use_cftime_datetimes=False,
-                              only_use_python_datetimes=True)
-
+                        only_use_cftime_datetimes=False,
+                        only_use_python_datetimes=True)
     #for ti,t in enumerate(time):
     #    print(str(time_num[ti])+' '+ str(t)+' '+str(type(t)))# find the max_depth, if necessary
     
     try:
         maxz=ncf.bottom_depth
     except:
-        print('DT: bottom depth not found! bypassed!')
-        maxz = np.nan # get_botdepth(lon, lat)
+        maxz = get_botdepth(lon, lat)
 
     # update the bottom depthint
     depthints = depthints0.copy()
@@ -137,6 +134,7 @@ def fill_stationdata_obs(file,statset,vars,timeint,depthints0,olf):
 
     # check if dates are in
     tind=np.where((time>=timeint[0]) * (time<=timeint[1]))[0]
+
     # check if depths are in
     if list(depth) != [-9999]:
         depthintmin=np.nanmin([dint[0] for dint in depthints.values()]) #find the minimum lower lim of depthints

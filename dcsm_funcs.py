@@ -6,7 +6,7 @@ provides functions relevant to dcsm (deltares) simulations
 
 import netCDF4
 import numpy as np
-
+import datetime
 from general_funcs import get_var_from_ncf
 
 def get_dcsm_dataF(simf,vars,dcsmv='surface'):
@@ -15,7 +15,10 @@ def get_dcsm_dataF(simf,vars,dcsmv='surface'):
     vlib = {'t': 'time', 'zmax': 'TotalDepth',
             'temp': 'temperature', 'salt': 'salinity',
             'DO': 'OXY', 'Chl': 'Chlfa',
-            'DIN': 'DIN','DIP': 'PO4', 'Si': 'Si'
+            'DIN': 'DIN','DIP': 'PO4', 'Si': 'Si',
+            'Diatoms':'MDIATOMS','Flagellates':'MFLAGELA',
+            'Phaeocystis':'PHAEOCYS','Dinoflagellates':'DINOFLAG',
+            'SPM':'IM1'
             }
 
     try:
@@ -44,6 +47,9 @@ def get_dcsm_dataF(simf,vars,dcsmv='surface'):
             elif varn=='OXY' and units=='(g/m3)':
                 #!! is it O (atomic weight 16) or O2 (molecular weight: 32)? assume O (16)
                 conv_factor = 1000 / 16  # 1000mg/g*1mmolO/16gO -> mmolO2/m3
+            elif units=='(gC/m3)' and varn in ['Flagellates','Phaeocystis','Diatoms','Dinoflagellates']:
+                conv_factor = 1000/12
+                print('bla 52: ',varn,conv_factor)
             simdata[varn] = var*conv_factor
             # multiply depth with -1
             if varn == 'z':
@@ -52,11 +58,11 @@ def get_dcsm_dataF(simf,vars,dcsmv='surface'):
     time_num = ncf.variables[vlib['t']][:]
     #default netCDF4
     units=ncf.variables[vlib['t']].getncattr('units').replace('minutes','seconds')
-    simtime = netCDF4.num2date(time_num, units)
+    # simtime = netCDF4.num2date(time_num, units)
     #to use in combinaton with cftime lib:
-    #simtime = netCDF4.num2date(time_num, units,
-    #                           only_use_cftime_datetimes=False,
-    #                           only_use_python_datetimes=True)
+    simtime = netCDF4.num2date(time_num, units,
+                              only_use_cftime_datetimes=False,
+                              only_use_python_datetimes=True)
 
     lons=ncf.variables['station_x_coordinate'][:]
     lats = ncf.variables['station_y_coordinate'][:]
@@ -100,7 +106,7 @@ def structure_dcsm_data(station,lon,lat,maxz,timeint,depthints,vars,simdata, tim
     #simdata, time, lons, lats, TotDepths, StInds = get_dcsm_dataF(simf, vars)
 
     vardims = {'ssh': '2D', 'temp': '3D', 'salt': '3D', 'DO': '3D', 'DOs': '3D', 'DIN': '3D', 'DIP': '3D', 'Si': '3D',
-               'NO3': '3D', 'NH4': 'NH4', 'Chl': '3D'}
+               'NO3': '3D', 'NH4': 'NH4', 'Chl': '3D','Diatoms':'3D','Dinoflagellates':'3D','Flagellates':'3D','Phaeocystis':'3D'}
 
     t_in = False
     st_in = False
