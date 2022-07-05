@@ -136,8 +136,8 @@ def main(modtype,modfname,statsets,yint):
     # regarding observations.
     if len(statsets)==0:
        #statsets = ['cosyna', 'BSH', 'BGC']
-       statsets = ['InterRegFG']
-       #statsets = ['InterReg']
+       #statsets = ['InterRegFG']
+       statsets = ['InterReg']
        #stations = ['Ems', 'Deutsche Bucht','NBII']
        #stations = ['Cuxhaven','HPA-Elbe']
     stations=[]

@@ -463,12 +463,12 @@ def markstatonmap(ax, setup, station, lon,lat,maxz):
         lon_0=5.
         res='50m'
 
-    ax.plot(lon,lat, 'r.', markersize=5, marker='d', transform=ccrs.PlateCarree())
+    ax.plot(lon,lat, 'r.', markersize=5, transform=ccrs.PlateCarree())
     ax.set_yticklabels([])
     ax.set_xticklabels([])
     ax.add_feature(cfeature.GSHHSFeature(scale='auto', levels=None), linewidth=0.5, facecolor= (.8, .8, .8))
     extent=[llcrnrlon, urcrnrlon, llcrnrlat, urcrnrlat]
-    ax.set_extent(extent, ccrs.PlateCarree())
+    ax.set_extent(extent, crs=ccrs.PlateCarree())
     
 def prepfig(res,figwh,colno,rowno,timeint):
     # start a figure
