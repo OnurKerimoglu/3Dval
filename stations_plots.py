@@ -69,9 +69,10 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
     if not os.path.exists(plotpath):
         os.makedirs(plotpath)
 
+    #DT: no longer necessary with cartopy
     #projection (for showing stations on maps)
-    proj=getproj(setup='SNSfull',projpath=os.path.dirname(os.path.realpath(__file__)))
-    #proj = getproj(setup='WadSea', projpath=os.path.dirname(os.path.realpath(__file__)))
+    #proj = getproj(setup='SNSfull',projpath=os.path.dirname(os.path.realpath(__file__)))
+    #proj = getproj(setup='SENS', projpath=os.path.dirname(os.path.realpath(__file__)))
 
     #extract the station list if not provided
     if len(stations)==0:
@@ -97,11 +98,11 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
                      #horizontalalignment='right', size=10)
             # show the location of the station on a map in one panel
             #old
-            ax = plt.axes([0.77, 0.77, 0.22, 0.22]) 
-            markstatonmap(ax, proj, station, obs[station]['lon'], obs[station]['lat'], obs[station]['bottom_depth'])
+            #ax = plt.axes([0.77, 0.77, 0.22, 0.22]) 
+            #markstatonmap(ax, proj, station, obs[station]['lon'], obs[station]['lat'], obs[station]['bottom_depth'])
             #new
-            #ax = plt.axes([0.77, 0.77, 0.22, 0.22],projection=ccrs.PlateCarree())
-            #markstatonmap(ax, 'SENS', station, obs[station]['lon'], obs[station]['lat'], obs[station]['bottom_depth'])
+            ax = plt.axes([0.77, 0.77, 0.22, 0.22],projection=ccrs.PlateCarree())
+            markstatonmap(ax, 'SENS', station, obs[station]['lon'], obs[station]['lat'], obs[station]['bottom_depth'])
             # if no plot is made, don't save an empty figure: to achieve this track whether any plot is made
             anyplotinfig = False
             
@@ -121,13 +122,13 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
                 hset = []; idset = []  #list of handles (needed for legend)
 
                 #plot obs
+                #DT: monsuf moved outside of if-statement, because otherwise it could remain undefined.
                 monsuf=''
                 if obs[station][varname]['presence']:
                     # limit the months to include
                     months2keep = [] #[7, 8]
                     if len(months2keep)>0:
                         monsuf='_M'+'-'.join(map(str,months2keep))
-                        
                         obs[station][varname][layer] = stationdata_filter_time(obs[station][varname][layer],months2keep)
                     hset,idset,anyplotinax,anyplotinfig = plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,'obs',ax,
                                                                         obs[station][varname][layer]['time'],
@@ -146,6 +147,8 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
                                                                             simset[simname][station][varname][layer]['value'],
                                                                             timeint, S, 'sim',simno)
                         # annotate skill scores
+                        # DT: modified to accomodate different numbers of simulations
+                        # - moved "n" into the plot panel, as they are the same for all sims.
                         if (obs[station][varname]['presence']) and (simset[simname][station][varname]['presence']):
                             skills=get_skillscores(obs[station][varname][layer],simset[simname][station][varname][layer],timeint)
                             if len(plotopts['sims2plot'])>2:
@@ -192,49 +195,67 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
                         elif (yticks[-1]-yticks[0])<=500:
                             ax.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(25.00))
                     else:
-                        #print('not done yet')   
-                        # axis limits
+                        # DT: automatic y-axis limits
                         ymax=0
                         ymin=9999999
-                        print(len(hset))
+
+                        # iterate through all plotted datasets in a panel (obs/sim)
                         for ni in range(0,len(hset)):
+                            # if maximum of current plot handle is larger than previous max, replace
                             if np.amax(plt.getp(hset[ni],'ydata'))>ymax:
                                 ymax=np.amax(plt.getp(hset[ni],'ydata'))
-                                
+
+                            # if minimum of current plot handle is smaller than previous min, replace
                             if np.amin(plt.getp(hset[ni],'ydata'))<ymin:
                                 ymin=np.amin(plt.getp(hset[ni],'ydata'))
+
+                        # range
                         ydist=ymax-ymin
+                        # margin: 10% of range
                         ymargin=0.1*ydist
+
+                        # apply minimum only to salt (expand if necessary)
                         if varname=='salt':
+                            # crop lower limit at 0, or reduce lower limit by margin
                             ymin=np.amax([ymin-ymargin,0])
                         else:
                             ymin=0
+                        # expand upper limit by margin
                         ymax=ymax+ymargin
-                        #print(varname,ymin,ymax)
+
+                        # apply limits
                         ax.set_ylim([ymin,ymax])
-                        
-                        print(ymax,ymin,ydist)
+
                         # axis ticks
+                        # define order of magnitude of the data
                         omag=(round(np.log10(round(ydist)))-1)
                         tenpow=10**omag
+
+                        # minimum and maximum no. of ticks.
                         minnoticks=3
                         maxnoticks=5
-                        #print('omag: ',tenpow)
+
+                        # caclulate ticks: from nearest upper integer to minimum, to nearest lower neighbour of maximum,
+                        # in steps of previously calculated powers of ten
                         yticks=np.array(np.arange(np.ceil(ymin),tenpow*np.floor(ymax/tenpow)+tenpow,tenpow))
-                        #print(yticks,len(yticks))
-                        
+
+                        # apply minimum no. of ticks.
                         if len(yticks)<minnoticks:
+                            # if there are too few ticks, use lower order of magnitude, result may be more ticks than allowed maximum
                             yticks=np.array(np.arange(np.ceil(ymin),tenpow*np.floor(ymax/tenpow)+tenpow,10**(omag-1)))
-                            #print(ii,yticks,len(yticks))
+
+                        # apply maximum no. of ticks.
                         ii=1
                         if len(yticks)>maxnoticks:
                             while len(yticks)>maxnoticks:
                                 ii+=1
+                                # increase tick interval to reduce no. of tick.
                                 yticks=np.array(np.arange(np.ceil(ymin),tenpow*np.floor(ymax/tenpow)+tenpow,ii*10**(omag)))
-                                
+
+                        # apply ticks.
                         ax.set_yticks(yticks)
-                        #print(yticks,ymin,ymax)
-                        #ax.yaxis.set_major_locator(yticks)
+
+                        # some cosmetics: get minor ticks.
                         if (yticks[-1] - yticks[0]) <= 3.0:
                             ax.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(0.1))
                         elif (yticks[-1]-yticks[0])<=36:
@@ -346,7 +367,7 @@ def match_time(t1dt,v1,t2dt,v2):
     return(t1dt[i1],v1[i1],v2[i2])
 
 def plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,id,ax,times,values,timeint,S,seriestype,sno=-1):
-    tind =np.where((times>=timeint[0]) * (times<=timeint[1]))[0]
+    tind =np.where((np.array(times)>=timeint[0]) * (np.array(times)<=timeint[1]))[0]
     if len(tind)==0:
         return (hset,idset,anyplotinax,anyplotinfig)
 
@@ -364,16 +385,91 @@ def plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,id,ax,times,values,timeint
 
     return (hset, idset, anyplotinax, anyplotinfig)
 
-def markstatonmap(ax, proj, station, lon,lat,maxz):
-    tx, ty = proj(lon, lat)
-    proj.plot(tx, ty, 'r.', markersize=5, marker='d')
-    #plt.text(tx, ty + 8000, ' ($z_{max}$=%s)'%maxz, size=10.0, horizontalalignment='center', verticalalignment='bottom', color='black',backgroundcolor='white')
+#DT: basemap proj object no longer needed, move to cartopy
+#old
+#def markstatonmap(ax, proj, station, lon,lat,maxz):
+    #tx, ty = proj(lon, lat)
+    #proj.plot(tx, ty, 'r.', markersize=5, marker='d')
+    ##plt.text(tx, ty + 8000, ' ($z_{max}$=%s)'%maxz, size=10.0, horizontalalignment='center', verticalalignment='bottom', color='black',backgroundcolor='white')
+    #ax.set_yticklabels([])
+    #ax.set_xticklabels([])
+    ## proj.drawlsmask(land_color='.8', ocean_color='w',resolution='f')
+    #proj.drawcoastlines(color=(0.3, 0.3, 0.3), linewidth=0.5)
+    #proj.fillcontinents((.8, .8, .8), lake_color=(0.6, 0.6, 1.0))
+#new
+def markstatonmap(ax, setup, station, lon,lat,maxz):
+    if setup=='SNSfull':
+        llcrnrlon=0.0
+        llcrnrlat=51.0
+        urcrnrlon=9.5
+        urcrnrlat=56.0
+        lat_0=52.0
+        lon_0=5.
+        res='50m'
+    elif setup=='WadSea':
+        llcrnrlon=6.2
+        llcrnrlat=53.2
+        urcrnrlon=9.3
+        urcrnrlat=55.1
+        lat_0=52.0
+        lon_0=5.
+        res='50m'
+    elif setup=='Ems':
+        llcrnrlon=6.0296
+        llcrnrlat=52.8525
+        urcrnrlon=7.7006
+        urcrnrlat=53.9622
+        lat_0=52.0
+        lon_0=5.
+        res='10m'
+    elif setup=='GBight':
+        llcrnrlon=4
+        llcrnrlat=52.9
+        urcrnrlon=9.7
+        urcrnrlat=55.6
+        lat_0=52.0
+        lon_0=5.
+        res='50m'
+    elif setup=='SNSext':
+        llcrnrlon=0.0
+        llcrnrlat=51.0
+        urcrnrlon=9.5
+        urcrnrlat=58.0
+        lat_0=52.0
+        lon_0=5.
+        res='50m'
+    elif setup=='SENS':
+        llcrnrlon=4.3
+        llcrnrlat=52.4
+        urcrnrlon=9.3
+        urcrnrlat=56
+        lat_0=52.0
+        lon_0=5.
+        res='10m'
+    elif setup == 'WadSea':
+        llcrnrlon=6.2
+        llcrnrlat=53.2
+        urcrnrlon=9.3
+        urcrnrlat=55.1
+        lat_0=52.0
+        lon_0=5.
+        res='50m'
+    elif setup=='CuxBusHel':
+        llcrnrlon=7.7
+        llcrnrlat=53.5
+        urcrnrlon=9.2
+        urcrnrlat=54.3
+        lat_0=52.0
+        lon_0=5.
+        res='50m'
+
+    ax.plot(lon,lat, 'r.', markersize=5, marker='d', transform=ccrs.PlateCarree())
     ax.set_yticklabels([])
     ax.set_xticklabels([])
-    # proj.drawlsmask(land_color='.8', ocean_color='w',resolution='f')
-    proj.drawcoastlines(color=(0.3, 0.3, 0.3), linewidth=0.5)
-    proj.fillcontinents((.8, .8, .8), lake_color=(0.6, 0.6, 1.0))
-
+    ax.add_feature(cfeature.GSHHSFeature(scale='auto', levels=None), linewidth=0.5, facecolor= (.8, .8, .8))
+    extent=[llcrnrlon, urcrnrlon, llcrnrlat, urcrnrlat]
+    ax.set_extent(extent, ccrs.PlateCarree())
+    
 def prepfig(res,figwh,colno,rowno,timeint):
     # start a figure
     #years:

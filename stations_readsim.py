@@ -9,8 +9,6 @@ import os
 import pickle
 import numpy as np
 import warnings
-# import cftime
-
 import datetime
 from getm_funcs import get_getm_dom_vars,get_getm_dataF
 from dcsm_funcs import get_dcsm_dataF,structure_dcsm_data
