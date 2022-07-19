@@ -8,6 +8,7 @@ import netCDF4
 import numpy as np
 import datetime
 from general_funcs import get_var_from_ncf
+#import warnings
 
 def get_dcsm_dataF(simf,vars,dcsmv='surface'):
 
@@ -67,7 +68,14 @@ def get_dcsm_dataF(simf,vars,dcsmv='surface'):
     lons=ncf.variables['station_x_coordinate'][:]
     lats = ncf.variables['station_y_coordinate'][:]
     TotDepths=ncf.variables['TotalDepth'][:,:]
-
+    
+    if np.ndim(lons)>1:
+        print('DCSM coordinates are given in 2D format! Eliminating time dimension')
+        lonsxy=lons
+        latsxy=lats
+        lons=np.squeeze(lonsxy[0,:])
+        lats=np.squeeze(latsxy[0,:])
+    
     #construct a station index, i.e., the index that points to the respective station
     StInd = {}
     for stno in range(0,len(ncf.variables['station_name'])):
@@ -80,7 +88,8 @@ def get_dcsm_dataF(simf,vars,dcsmv='surface'):
         elif stname=='JaBu_W_1':
             stname='JaBu'
         elif stname=='WeMu_W_1':
-            stname='WeMu'
+            #stname='WeMu'
+            stname='Wesermuendung'
         elif stname=='220065':
             stname='Norderelbe'
         elif stname=='220052_S':
@@ -125,7 +134,10 @@ def structure_dcsm_data(station,lon,lat,maxz,timeint,depthints,vars,simdata, tim
     if station in StInds.keys():
         Sind = StInds[station]
         st_in = True
-
+        print(lon,lons[Sind])
+    else:
+        print(station,StInds)
+        
     #check whether the coordinates and max depth (roughly) match
     if t_in and st_in:
         if abs(lon - lons[Sind])>0.1:

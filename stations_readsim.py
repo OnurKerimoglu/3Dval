@@ -48,6 +48,7 @@ def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,ob
     #fill the data in correct structure
     sim = {}
     stations=obs.keys()
+    
     for station in stations:
         print('  ' + station)
         lon = obs[station]['lon']
@@ -55,7 +56,8 @@ def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,ob
         maxz_obs= obs[station]['bottom_depth']
         if (simname[0:2] == 'GF' or simname[0:3] == 'SNS') and (meth2D == 'pretree'):
             sdata = interp_simdata_on_station(station,simdata,simtime,proj,domaintree,bat,lon,lat,maxz_obs,timeint,depthints,vars)
-        elif simname[0:6] == 'DCSM':
+        #elif simname[0:6] == 'DCSM' or 'DCSM' in simname[0:6]:
+        elif 'DCSM' in simname[0:6]:
             #sdata = structure_dcsm_data(station,simf,lon,lat,maxz_obs,timeint,depthints,vars)
             sdata = structure_dcsm_data(station,lon,lat,maxz_obs,timeint,depthints,vars,simdata,simtime,lons,lats,maxz_sim,StInds)
         else:

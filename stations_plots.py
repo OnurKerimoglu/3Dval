@@ -25,7 +25,7 @@ class Style:
             self.figwh=[12, 15] #BG2020
             #self.col={'obs':'0.6','sim':['k','r','b','g']}
             self.col={'obs':'0.6','sim':['k','tomato','deepskyblue','darkblue']}
-            self.line={'obs':'None','sim':['-','-','--','-']}
+            self.line={'obs':'None','sim':['-','--','-','--']}
             self.marker={'obs':'o','sim':['None','None','None','None']}
             self.lw={'obs':1,'sim':[1,1,1,1]}
 
@@ -47,17 +47,17 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
     #varlims_offshore={'temp':[0,20],'salt':[28,35],'NH4':[0,20],'NO3':[0,60],'DIN':[0,50],
                       #'DIP':[0,2.1], 'Si':[0,50],'Chl':[0,20],'Cyanobacteria':[0,30],'Diatoms':[0,30],'Dinoflagellates':[0,20],'Flagellates':[0,30],'Phaeocystis':[0,10],'other':[0,30]}
     varlims_offshore={'temp': [-1.0, 22.], 'salt': [0, 0],'NH4':[0,50],'NO3':[0,250], 'DIN': [0, 0],
-                       'DIP': [0, 0], 'Si':[0, 0], 'Chl': [0, 0],'Cyanobacteria':[0,0],'Diatoms':[0,0],'Dinoflagellates':[0,0],'Flagellates':[0,0],'Phaeocystis':[0,0],'other':[0,0]}
+                       'DIP': [0, 0], 'Si':[0, 0], 'Chl': [0, 0],'Cyanobacteria':[0,0],'Diatoms':[0,40],'Dinoflagellates':[0,0],'Flagellates':[0,0],'Phaeocystis':[0,0],'other':[0,0]}
     varticks_offshore={'temp':[0,5,10,15,20],'salt':[29,31,33,35],
                        'NH4': [0,5,10,15,20],'NO3': [0,10,20,30,40,50],'DIN': [0,10,20,30,40,50],
-                       'DIP': [0,0.5,1.0,1.5,2.0],'Si': [0,10,20,30,40,50], 'Chl': [0,5,10,15,20],'Cyanobacteria':[0,10,20],'Diatoms':[0,10,20],'Dinoflagellates':[0,5,10,15],'Flagellates':[0,10,20],'Phaeocystis':[0,2,4,6,8],'other':[0,10,20]}
+                       'DIP': [0,0.5,1.0,1.5,2.0],'Si': [0,10,20,30,40,50], 'Chl': [0,5,10,15,20],'Cyanobacteria':[0,10,20],'Diatoms':[0,10,20,30],'Dinoflagellates':[0,5,10,15],'Flagellates':[0,10,20],'Phaeocystis':[0,2,4,6,8],'other':[0,10,20]}
     #varlims_coastal = {'temp': [-1.0, 22.], 'salt': [0, 32],'NH4':[0,50],'NO3':[0,250], 'DIN': [0, 350],
                        #'DIP': [0, 4], 'Si':[0, 250], 'Chl': [0, 40],'Cyanobacteria':[0,50],'Diatoms':[0,50],'Dinoflagellates':[0,20],'Flagellates':[0,50],'Phaeocystis':[0,10],'other':[0,50]}
     varlims_coastal = {'temp': [-1.0, 22.], 'salt': [0, 0],'NH4':[0,50],'NO3':[0,250], 'DIN': [0, 0],
-                       'DIP': [0, 0], 'Si':[0, 0], 'Chl': [0, 0],'Cyanobacteria':[0,0],'Diatoms':[0,0],'Dinoflagellates':[0,0],'Flagellates':[0,0],'Phaeocystis':[0,0],'other':[0,0]}
+                       'DIP': [0, 0], 'Si':[0, 0], 'Chl': [0, 0],'Cyanobacteria':[0,0],'Diatoms':[0,60],'Dinoflagellates':[0,0],'Flagellates':[0,0],'Phaeocystis':[0,0],'other':[0,0]}
     varticks_coastal = {'temp': [0, 5, 10, 15, 20], 'salt': [0,10,20,30],
                         'NH4': [0,10,20,30,40,50],'NO3':[0,100,200,300],'DIN':[0,100,200],
-                        'DIP':[0,1,2,3],'Si': [0,50,100,150,200,250],'Chl':[0,10,20,30,40],'Cyanobacteria':[0,10,20,30,40],'Diatoms':[0,10,20,30,40],'Dinoflagellates':[0,5,10,15],'Flagellates':[0,10,20,30,40],'Phaeocystis':[0,2,4,6,8],'other':[0,10,20,30,40]}
+                        'DIP':[0,1,2,3],'Si': [0,50,100,150,200,250],'Chl':[0,10,20,30,40],'Cyanobacteria':[0,10,20,30,40],'Diatoms':[0,10,20,30,40,50],'Dinoflagellates':[0,5,10,15],'Flagellates':[0,10,20,30,40],'Phaeocystis':[0,2,4,6,8],'other':[0,10,20,30,40]}
     axtune=True
     #figure parameters:
     #colnum= len(depthints.keys())
@@ -228,7 +228,10 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
 
                         # axis ticks
                         # define order of magnitude of the data
-                        omag=(round(np.log10(round(ydist)))-1)
+                        if round(ydist)>0:
+                            omag=(round(np.log10(round(ydist)))-1)
+                        else:
+                            omag=0
                         tenpow=10**omag
 
                         # minimum and maximum no. of ticks.
