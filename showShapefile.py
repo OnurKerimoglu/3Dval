@@ -119,7 +119,7 @@ def main(dataroot,yearlist,scenarios,lonlatextent,varns,mos):
                 #ax1 = f.add_subplot(nrows, 3, vari + 7, projection=ccrs.PlateCarree())
                 
                 # add column with differences
-                tmpdiff=amshp[f'{varn}_{scenarios[comparescenarios[0]]}']-amshp[f'{varn}_{scenarios[comparescenarios[1]]}']
+                tmpdiff=amshp[f'{varn}_{scenarios[comparescenarios[1]]}']-amshp[f'{varn}_{scenarios[comparescenarios[0]]}']
                 columndiff=f'{varn}{mos}_diff'
                 amshp[columndiff]=tmpdiff
                 
