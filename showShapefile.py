@@ -147,7 +147,12 @@ def main(dataroot,yearlist,scenarios,lonlatextent,varns,mos):
 def plot_panel(f,nrows,panelindex,amshp,column,vlims,lonlatextent,titlestr):
     ax = f.add_subplot(nrows, 3, panelindex, projection=ccrs.PlateCarree())
     if vlims[0]==vlims[1]:
-        amshp.plot(column = column, legend = True, ax = ax)
+        cmin=abs(amshp[column].min())
+        cmax=abs(amshp[column].max())
+        vmin = -max(cmin,cmax)
+        vmax =  max(cmin,cmax)
+        #print(cmin,cmax)
+        amshp.plot(column = column, legend = True, ax = ax, vmin=vmin, vmax=vmax, cmap=plt.get_cmap("bwr"))
     else:
         amshp.plot(column = column, legend = True, ax = ax, vmin=vlims[0], vmax=vlims[1])
                    
