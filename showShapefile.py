@@ -40,7 +40,9 @@ def main(dataroot,yearlist,scenarios,lonlatextent,varns,mos):
     # adapt figure format to your liking
     figuresize=(20,11)
     dpi=120
-    
+    # inclusion_list=['N1','N2','N3','N4','N5','T1']
+    inclusion_list=['NEA 3/4','NEA 1/26b','transitional waters','NEA 1/26c','NEA5']
+
     # expand this if you want to plot any other variable. Modify if necessary.
     # To put proper variable name above each panel:
     prettytitle = {'Chl': 'Summer Chl-a', 'DIP': 'Winter DIP', 'DIN': 'Winter DIN'}
@@ -88,6 +90,12 @@ def main(dataroot,yearlist,scenarios,lonlatextent,varns,mos):
         # name column
         idcol = "EU_CD_CW"
         areaids = list(amshp[idcol])
+
+        # include areas from inclusion_list
+        nea_type = list(amshp.NEA_TYPE)
+        neaids = list([icell for icell, ntype in enumerate(nea_type) if ntype in inclusion_list])
+
+        amshp = amshp.iloc[neaids, :]
 
         # define figure
         f = plt.figure(figsize=figuresize, dpi=dpi)
