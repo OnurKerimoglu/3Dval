@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import cartopy.io.img_tiles as cimgt
-from general_funcs import getproj,format_date_axis
+from general_funcs import getproj, format_date_axis
 
 class Style:
     def __init__(self,opt='default'):
@@ -25,9 +25,9 @@ class Style:
             self.figwh=[12, 15] #BG2020
             #self.col={'obs':'0.6','sim':['k','r','b','g']}
             self.col={'obs':'0.6','sim':['k','tomato','deepskyblue','darkblue']}
-            self.line={'obs':'None','sim':['-','--','-','--']}
+            self.line={'obs':'None','sim':['-','-','-','--']}
             self.marker={'obs':'o','sim':['None','None','None','None']}
-            self.lw={'obs':1,'sim':[1,1,1,1]}
+            self.lw={'obs':1,'sim':[0.8,1,1,1]}
 
 def stations_plots(plotopts,obs,sim,plotrootpath,statsets,stations,timeint,depthints):
     fnamecode= '_%s-%s' %(timeint[0].year, timeint[1].year)
@@ -80,7 +80,7 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
 
     for stationno,station in enumerate(stations):
         print ('  '+station)
-        if station in ['BOCHTVWTM', 'Bork', 'Buesum', 'DOOVBWT', 'GROOTGND', 'MARSDND', 'Norderelbe', 'Suederpiep', 'Wesermuendung','ZUIDOLWOT']:
+        if station in ['BOCHTVWTM', 'Bork_W_1', 'GE_Bsum', 'DOOVBWT', 'GROOTGND', 'MARSDND', 'GE_Norderelbe', 'GE_Sderpiep', 'WeMu_W1','ZUIDOLWOT']:
             print('coastal')
             varticks = varticks_coastal
             varlims = varlims_coastal
@@ -92,7 +92,7 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
 
             # genereate a new figure, size of which is a function of number of variables (rows) and layers (columns) to be show
             fig = prepfig(S.res, S.figwh, colnum, rownum, timeint)
-            fig.subplots_adjust(hspace=.30, wspace=.2, left=0.15, right=0.7, top=0.75, bottom=0.06)
+            fig.subplots_adjust(hspace=.30, wspace=.2, left=0.15, right=0.95, top=0.75, bottom=0.06)
             # name of the station
             #fig.text(0.76, 0.99, station + '\n$Z_{max}$=%.1f m' % obs[station]['bottom_depth'], verticalalignment='top',
                      #horizontalalignment='right', size=10)
@@ -101,11 +101,12 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
             #ax = plt.axes([0.77, 0.77, 0.22, 0.22]) 
             #markstatonmap(ax, proj, station, obs[station]['lon'], obs[station]['lat'], obs[station]['bottom_depth'])
             #new
-            ax = plt.axes([0.77, 0.77, 0.22, 0.22],projection=ccrs.PlateCarree())
+            # ax = plt.axes([0.77, 0.77, 0.22, 0.22],projection=ccrs.PlateCarree())
+            ax = plt.axes([0.73, 0.78, 0.25, 0.25], projection=ccrs.PlateCarree())
             markstatonmap(ax, 'SENS', station, obs[station]['lon'], obs[station]['lat'], obs[station]['bottom_depth'])
             # if no plot is made, don't save an empty figure: to achieve this track whether any plot is made
             anyplotinfig = False
-            
+            anyplotinaxlist = []
             for varno,varname in enumerate(plotopts['varns']): #in each panel
 
                 #create a panel
@@ -124,16 +125,9 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
                 #plot obs
                 #DT: monsuf moved outside of if-statement, because otherwise it could remain undefined.
                 monsuf=''
-                if obs[station][varname]['presence']:
-                    # limit the months to include
-                    months2keep = [] #[7, 8]
-                    if len(months2keep)>0:
-                        monsuf='_M'+'-'.join(map(str,months2keep))
-                        obs[station][varname][layer] = stationdata_filter_time(obs[station][varname][layer],months2keep)
-                    hset,idset,anyplotinax,anyplotinfig = plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,'obs',ax,
-                                                                        obs[station][varname][layer]['time'],
-                                                                        obs[station][varname][layer]['value'],
-                                                                        timeint,S,'obs')
+                plotobs_switch = (all((sim[-2:] == 'CS') or (sim[-5:] == 'CSwPr')
+                                      for sim in plotopts['sims2plot']) or plotopts['plot_obs_override'])*plotopts['plot_obs_force']
+
                 # plot each sim
                 for simno,simname in enumerate(plotopts['sims2plot']): #enumerate(simset.keys()):
                     if simset[simname][station][varname]['presence']:
@@ -149,21 +143,24 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
                         # annotate skill scores
                         # DT: modified to accomodate different numbers of simulations
                         # - moved "n" into the plot panel, as they are the same for all sims.
-                        if (obs[station][varname]['presence']) and (simset[simname][station][varname]['presence']):
+
+                        if (obs[station][varname]['presence']) and (simset[simname][station][varname]['presence']) and plotobs_switch:
                             skills=get_skillscores(obs[station][varname][layer],simset[simname][station][varname][layer],timeint)
                             if len(plotopts['sims2plot'])>2:
+                                # print(simname,simno,skills['n'])
                                 if (simno==0) and (skills['n'] != 0):
                                     plt.text(0.9,0.9,r'$n:$%d'%(skills['n']),
                                             fontsize=7, ha='left',va='center', transform=ax.transAxes, color=S.col['sim'][simno])
-                                if (simno<=2) and (skills['n'] != 0):
+                                if (simno<=3) and (skills['n'] != 0):
                                     if (len(plotopts['sims2plot']) - 0) == 1:
                                         x =0
                                     else:
-                                        x = 0.35 * simno
+                                        x = 0.25 * simno
                                     plt.text(x, 1.08, r'$B^*$:%3.2f, $\rho$:%3.2f'
                                             %(np.round(skills['B*'] * 100) / 100, np.round(skills['r'] * 100) / 100),
                                             fontsize=7, ha='left',va='center', transform=ax.transAxes, color=S.col['sim'][simno])
-                            elif (simno<2) and (skills['n'] != 0):
+                            # elif (simno<2) and (skills['n'] != 0):
+                            elif (len(plotopts['sims2plot'])<=2) and (skills['n'] != 0):
                                     if (len(plotopts['sims2plot']) - 0) == 1:
                                         x =0
                                     else:
@@ -172,12 +169,24 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
                                             %(np.round(skills['B*'] * 100) / 100, np.round(skills['r'] * 100) / 100, skills['n']),
                                             fontsize=8, ha='left',va='center', transform=ax.transAxes, color=S.col['sim'][simno])
                 #ylabel:varname, unit
+                
+                
+                if obs[station][varname]['presence'] and plotobs_switch:
+                    # limit the months to include
+                    months2keep = [] #[7, 8]
+                    if len(months2keep)>0:
+                        monsuf='_M'+'-'.join(map(str,months2keep))
+                        obs[station][varname][layer] = stationdata_filter_time(obs[station][varname][layer],months2keep)
+                    hset,idset,anyplotinax,anyplotinfig = plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,'obs',ax,
+                                                                        obs[station][varname][layer]['time'],
+                                                                        obs[station][varname][layer]['value'],
+                                                                        timeint,S,'obs')
                 if varname in varlongnames.keys():
                     varlongname=varlongnames[varname]
                 else:
                     varlongname=varname
                 plt.ylabel(varlongname+' ['+varunits[varname]+']',size=8)
-                ax.get_yaxis().set_label_coords(-0.17, 0.5)
+                ax.get_yaxis().set_label_coords(-0.1, 0.5)
 
                 if (axtune) and (varname in varticks.keys()):
                     yticks = varticks[varname]
@@ -196,77 +205,76 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
                             ax.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(25.00))
                     else:
                         # DT: automatic y-axis limits
-                        ymax=0
-                        ymin=9999999
+                        if len(hset)>0:
+                            ymax=0
+                            ymin=9999999
+                            # iterate through all plotted datasets in a panel (obs/sim)
+                            for ni in range(0,len(hset)):
+                                # if maximum of current plot handle is larger than previous max, replace
+                                if np.amax(plt.getp(hset[ni],'ydata'))>ymax:
+                                    ymax=np.amax(plt.getp(hset[ni],'ydata'))
 
-                        # iterate through all plotted datasets in a panel (obs/sim)
-                        for ni in range(0,len(hset)):
-                            # if maximum of current plot handle is larger than previous max, replace
-                            if np.amax(plt.getp(hset[ni],'ydata'))>ymax:
-                                ymax=np.amax(plt.getp(hset[ni],'ydata'))
+                                # if minimum of current plot handle is smaller than previous min, replace
+                                if np.amin(plt.getp(hset[ni],'ydata'))<ymin:
+                                    ymin=np.amin(plt.getp(hset[ni],'ydata'))
 
-                            # if minimum of current plot handle is smaller than previous min, replace
-                            if np.amin(plt.getp(hset[ni],'ydata'))<ymin:
-                                ymin=np.amin(plt.getp(hset[ni],'ydata'))
+                            # range
+                            ydist=ymax-ymin
+                            # margin: 10% of range
+                            ymargin=0.1*ydist
 
-                        # range
-                        ydist=ymax-ymin
-                        # margin: 10% of range
-                        ymargin=0.1*ydist
+                            # apply minimum only to salt (expand if necessary)
+                            if varname=='salt':
+                                # crop lower limit at 0, or reduce lower limit by margin
+                                ymin=np.amax([ymin-ymargin,0])
+                            else:
+                                ymin=0
+                            # expand upper limit by margin
+                            ymax=ymax+ymargin
 
-                        # apply minimum only to salt (expand if necessary)
-                        if varname=='salt':
-                            # crop lower limit at 0, or reduce lower limit by margin
-                            ymin=np.amax([ymin-ymargin,0])
-                        else:
-                            ymin=0
-                        # expand upper limit by margin
-                        ymax=ymax+ymargin
+                            # apply limits
+                            ax.set_ylim([ymin,ymax])
 
-                        # apply limits
-                        ax.set_ylim([ymin,ymax])
+                            # axis ticks
+                            # define order of magnitude of the data
+                            if round(ydist)>0:
+                                omag=(round(np.log10(round(ydist)))-1)
+                            else:
+                                omag=0
+                            tenpow=10**omag
 
-                        # axis ticks
-                        # define order of magnitude of the data
-                        if round(ydist)>0:
-                            omag=(round(np.log10(round(ydist)))-1)
-                        else:
-                            omag=0
-                        tenpow=10**omag
+                            # minimum and maximum no. of ticks.
+                            minnoticks=3
+                            maxnoticks=5
 
-                        # minimum and maximum no. of ticks.
-                        minnoticks=3
-                        maxnoticks=5
+                            # caclulate ticks: from nearest upper integer to minimum, to nearest lower neighbour of maximum,
+                            # in steps of previously calculated powers of ten
+                            yticks=np.array(np.arange(np.ceil(ymin),tenpow*np.floor(ymax/tenpow)+tenpow,tenpow))
 
-                        # caclulate ticks: from nearest upper integer to minimum, to nearest lower neighbour of maximum,
-                        # in steps of previously calculated powers of ten
-                        yticks=np.array(np.arange(np.ceil(ymin),tenpow*np.floor(ymax/tenpow)+tenpow,tenpow))
+                            # apply minimum no. of ticks.
+                            if len(yticks)<minnoticks:
+                                # if there are too few ticks, use lower order of magnitude, result may be more ticks than allowed maximum
+                                yticks=np.array(np.arange(np.ceil(ymin),tenpow*np.floor(ymax/tenpow)+tenpow,10**(omag-1)))
 
-                        # apply minimum no. of ticks.
-                        if len(yticks)<minnoticks:
-                            # if there are too few ticks, use lower order of magnitude, result may be more ticks than allowed maximum
-                            yticks=np.array(np.arange(np.ceil(ymin),tenpow*np.floor(ymax/tenpow)+tenpow,10**(omag-1)))
+                            # apply maximum no. of ticks.
+                            ii=1
+                            if len(yticks)>maxnoticks:
+                                while len(yticks)>maxnoticks:
+                                    ii+=1
+                                    # increase tick interval to reduce no. of tick.
+                                    yticks=np.array(np.arange(np.ceil(ymin),tenpow*np.floor(ymax/tenpow)+tenpow,ii*10**(omag)))
 
-                        # apply maximum no. of ticks.
-                        ii=1
-                        if len(yticks)>maxnoticks:
-                            while len(yticks)>maxnoticks:
-                                ii+=1
-                                # increase tick interval to reduce no. of tick.
-                                yticks=np.array(np.arange(np.ceil(ymin),tenpow*np.floor(ymax/tenpow)+tenpow,ii*10**(omag)))
-
-                        # apply ticks.
-                        ax.set_yticks(yticks)
-
-                        # some cosmetics: get minor ticks.
-                        if (yticks[-1] - yticks[0]) <= 3.0:
-                            ax.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(0.1))
-                        elif (yticks[-1]-yticks[0])<=36:
-                            ax.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(1.00))
-                        elif (yticks[-1]-yticks[0])<=100:
-                            ax.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(5.00))
-                        elif (yticks[-1]-yticks[0])<=500:
-                            ax.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(25.00))
+                            # apply ticks.
+                            ax.set_yticks(yticks)
+                            # some cosmetics: get minor ticks.
+                            if (yticks[-1] - yticks[0]) <= 3.0:
+                                ax.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(0.1))
+                            elif (yticks[-1]-yticks[0])<=36:
+                                ax.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(1.00))
+                            elif (yticks[-1]-yticks[0])<=100:
+                                ax.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(5.00))
+                            elif (yticks[-1]-yticks[0])<=500:
+                                ax.yaxis.set_minor_locator(mpl.ticker.MultipleLocator(25.00))
                         
                 ax.tick_params(axis='y', which='minor', direction='in', labelsize=9)
                 ax.tick_params(axis='y', which='major', direction='out', labelsize=9)
@@ -278,9 +286,15 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
                     ax.set_xticklabels([])
 
                 #add legend
-                if anyplotinax:
-                    #ax = plt.axes([0.6, 0.75, 0.4, 0.15],visible=False) #todo: place the legend in a dedicated axis within the top margin
-                    lgd = ax.legend(handles=hset, labels=idset, loc='center left',fontsize=9, numpoints=1, bbox_to_anchor=(1.02, 0.5))
+                # if anyplotinax:
+                #     #ax = plt.axes([0.6, 0.75, 0.4, 0.15],visible=False) #todo: place the legend in a dedicated axis within the top margin
+                #     lgd = ax.legend(handles=hset, labels=idset, loc='center left',fontsize=9, numpoints=1, bbox_to_anchor=(1.02, 0.5))
+                anyplotinaxlist.append(anyplotinax)
+
+            if any(anyplotinaxlist):
+                #ax = plt.axes([0.6, 0.75, 0.4, 0.15],visible=False) #todo: place the legend in a dedicated axis within the top margin
+                lgd = fig.legend(handles=hset, labels=idset, fontsize=9, numpoints=1, bbox_to_anchor=(0.08, 0.71
+                                                                                                      , 0.25, 0.25))
 
             #save&close the figure
             if not anyplotinfig:
@@ -318,14 +332,15 @@ def get_skillscores(obs,sim,timeint):
     #reduce time
     # tind = np.where((obs['time'] >= timeint[0]) * (obs['time'] <= timeint[1]))[0]
     tind = np.where((np.array(obs['time']) >= timeint[0]) * (np.array(obs['time']) <= timeint[1]))[0]
-    t,o,s=match_time(obs['time'][tind], obs['value'][tind], sim['time'],sim['value'])
+    # t,o,s=match_time(obs['time'][tind], obs['value'][tind], sim['time'],sim['value'])
+    t, o, s = match_time(np.array(obs['time'])[tind], np.array(obs['value'])[tind], sim['time'], sim['value'])
 
     # calculate statistics:
     skills={}
     skills['n']=len(o)
     from scipy.stats import pearsonr
 
-    if len(tind)>1:
+    if len(t)>1 and not any(np.isnan(s)):
         r, p = pearsonr(s, o)
     else:
         r=np.nan
@@ -375,7 +390,7 @@ def plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,id,ax,times,values,timeint
         return (hset,idset,anyplotinax,anyplotinfig)
 
     if seriestype=='obs':
-        h, = ax.plot(times[tind], values[tind], linestyle=S.line['obs'], marker=S.marker['obs'], lw=S.lw['obs'], color=S.col['obs'], mfc=S.col['obs'], mec=S.col['obs'], markersize=3, label=id)
+        h, = ax.plot(np.array(times)[tind], np.array(values)[tind], linestyle=S.line['obs'], marker=S.marker['obs'], lw=S.lw['obs'], color=S.col['obs'], mfc=S.col['obs'], mec=S.col['obs'], markersize=3, label=id)
     else:
         if sno==-1:
             raise(Exception('Simulation # must be provided (sno)'))

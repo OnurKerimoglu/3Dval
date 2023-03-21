@@ -44,6 +44,9 @@ def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,ob
     elif simname[0:4] == 'DCSM':
         print('Accessing DCSM data')
         simdata, simtime, lons, lats, maxz_sim, StInds = get_dcsm_dataF(simf, vars)
+    elif simname[0:3] == 'FSK':
+        print('Accessing FSK data')
+        simdata, simtime, lons, lats, maxz_sim, StInds = get_dcsm_dataF(simf, vars)
 
     #fill the data in correct structure
     sim = {}
@@ -56,8 +59,10 @@ def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,ob
         maxz_obs= obs[station]['bottom_depth']
         if (simname[0:2] == 'GF' or simname[0:3] == 'SNS') and (meth2D == 'pretree'):
             sdata = interp_simdata_on_station(station,simdata,simtime,proj,domaintree,bat,lon,lat,maxz_obs,timeint,depthints,vars)
-        #elif simname[0:6] == 'DCSM' or 'DCSM' in simname[0:6]:
         elif 'DCSM' in simname[0:6]:
+            #sdata = structure_dcsm_data(station,simf,lon,lat,maxz_obs,timeint,depthints,vars)
+            sdata = structure_dcsm_data(station,lon,lat,maxz_obs,timeint,depthints,vars,simdata,simtime,lons,lats,maxz_sim,StInds)
+        elif 'FSK' in simname[0:3]:
             #sdata = structure_dcsm_data(station,simf,lon,lat,maxz_obs,timeint,depthints,vars)
             sdata = structure_dcsm_data(station,lon,lat,maxz_obs,timeint,depthints,vars,simdata,simtime,lons,lats,maxz_sim,StInds)
         else:
@@ -75,7 +80,8 @@ def readsim(paths,simname,readraw,simdomain,meth2D,statsets,timeint,depthints,ob
 def interp_simdata_on_station(station,simdata,time,proj,domaintree,bat,lon,lat,maxz_obs,timeint,depthints,vars,quickzfind=True):
 
     vardims={'ssh':'2D','temp':'3D','salt':'3D','DO':'3D','DOs':'3D','DIN':'3D','DIP':'3D','Si':'3D','NO3':'3D','NH4':'NH4','Chl':'3D',
-             'Cyanobacteria':'3D','Diatoms':'3D','Dinoflagellates':'3D','Flagellates':'3D','Phaeocystis':'3D','other':'3D'}
+             'Cyanobacteria':'3D','Diatoms':'3D','Dinoflagellates':'3D','Flagellates':'3D','Phaeocystis':'3D','other':'3D',
+             'diat_limI': '3D', 'diat_limN': '3D', 'diat_limP': '3D', 'diat_limSi': '3D'}
     # maybe no need to check if other conditions are not satisfied
     XY_in=False
     z_in=True #assume z_in is ok by default

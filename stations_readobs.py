@@ -10,8 +10,9 @@ import numpy as np
 import netCDF4
 import datetime
 from general_funcs import get_botdepth
+from NWDM_funcs import wfsrequest
 
-def readobs(paths,readraw,statsets,stations,timeint,depthints,vars,olf):
+def readobs(paths,readraw,statsets,stations,timeint,depthints,vars,olf,use_NWDM):
     # olf: factor of standard deviation around the mean  within which the values will be kept
     print ('Reading observations:')
 
@@ -32,20 +33,31 @@ def readobs(paths,readraw,statsets,stations,timeint,depthints,vars,olf):
            return obs
 
         # if pickledfile does not exist:
-        obs={}
-        for statset in statsets:
-            print('Filling obs. dataset:%s'%statset)
-            obs=looppath_fill_stationdata_obs(obs,paths,statset,stations,timeint,depthints,vars,olf)
+        obs = {}
+        # obs2 = {}
+        if use_NWDM:
+            for statset in statsets:
+                # obs = wfsrequest(paths, statset, stations, timeint, vars, olf)
+                obs = wfsrequest(stations, timeint, vars, olf, maxz_switch=True)
+        else:
+            for statset in statsets:
+                print('Filling obs. dataset:%s'%statset)
+                obs = looppath_fill_stationdata_obs(obs, paths, statset, stations, timeint, depthints, vars, olf)
 
         #pickle the obs file
-        f=open(pickledobsfile,'wb')
-        pickle.dump((obs,),f) #,protocol=-1
+        f = open(pickledobsfile, 'wb')
+        pickle.dump((obs,), f) #,protocol=-1
         print('Pickled obs file for later use:' + pickledobsfile)
         f.close()
     else:
-        for statset in statsets:
-            print('Filling obs. dataset:%s' % statset)
-            obs = looppath_fill_stationdata_obs({}, paths, statset, stations, timeint, depthints,vars,olf)
+        obs={}
+        if use_NWDM:
+            for statset in statsets:
+                obs = wfsrequest(paths,statset,stations,timeint,vars,olf)
+        else:
+            for statset in statsets:
+                print('Filling obs. dataset:%s' % statset)
+                obs = looppath_fill_stationdata_obs({}, paths, statset, stations, timeint, depthints,vars,olf)
     return obs
 
 def looppath_fill_stationdata_obs(obs,paths,statset,stations,timeint,depthints,vars,olf):
@@ -134,7 +146,7 @@ def fill_stationdata_obs(file,statset,vars,timeint,depthints0,olf):
 
     # check if dates are in
     tind=np.where((time>=timeint[0]) * (time<=timeint[1]))[0]
-
+    
     # check if depths are in
     if list(depth) != [-9999]:
         depthintmin=np.nanmin([dint[0] for dint in depthints.values()]) #find the minimum lower lim of depthints
