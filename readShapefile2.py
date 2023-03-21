@@ -64,7 +64,7 @@ def write_dataframe(path, filename, df, index=False, sep=';', **kwargs):
 
 
 # environment variables
-scenario_list=["CS","28"]
+scenario_list=["CS","28","28M"]
 yearlist=[2017]
 varlistout={'DIN':'DIN','DIP':'DIP','Chl':'CHL'}
 
@@ -140,6 +140,7 @@ crs=str(sfshp.crs)
 
 gdfdata = {'x':x_list,'y':y_list,'area':a_list}
 # create geodataframe
+print(crs,f"EPSG:{crs[-4:]}")
 modshp = gpd.GeoDataFrame(data = gdfdata, geometry = p_list, crs = f"EPSG:{crs[-4:]}")
 modshp = modshp.rename_axis('gridcell' ).reset_index()
 

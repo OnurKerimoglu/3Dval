@@ -202,8 +202,9 @@ def get_2Dtree(lons,lats,proj,Vpy=3):
 def get_botdepth(lon,lat,method='tree'):
     proj = getproj(setup='SNSfull', projpath=os.path.dirname(os.path.realpath(__file__)))
     # proj = getproj(setup = 'NS', projpath = os.path.dirname(os.path.realpath(__file__)))
-    topofile = '/home/onur/WORK/projects/GB/data/topo/topo_HR2.nc'
+    # topofile = '/home/onur/WORK/projects/GB/data/topo/topo_HR2.nc'
     #topofile='/home/onur/WORK/projects/GB/data/topo/topo_GreaterNorthSea.nc'
+    topofile = '/home/daniel/levante_work/IR/Bathymetry/topo_HR2.nc'
     if os.path.exists(topofile):
         nc=netCDF4.Dataset(topofile)
         # depths=nc.variables['depth_average'][:]
@@ -371,7 +372,7 @@ def getproj(setup,projpath=os.path.dirname(os.path.realpath(__file__))):
         # upper right corners are not used, as they are defined in the specific routines, e.g. via cartopy.
         proj = Proj(proj='eqc', lat_0=52., lon_0=5., lat_ts=52)
         #pickle for later use:
-        f=open(pickledproj,'wb')
+        f = open(pickledproj,'wb')
         pickle.dump((proj,),f) #,protocol=-1
         f.close()
     return proj
@@ -464,3 +465,46 @@ def get_var_from_ncf(varn_vl,ncf):
             print('Warning: requested variable not found:'+varn_vl)
 
     return(varF,success)
+
+def grab_data(simset,varlist,plotrootpath,statoutlist):
+    # takes data from simset and writes it out as csv
+    import pandas as pd
+    outdir=os.path.join(plotrootpath,'grab_data')
+    unit = {'Chl':'mgChlm-3', 'DIN': 'mmolNm-3', 'DIP': 'mmolPm-3', 'salt': 'PSU', 'Si': 'mmolSim-3'}
+    if not os.path.exists(outdir):
+        os.mkdir(outdir)
+    for si, sim in enumerate(simset.keys()):
+        print(sim)
+        if sim.split('-')[0] == 'GF':
+            simout = sim.split('-')[1]
+            # if not os.path.exists(os.path.join(outdir, simout)):
+            #     os.mkdir(os.path.join(outdir, simout))
+
+            tmp = simset[sim]
+
+            # for sti, station in enumerate(simset.keys()):
+
+            data = {'station_id': [], 'time': []}
+            for vi, var in enumerate(varlist):
+                data[var]=[]
+            # t_list = []
+            # s_list = []
+
+            for sti, station in enumerate(statoutlist):
+                if station in tmp.keys():
+                    print(station)
+                    for vi, var in enumerate(varlist):
+                        if vi == 0:
+                            time = tmp[station][var]["surface"]["time"]
+                            data['time'].extend(time)
+                            data['station_id'].extend(len(time)*[station])
+                        data[var].extend(list(tmp[station][var]["surface"]["value"]))
+
+            #             value = tmp[station][var]["surface"]["value"]
+            #             df.insert(len(df.columns),f'{var}_{unit[var]}',value)
+            df = pd.DataFrame(data)
+            outfile = f'GPM-{simout}.csv'
+            df.to_csv(os.path.join(outdir, outfile), index=False, sep=';')
+
+
+    print('grab data: exported!')

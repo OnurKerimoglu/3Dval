@@ -156,7 +156,7 @@ if __name__=='__main__':
         #ncfile = '/home/onur/WORK/projects/ICG-EMO/data/GPM/CS/CS_09-14.nc'
         #ncfile = '/home/onur/WORK/projects/ICG-EMO/data/GPM/CS/CS_09-14-PERCDIF-HS1_09-14-REL-CS_09-14.nc'
         #ncfile = '/home/onur/WORK/projects/ICG-EMO/data/GPM/HS1/HS1_09-14-PERCDIF-HS2_09-14-REL-CS_09-14.nc'
-        ncfile = '/work/ku0646/g260105/IR/sns144-GPMEH-G200124-Fnew3-PPPMZZ-vS-ICGEMO-CS-BCdcsmP-rivWS/extract_skillCS_sns144-GPMEH-G200124-Fnew3-PPPMZZ-vS-ICGEMO-CS-BCdcsmP-rivWS.2017-avgout.nc'
+        ncfile = '/work/ku0646/g260105/IR/sns144-GPMEH-G200124-Fnew3-PPPMZZ-vS-ICGEMO-CS-BCdcsmP-rivWS-28M/extract_skillCS_sns144-GPMEH-G200124-Fnew3-PPPMZZ-vS-ICGEMO-CS-BCdcsmP-rivWS-28M.2017-avgout.nc'
 
     if len(sys.argv) > 2:
         varns = [sys.argv[2].split(',')[0]]

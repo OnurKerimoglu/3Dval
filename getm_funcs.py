@@ -22,9 +22,24 @@ def get_getm_dataF(simf,varns,ysl,xsl,getmv='mean',modtype='GF-PPZZ'):
     if modtype == 'GF-maecs':
         vlibfabm={'DOs': 'hzg_maecs_O2_percSat','DIN': 'hzg_maecs_nutN', 'DIP': 'hzg_maecs_nutP', 'Chl': 'hzg_maecs_chl'}
     elif modtype == 'GF-PZ':
-        vlibfabm={'DOs':'EH_abioP_O2_percSat','DIN':'EH_abioP_DINO3+EH_abioP_DINH4','NO3':'EH_abioP_DINO3','NH4':'EH_abioP_DINH4','DIP':'EH_abioP_DIP','Si':'EH_abioP_DISi','Chl':'GPM_phy_Chl'}
+        vlibfabm={'DOs': 'EH_abioP_O2_percSat', 'DIN': 'EH_abioP_DINO3+EH_abioP_DINH4', 'NO3': 'EH_abioP_DINO3',
+                  'NH4': 'EH_abioP_DINH4', 'DIP': 'EH_abioP_DIP', 'Si': 'EH_abioP_DISi', 'Chl': 'GPM_phy_Chl'}
     elif modtype=='GF-PPZZ':
-        vlibfabm={'DOs':'EH_abioP_O2_percSat','DIN':'EH_abioP_DINO3+EH_abioP_DINH4','NO3':'EH_abioP_DINO3','NH4':'EH_abioP_DINH4','DIP':'EH_abioP_DIP','Si':'EH_abioP_DISi','Chl':'total_chlorophyll_calculator_result','Diatoms':'GPM_diat_C','Flagellates':'GPM_nf_C','Phaeocystis':'GPM_pha_C','Dinoflagellates':'GPM_mixo_C'}
+        vlibfabm={'DOs': 'EH_abioP_O2_percSat', 'DIN': 'EH_abioP_DINO3+EH_abioP_DINH4', 'NO3': 'EH_abioP_DINO3',
+                  'NH4': 'EH_abioP_DINH4', 'DIP': 'EH_abioP_DIP', 'Si': 'EH_abioP_DISi',
+                  'Chl': 'total_chlorophyll_calculator_result', 'Diatoms': 'GPM_diat_C', 'Flagellates': 'GPM_nf_C',
+                  'diat_limI': 'GPM_diat_limI', 'diat_limN': 'GPM_diat_limN', 'diat_limP': 'GPM_diat_limP',
+                  'diat_limSi': 'GPM_diat_limSi', 'nf_limI': 'GPM_nf_limI', 'nf_limN': 'GPM_nf_limN',
+                  'nf_limP': 'GPM_nf_limP'}
+    elif modtype=='GF-PPPMZZ':
+        vlibfabm={'DOs': 'EH_abioP_O2_percSat', 'DIN': 'EH_abioP_DINO3+EH_abioP_DINH4', 'NO3': 'EH_abioP_DINO3',
+                  'NH4': 'EH_abioP_DINH4', 'DIP': 'EH_abioP_DIP', 'Si': 'EH_abioP_DISi',
+                  'Chl': 'total_chlorophyll_calculator_result', 'Diatoms': 'GPM_diat_C', 'Flagellates': 'GPM_nf_C',
+                  'Phaeocystis': 'GPM_pha_C', 'Dinoflagellates': 'GPM_mixo_C', 'diat_limI': 'GPM_diat_limI',
+                  'diat_limN': 'GPM_diat_limN', 'diat_limP': 'GPM_diat_limP', 'diat_limSi': 'GPM_diat_limSi',
+                  'nf_limI': 'GPM_nf_limI', 'nf_limN': 'GPM_nf_limN', 'nf_limP': 'GPM_nf_limP',
+                  'pha_limI': 'GPM_pha_limI', 'pha_limN': 'GPM_pha_limN', 'pha_limP': 'GPM_pha_limP',
+                  'mixo_limI': 'GPM_mixo_limI', 'mixo_limN': 'GPM_mixo_limN', 'mixo_limP': 'GPM_mixo_limP'}
     vlib.update(vlibfabm)
 
     try:
@@ -104,8 +119,8 @@ def get_getm_dom_vars(simf,simdomain=''):
     return (lons,lats,bat,ysl,xsl)
 
 #def get_getm_bathymetry_cropped(fname='/home/onur/WORK/projects/GB/data/topo/topo_area_sns.nc',setup='SNS'):
-def get_getm_bathymetry_cropped(fname='/work/ku0646/UBA/Forcing/sns/Topo/topo_area_sns.nc',setup='SNS'):
-#def get_getm_bathymetry_cropped(fname='/home/daniel/levante_work/IR/Bathymetry/topo_area_sns.nc',setup='SNS'):
+# def get_getm_bathymetry_cropped(fname='/work/ku0646/UBA/Forcing/sns/Topo/topo_area_sns.nc',setup='SNS'):
+def get_getm_bathymetry_cropped(fname='/home/daniel/levante_work/IR/Bathymetry/topo_area_sns.nc',setup='SNS'):
     ncB=netCDF4.Dataset(fname)
     ncBv=ncB.variables
     #bathymetry from a topo file

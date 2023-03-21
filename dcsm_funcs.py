@@ -50,7 +50,6 @@ def get_dcsm_dataF(simf,vars,dcsmv='surface'):
                 conv_factor = 1000 / 16  # 1000mg/g*1mmolO/16gO -> mmolO2/m3
             elif units=='(gC/m3)' and varn in ['Flagellates','Phaeocystis','Diatoms','Dinoflagellates']:
                 conv_factor = 1000/12
-                print('bla 52: ',varn,conv_factor)
             simdata[varn] = var*conv_factor
             # multiply depth with -1
             if varn == 'z':
@@ -67,7 +66,10 @@ def get_dcsm_dataF(simf,vars,dcsmv='surface'):
 
     lons=ncf.variables['station_x_coordinate'][:]
     lats = ncf.variables['station_y_coordinate'][:]
-    TotDepths=ncf.variables['TotalDepth'][:,:]
+    try:
+        TotDepths=ncf.variables['TotalDepth'][:, :]
+    except:
+        TotDepths = ncf.variables['salinity'][:, :]*0
     
     if np.ndim(lons)>1:
         print('DCSM coordinates are given in 2D format! Eliminating time dimension')
@@ -78,30 +80,37 @@ def get_dcsm_dataF(simf,vars,dcsmv='surface'):
     
     #construct a station index, i.e., the index that points to the respective station
     StInd = {}
-    for stno in range(0,len(ncf.variables['station_name'])):
-        ststr=ncf.variables['station_name'][stno, :].tostring()
+    bla = [di for di, dim in enumerate(ncf.variables['station_name'].dimensions) if dim == 'stations']
+    stationrange = range(0,ncf.variables['station_name'].shape[bla[0]])
+
+    for stno in stationrange:
+        if bla[0] == 0:
+            ststr=ncf.variables['station_name'][stno, :].tostring()
+        else:
+            ststr = ncf.variables['station_name'][:,stno].tostring()
         stname=str(ststr.decode('ascii').strip().strip('\x00'))
-        if stname=='Nney_W_2':
-            stname='Nney'
-        elif stname=='Bork_W_1':
-            stname='Bork'
-        elif stname=='JaBu_W_1':
-            stname='JaBu'
-        elif stname=='WeMu_W_1':
+        # if stname=='Nney_W_2' or stname=='NneyW21' or stname=='NneyW23':
+        #     stname='Nney'
+        # elif stname=='Bork_W_1' or stname=='BorkW1':
+        #     stname='Bork'
+        # elif stname=='JaBu_W_1':
+            # stname='JaBu'
+        # elif stname=='WeMu_W_1':
             #stname='WeMu'
-            stname='Wesermuendung'
-        elif stname=='220065':
-            stname='Norderelbe'
+            # stname='Wesermuendung2'
+        # elif stname=='WeMu_W_2':
+            #stname='WeMu'
+            # stname='Wesermuendung'
+        if stname=='220065':
+            stname='GE_Norderelbe'
         elif stname=='220052_S':
-            stname='Suederpiep'
+            stname='GE_Sderpiep'
         elif stname=='220052_B':
-            stname='Buesum'
+            stname='GE_Bsum'
         elif stname=='220057':
-            stname='Hoernum_Vortrapptief'
+            stname='GE_Hrnum_Vortrapptief'
         elif stname=='220006':
-            stname='Suedl_Amrum'
-        elif stname=='220065':
-            stname='Norderelbe'
+            stname='GE_Sdl_Amrum'
             
         StInd[stname]=stno
         StInd[stname.encode()]=stno #convert to byte class
@@ -134,7 +143,6 @@ def structure_dcsm_data(station,lon,lat,maxz,timeint,depthints,vars,simdata, tim
     if station in StInds.keys():
         Sind = StInds[station]
         st_in = True
-        print(lon,lons[Sind])
     else:
         print(station,StInds)
         
