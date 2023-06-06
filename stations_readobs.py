@@ -50,10 +50,10 @@ def readobs(paths,readraw,statsets,stations,timeint,depthints,vars,olf,use_NWDM)
         print('Pickled obs file for later use:' + pickledobsfile)
         f.close()
     else:
-        obs={}
+        obs = {}
         if use_NWDM:
             for statset in statsets:
-                obs = wfsrequest(paths,statset,stations,timeint,vars,olf)
+                obs = wfsrequest(paths, statset, stations, timeint, vars, olf)
         else:
             for statset in statsets:
                 print('Filling obs. dataset:%s' % statset)
@@ -93,11 +93,19 @@ def fill_stationdata_obs(file,statset,vars,timeint,depthints0,olf):
         vlib = {'t': 'time', 'x': 'lon', 'y': 'lat', 'z': 'depth', 'temp': 'temp', 'salt': 'sal','DOs': 'DOsat'}
     elif statset in ['BGC']:
         vlib = {'t': 'time', 'x': 'lon', 'y': 'lat', 'z': 'depth', 'Chl': 'chl', 'DIN': 'DIN', 'DIP': 'DIP', 'Si':'Si', 'NO3':'NO3', 'NH4':'NH4'}
+    elif statset in ['PhysNut']:
+        vlib = {'t': 'time', 'x': 'lon', 'y': 'lat', 'z': 'depth', 'Chl': 'chl', 'DIP': 'DIP', 'Si': 'Si', 'NO3': 'NO3',
+                'NH4': 'NH4', 'DIN': 'DIN', 'salt': 'SALT', 'temp': 'TEMP', 'KC': 'KC'}
     elif statset in ['InterReg']:
         vlib = {'t': 'time', 'x': 'lon', 'y': 'lat', 'z': 'depth', 'Chl': 'chl', 'DIP': 'DIP', 'Si':'Si', 'NO3':'NO3', 'NH4':'NH4','DIN':'DIN','salt':'SALT','KC':'KC'}
     elif statset in ['InterRegFG']:
         vlib = {'t': 'time', 'x': 'lon', 'y': 'lat', 'z': 'depth', 'Chl': 'chl', 'DIP': 'DIP', 'Si':'Si', 'NO3':'NO3', 'NH4':'NH4','DIN':'DIN','salt':'SALT','KC':'KC','Cyanobacteria':'Cyanobacteria','Diatoms':'Diatoms','Dinoflagellates':'Dinoflagellates',
                 'Flagellates':'Flagellates','Phaeocystis':'Phaeocystis','other':'other'}
+    elif statset in ['Phyto']:
+        vlib = {'t': 'time', 'x': 'lon', 'y': 'lat', 'z': 'depth', 'Chl': 'chl', 'DIP': 'DIP', 'Si': 'Si', 'NO3': 'NO3',
+                'NH4': 'NH4', 'DIN': 'DIN', 'salt': 'SALT', 'KC': 'KC', 'Cyanobacteria': 'Cyanobacteria',
+                'Diatoms': 'Diatoms', 'Dinoflagellates': 'Dinoflagellates',
+                'Flagellates': 'Flagellates', 'Phaeocystis': 'Phaeocystis', 'other': 'other'}
 
     #variables without depth dimension
     noZDvars = ['ssh']

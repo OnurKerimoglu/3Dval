@@ -120,6 +120,7 @@ def get_getm_dom_vars(simf,simdomain=''):
 
 #def get_getm_bathymetry_cropped(fname='/home/onur/WORK/projects/GB/data/topo/topo_area_sns.nc',setup='SNS'):
 # def get_getm_bathymetry_cropped(fname='/work/ku0646/UBA/Forcing/sns/Topo/topo_area_sns.nc',setup='SNS'):
+# def get_getm_bathymetry_cropped(fname='../Bathymetry/topo_area_sns.nc',setup='SNS'):
 def get_getm_bathymetry_cropped(fname='/home/daniel/levante_work/IR/Bathymetry/topo_area_sns.nc',setup='SNS'):
     ncB=netCDF4.Dataset(fname)
     ncBv=ncB.variables

@@ -28,6 +28,7 @@ class Style:
             self.line={'obs':'None','sim':['-','-','-','--']}
             self.marker={'obs':'o','sim':['None','None','None','None']}
             self.lw={'obs':1,'sim':[0.8,1,1,1]}
+            self.alpha = {'obs': 0.5, 'sim': 1.0}
 
 def stations_plots(plotopts,obs,sim,plotrootpath,statsets,stations,timeint,depthints):
     fnamecode= '_%s-%s' %(timeint[0].year, timeint[1].year)
@@ -42,7 +43,7 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
 
     #variables to plot, definitions
     varlongnames={'temp':'Temperature', 'salt':'Salinity', 'DOs':'O2 sat.', 'DIN':'DIN', 'DIP':'DIP', 'Chl':'Chl','Cyanobacteria':'CYB\n','Diatoms':'DIA\n','Dinoflagellates':'DNF\n','Flagellates':'FLG\n','Phaeocystis':'PHA\n','other':'other\n'}
-    varunits={'temp':u'\N{DEGREE SIGN}C', 'salt':'g/kg', 'DOs':'%', 'DIN':'$\mu$MN', 'NH4':'$\mu$MN', 'NO3':'$\mu$MN', 'Si':'$\mu$MSi', 'DIP':'$\mu$MP', 'Chl':'mg/m$^3$','Cyanobacteria':'mmolC/m$^3$','Diatoms':'mmolC/m$^3$','Dinoflagellates':'mmolC/m$^3$','Flagellates':'mmolC/m$^3$','Phaeocystis':'mmolC/m$^3$','other':'mmolC/m$^3$'}
+    varunits={'temp':u'\N{DEGREE SIGN}C', 'salt':'g/kg', 'DOs':'%', 'DIN':'$\u03BC$MN', 'NH4':'$\u03BC$MN', 'NO3':'$\u03BC$MN', 'Si':'$\u03BC$MSi', 'DIP':'$\u03BC$MP', 'Chl':'mg/m$^3$','Cyanobacteria':'mmolC/m$^3$','Diatoms':'mmolC/m$^3$','Dinoflagellates':'mmolC/m$^3$','Flagellates':'mmolC/m$^3$','Phaeocystis':'mmolC/m$^3$','other':'mmolC/m$^3$'}
     # To use automatic y-axis scaling, set the limits to [0,0].
     #varlims_offshore={'temp':[0,20],'salt':[28,35],'NH4':[0,20],'NO3':[0,60],'DIN':[0,50],
                       #'DIP':[0,2.1], 'Si':[0,50],'Chl':[0,20],'Cyanobacteria':[0,30],'Diatoms':[0,30],'Dinoflagellates':[0,20],'Flagellates':[0,30],'Phaeocystis':[0,10],'other':[0,30]}
@@ -145,7 +146,7 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
                         # - moved "n" into the plot panel, as they are the same for all sims.
 
                         if (obs[station][varname]['presence']) and (simset[simname][station][varname]['presence']) and plotobs_switch:
-                            skills=get_skillscores(obs[station][varname][layer],simset[simname][station][varname][layer],timeint)
+                            skills=get_skillscores(obs[station][varname][layer], simset[simname][station][varname][layer],timeint)
                             if len(plotopts['sims2plot'])>2:
                                 # print(simname,simno,skills['n'])
                                 if (simno==0) and (skills['n'] != 0):
@@ -180,12 +181,13 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
                     hset,idset,anyplotinax,anyplotinfig = plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,'obs',ax,
                                                                         obs[station][varname][layer]['time'],
                                                                         obs[station][varname][layer]['value'],
-                                                                        timeint,S,'obs')
+                                                                        timeint, S, 'obs')
                 if varname in varlongnames.keys():
                     varlongname=varlongnames[varname]
                 else:
                     varlongname=varname
-                plt.ylabel(varlongname+' ['+varunits[varname]+']',size=8)
+                plt.ylabel(varlongname+'\n['+varunits[varname]+']',size=8)
+                ax.get_yaxis().set_label_coords(-0.1, 0.5)
                 ax.get_yaxis().set_label_coords(-0.1, 0.5)
 
                 if (axtune) and (varname in varticks.keys()):
@@ -293,8 +295,10 @@ def stations_plots_ts(plotopts,obs,simset,plotpath,stations,timeint,depthints,fn
 
             if any(anyplotinaxlist):
                 #ax = plt.axes([0.6, 0.75, 0.4, 0.15],visible=False) #todo: place the legend in a dedicated axis within the top margin
-                lgd = fig.legend(handles=hset, labels=idset, fontsize=9, numpoints=1, bbox_to_anchor=(0.08, 0.71
-                                                                                                      , 0.25, 0.25))
+                # lgd = fig.legend(handles=hset, labels=idset, fontsize=9, numpoints=1,
+                #                  bbox_to_anchor=(0.08, 0.71, 0.25, 0.25), bbox_transform=fig.transFigure)
+                 lgd = fig.legend(handles=hset, labels=idset, fontsize=9, numpoints=1,
+                                 bbox_to_anchor=(0.01, 0.82), loc='lower left', bbox_transform=fig.transFigure)
 
             #save&close the figure
             if not anyplotinfig:
@@ -390,7 +394,8 @@ def plot_ts_panel(anyplotinax,anyplotinfig,hset,idset,id,ax,times,values,timeint
         return (hset,idset,anyplotinax,anyplotinfig)
 
     if seriestype=='obs':
-        h, = ax.plot(np.array(times)[tind], np.array(values)[tind], linestyle=S.line['obs'], marker=S.marker['obs'], lw=S.lw['obs'], color=S.col['obs'], mfc=S.col['obs'], mec=S.col['obs'], markersize=3, label=id)
+        h, = ax.plot(np.array(times)[tind], np.array(values)[tind], linestyle=S.line['obs'], marker=S.marker['obs'],
+                     lw=S.lw['obs'], color=S.col['obs'], mfc=S.col['obs'], mec=S.col['obs'], alpha=S.alpha['obs'], markersize=3, label=id)
     else:
         if sno==-1:
             raise(Exception('Simulation # must be provided (sno)'))

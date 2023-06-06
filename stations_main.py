@@ -92,14 +92,16 @@ pathreg = {'onur': {#'GF-Mnm': '/home/onur/WORK/projects/2013/maecs/sns144-M1801
                     'DCSM-CS': '/work/ku0646/g260105/IR/Harmonization/DCSM/DCSM-FM_0_5nm_waq_0000_2014-2017_CS.nc',
                     'DCSM-28m': '/work/ku0646/g260105/IR/Harmonization/DCSM/DCSM-FM_0_5nm_waq_0000_2014-2017_28.nc',
                     #'GF-old': '/home/daniel/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillC_sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223.2015-2017_zSB.nc',
-                    'plotrootpath':'/work/ku0646/g260105/IR/Harmonization/',
+                    'plotrootpath':'/work/ku0646/g260105/UBA/Comparison/',
                     'pickledobspath': './',
-                    'BGC':    '/home/daniel/IR/stations/individual/BGC/',
-                    'BSH':    '/home/daniel/IR/stations/individual/BSH/',
-                    'cosyna': '/home/daniel/IR/stations/COSYNA/proc/nc',
-                    #'InterReg':'/work/ku0646/g260105/IR/stations/InterReg/allNC'
                     'InterReg':'/work/ku0646/g260105/IR/Harmonization/allNC',
-                    'InterRegFG':'/work/ku0646/g260105/IR/Harmonization/allNC'
+                    'InterRegFG':'/work/ku0646/g260105/IR/Harmonization/allNC',
+                    'PhysNut': '/work/ku0646/g260105/UBA/Comparison/allNC',
+                    'Phyto': '/work/ku0646/g260105/UBA/Comparison/allNC',
+                    'SNS-NEU-CS': '/work/ku0598/g260105/sns144-EH-ERA5-4g-NEU-CS/extract_skillMphysC_sns144-EH-ERA5-4g-NEU-CS.2014-2017_S10.nc',
+                    'SNS-NEC-CS': '/work/ku0598/g260105/sns144-EH-ERA5-4g-NEC-CS/extract_skillMphysC_sns144-EH-ERA5-4g-NEC-CS.2014-2017_S10.nc',
+                    'SNS-GCU-CS': '/work/ku0598/g260105/sns144-EH-ERA5-4g-GCU-CS/extract_skillMphysC_sns144-EH-ERA5-4g-GCU-CS.2014-2017_S10.nc',
+                    'SNS-GCC-CS': '/work/ku0598/g260105/sns144-EH-ERA5-4g-GCC-CS/extract_skillMphysC_sns144-EH-ERA5-4g-GCC-CS.2014-2017_S10.nc'
                     },
         
          'daniel': {
@@ -116,8 +118,8 @@ pathreg = {'onur': {#'GF-Mnm': '/home/onur/WORK/projects/2013/maecs/sns144-M1801
                     'FSK-CSwPr': '/home/daniel/levante_work/IR/Harmonization/FSK/FSK_waq_2017_CSwPr_daily.nc',
                     'FSK-28mwPr': '/home/daniel/levante_work/IR/Harmonization/FSK/FSK_waq_2017_2o8wPr_daily.nc',
                     #'GF-old': '/home/daniel/IR/sns144-GPMEH-G200124-Fnew3-PPZZSi-vS-P191223-OREF-IR-BCc/extract_skillC_sns144-GPMEH-G191216-Fnew3-PPZZSi-vS-P191223.2015-2017_zSB.nc',
-                    'plotrootpath':'/home/daniel/levante_work/IR/Harmonization/',
-                    'pickledobspath': '/home/daniel/levante_work/IR/Harmonization/allNC',
+                    'plotrootpath':'/home/daniel/levante_work/UBA/Comparison/',
+                    'pickledobspath': '/home/daniel/levante_work/UBA/Comparison/allNC',
                     'GF-CSl':  '/home/daniel/levante_work2/sns144-GPMEH-G200124-Fnew3-PPPMZZ-vS-ICGEMO-CS-BCdcsmP-rivWS-2t/extract_var2C_sns144-GPMEH-G200124-Fnew3-PPPMZZ-vS-ICGEMO-CS-BCdcsmP-rivWS-2t.2017.nc',
                     'GF-28ml': '/home/daniel/levante_work2/sns144-GPMEH-G200124-Fnew3-PPPMZZ-vS-ICGEMO-CS-BCdcsmP-rivWS-28/extract_var2C_sns144-GPMEH-G200124-Fnew3-PPPMZZ-vS-ICGEMO-CS-BCdcsmP-rivWS-28.2017.nc',
                     'GF-HS1l': '/home/daniel/levante_work2/sns144-GPMEH-G200124-Fnew3-PPPMZZ-vS-ICGEMO-HS1-BCdcsmP-rivWS/extract_var2C_sns144-GPMEH-G200124-Fnew3-PPPMZZ-vS-ICGEMO-HS1-BCdcsmP-rivWS.2017.nc',
@@ -127,23 +129,33 @@ pathreg = {'onur': {#'GF-Mnm': '/home/onur/WORK/projects/2013/maecs/sns144-M1801
                     'InterReg':'/home/daniel/levante_work/IR/Harmonization/allNC',
                     'InterRegFG':'/home/daniel/levante_work/IR/Harmonization/allNC',
                     'InterRegFGlim-diat':'/home/daniel/levante_work/IR/Harmonization/allNC',
+                    'PhysNut': '/home/daniel/levante_work/UBA/Comparison/allNC',
+                    'Phyto': '/home/daniel/levante_work/UBA/Comparison/allNC',
                     # 'InterReg':'/home/daniel/levante_work/IR/Harmonization/NWDM',
                     # 'InterRegFG':'/home/daniel/levante_work/IR/Harmonization/NWDM'
                     'SNS-r': '/home/daniel/levante_work/IR/sns-oe/simout-gpmeh/sns144-r/extract_skillMphysC_sns144-r.2014-2017_S10.nc',
                     'SNS-t2': '/home/daniel/levante_work/IR/sns-oe/simout-gpmeh/sns144-t2/extract_skillMphysC_sns144-t2.2014-2017_S10.nc',
                     'SNS-t4': '/home/daniel/levante_work/IR/sns-oe/simout-gpmeh/sns144-t4/extract_skillMphysC_sns144-t4.2014-2017_S10.nc',
+                    'SNS-t6': '/home/daniel/levante_work2/sns144-t6/extract_skillMphysC_sns144-t6.2014-2017_S10.nc',
+                    'SNS-t8': '/home/daniel/levante_work2/sns144-t8/extract_skillMphysC_sns144-t8.2014-2017_S10.nc',
                     'SNS-2g-CS': '/home/daniel/levante_work/IR/sns-oe/simout-gpmeh/sns144-2g-CS/extract_skillMphysC_sns144-2g-CS.2014-2017_S10.nc',
                     'SNS-4g-CS': '/home/daniel/levante_work/IR/sns-oe/simout-gpmeh/sns144-4g-CS/extract_skillMphysC_sns144-4g-CS.2014-2017_S10.nc',
                     'SNS-2g-CS-NEC': '/home/daniel/levante_work/IR/sns-oe/simout-gpmeh/sns144-2g-CS-NEC/extract_skillMphysC_sns144-2g-CS-NEC.2014-2017_S10.nc',
-                    'SNS-4g-CS-NEC': '/home/daniel/levante_work/IR/sns-oe/simout-gpmeh/sns144-4g-CS-NEC/extract_skillMphysC_sns144-4g-CS-NEC.2014-2017_S10.nc'
+                    'SNS-4g-CS-NEC': '/home/daniel/levante_work/IR/sns-oe/simout-gpmeh/sns144-4g-CS-NEC/extract_skillMphysC_sns144-4g-CS-NEC.2014-2017_S10.nc',
+                    'SNS-meteo-t1': '/home/daniel/levante_work/IR/sns-oe/simout-gpmeh/sns144-meteo-t1/extract_skillMphysC_sns144-meteo-t1.2014-2017_S10.nc',
+                    'SNS-NEC-CS': '/home/daniel/levante_work2/sns144-EH-ERA5-4g-NEC-CS/extract_skillMphysC_sns144-EH-ERA5-4g-NEC-CS.2014-2017_S10.nc',
+                    'SNS-NEU-CS': '/home/daniel/levante_work2/sns144-EH-ERA5-4g-NEU-CS/extract_skillMphysC_sns144-EH-ERA5-4g-NEU-CS.2014-2017_S10.nc',
+                    'SNS-GCU-CS': '/home/daniel/levante_work2/sns144-EH-ERA5-4g-GCU-CS/extract_skillMphysC_sns144-EH-ERA5-4g-GCU-CS.2014-2017_S10.nc',
+                    'SNS-GCC-CS': '/home/daniel/levante_work2/sns144-EH-ERA5-4g-GCC-CS/extract_skillMphysC_sns144-EH-ERA5-4g-GCC-CS.2014-2017_S10.nc',
+                    'SNS-JT3-CS': '/home/daniel/levante_work2/sns144-EH-ERA5-4g-JT3-CS/extract_skillMphysC_sns144-EH-ERA5-4g-JT3-CS.2014-2017_S10.nc'
                     }
            }
 
 def main(modtype,modfname,statsets,yint):
     #PARAMETERS:
     # general
-    # user='g260105' #daniel,g260105,g260108,onur
-    user = 'daniel'
+    user='daniel' #daniel,g260105,g260108,onur
+    #user = 'daniel'
     vars_default = ['temp', 'salt', 'DOs', 'DIN', 'DIP', 'Chl']
     depthints={'surface': [0, 10]} #,'bottom':[10,0]} #for bottom, depthint is relative to bottom depth
     #timeint = [datetime.datetime(2012, 1, 1,0,0,0), datetime.datetime(2013, 12, 31,23,59,59)]
@@ -151,8 +163,9 @@ def main(modtype,modfname,statsets,yint):
     # regarding observations.
     if len(statsets)==0:
        #statsets = ['cosyna', 'BSH', 'BGC']
-       statsets = ['InterRegFG']
-       # statsets = ['InterReg']
+       #statsets = ['PhysNut']
+       # statsets = ['Phyto']
+       statsets = ['InterReg']
        #statsets = ['InterRegFGlim-diat']
        #stations = ['Ems', 'Deutsche Bucht','NBII']
        #stations = ['Cuxhaven','HPA-Elbe']
@@ -165,11 +178,15 @@ def main(modtype,modfname,statsets,yint):
        #vars=['DOs']
        vars=['temp', 'salt'] #,'DOs']
     elif len(statsets)==1 and statsets[0]=='BGC':
-       vars=['DIN', 'DIP', 'Si', 'Chl']
-    elif len(statsets)==1 and statsets[0]=='InterReg':
+       vars=['DIN', 'DIP', 'Si', 'Chl','DO']
+    elif len(statsets)==1 and statsets[0]=='PhysNut':
+       vars = ['salt', 'temp', 'DIN', 'DIP', 'Si', 'Chl']
+    elif len(statsets)==1 and statsets[0] == 'InterReg':
        #vars=['salt','DIN','DIP','Si','Chl']
        vars=['salt', 'DIN', 'DIP', 'Si', 'Chl']
     elif len(statsets)==1 and statsets[0]=='InterRegFG':
+       vars=['Chl', 'Diatoms', 'Flagellates', 'Dinoflagellates', 'Phaeocystis']#'Cyanobacteria','other']
+    elif len(statsets)==1 and statsets[0]=='Phyto':
        vars=['Chl', 'Diatoms', 'Flagellates', 'Dinoflagellates', 'Phaeocystis']#'Cyanobacteria','other']
        # vars=['Chl', 'Diatoms', 'Flagellates']#'Cyanobacteria','other']
     elif len(statsets) == 1 and statsets[0] == 'InterRegFGlim-diat':
@@ -186,7 +203,11 @@ def main(modtype,modfname,statsets,yint):
     # sims2plot = ['SNS-2g-CS-NEC', 'SNS-4g-CS-NEC']
     # sims2plot = ['SNS-2g-CS', 'SNS-2g-CS-NEC']
     # sims2plot = ['SNS-4g-CS', 'SNS-4g-CS-NEC']
-    sims2plot = ['SNS-2g-CS', 'SNS-2g-CS-NEC', 'SNS-4g-CS', 'SNS-4g-CS-NEC']
+    # sims2plot = ['SNS-2g-CS', 'SNS-2g-CS-NEC', 'SNS-4g-CS', 'SNS-4g-CS-NEC']
+    # sims2plot = ['SNS-4g-CS-NEC', 'SNS-meteo-t1']
+    # sims2plot = ['SNS-4g-CS-NEC', 'SNS-EH-ERA5-4g-NEC-CS', 'SNS-t6']
+    # sims2plot = ['SNS-4g-CS-NEC', 'SNS-t6']
+    #sims2plot = ['SNS-4g-CS', 'SNS-t4']
     # sims2plot=['DCSM-CS', 'GF-CS']
     # sims2plot=['GF-CS', 'FSK-CS', 'FSK-CSwPr']
     # sims2plot=['DCSM-28m','GF-28m', 'GF-28o']
@@ -195,10 +216,9 @@ def main(modtype,modfname,statsets,yint):
     # sims2plot=['GF-CS','GF-HS1','GF-HS2']
     # sims2plot=['DCSM-CS','DCSM-28m']
     # sims2plot = ['SNS-r', 'SNS-t4']
-    #sims2plot = ['GF-v3-jt3','GF-v3-bat','GF-v3-sat']
-    #sims2plot=['GF-ref', 'GF-R12', 'GF-M12', 'GF-W12']
-    #sims2plot= ['GF-PPZZ-fS', 'GF-PPZZ-vS']
-    #sims2plot = ['GF-Mnm','GF-Mfc','GF-Mvc'] #'GF-c100','GF-ref'] #,'GF-M13R12','GF-M12R13']
+    # sims2plot = ['SNS-NEU-CS', 'SNS-NEC-CS', 'SNS-GCU-CS', 'SNS-GCC-CS']
+    # sims2plot = ['SNS-JT3-CS', 'SNS-GCU-CS', 'SNS-GCC-CS']
+    sims2plot = ['SNS-GCC-CS', 'SNS-t8']
     readsimraw = False #i.e., if the pickle file should be ignored
     readobsraw = False #i.e., if the pickle file should be ignored
     simdomain = ''
@@ -209,7 +229,11 @@ def main(modtype,modfname,statsets,yint):
     pathreg_u = pathreg[user]
     
     #READ OBSERVATIONS
-    use_NWDM = False
+    use_NWDM = True
+    # if use_NWDM:
+    #     readsimraw = True #i.e., if the pickle file should be ignored
+    #     readobsraw = True #i.e., if the pickle file should be ignored
+
     obs = SRO.readobs(pathreg_u, readobsraw, statsets, stations, timeint, depthints, vars, olf, use_NWDM)
     
     if not modfname == '':

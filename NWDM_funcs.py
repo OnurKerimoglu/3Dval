@@ -14,7 +14,7 @@ from general_funcs import get_botdepth
 #                python -m pip install git+https://github.com/Deltares/dfm_tools
 from WQ_tools.nwdmFunctions import wfsbuild, readUrl
 from WQ_tools.dwaqFunctions import get_modkey, get_modTime
-from WQ_tools.plotFunctions import plotTS_modelNWDM
+#from WQ_tools.plotFunctions import plotTS_modelNWDM  # Apparent compatibility issue
 
 # -*- coding: utf-8 -*-
 """
@@ -201,7 +201,13 @@ varDict_TS = {
                  'lab_vars': 'Salinity (g/kg)',
                  'out_vars': 'sal',
                  'conv_vars': 1.,
-                 'depth': ['sea level', 'unknown']}
+                 'depth': ['sea level', 'unknown']},
+    'temperature': {'mod_vars': 'temperature',
+                    'p35code': 'WATERTEMP',
+                    'lab_vars': 'Temperature (celcius)',
+                    'out_vars': 'temp',
+                    'conv_vars': 1.,
+                    'depth': 'sea level'}
 }
 
 # dictionary translating NWDM p35 names to local variable names

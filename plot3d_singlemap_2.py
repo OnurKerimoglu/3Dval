@@ -70,36 +70,53 @@ def import_csv(path, file, sep=';', **kwargs):
 
 # central file names and folders
 # dataroot = "/work/ku0646/g260105/IR/"
-dataroot = "/home/daniel/levante_work/IR/"
+# dataroot = "/home/daniel/levante_work/IR/"
+dataroot = "/home/daniel/levante_work2/"
 
 # "datafiles" needs to be with lower case "d"
 # dir_obs='/work/ku0646/UBA/obsdata/reprocessed_ICES/'
 # dir_obs=f'{dataroot}/Harmonization/reprocessed_ICES/'
 # dir_obs = f'{dataroot}/Harmonization/NWDMdata_InterregStations_20142017/datafiles/'
-dir_obs = f'{dataroot}Harmonization/NWDM/datafiles/'
+dir_obs = f'/home/daniel/levante_work/IR/Harmonization/NWDM/datafiles/'
 
 # central plotting switches (CHANGE_HERE):
 cbarorient = 'horizontal'
 figuresize = (11.69, 8.27)
 dpi = 120
+NPPR_annual = True
 
-plotobslist = ['r', 't2', 't4']
+plotobslist = ['r', 't2', 't4', 't8', '2g-CS', '4g-CS', '2g-CS-NEC', '4g-CS-NEC',
+               'EH-ERA5-4g-NEU-CS', 'EH-ERA5-4g-NEC-CS', 'EH-ERA5-4g-GCU-CS', 'EH-ERA5-4g-GCC-CS', 'EH-ERA5-4g-JT3-CS']
 # scenarios
-scenout = {'2t': 'CS', '28': '2.8m', '28M': '2.8o', 'HS1': 'HS1', 'HS2': 'HS2','r': 'r', 't2': 't2', 't4':'t4'}
+scenout = {'2t': 'CS', '28': '2.8m', '28M': '2.8o', 'HS1': 'HS1', 'HS2': 'HS2','r': 'r', 't2': 't2', 't4': 't4', 't8': 't8',
+           '2g-CS': '2g-CS', '4g-CS': '4g-CS', '2g-CS-NEC': '2g-CS-NEC', '4g-CS-NEC': '4g-CS-NEC',
+           'EH-ERA5-4g-NEU-CS': 'NEU-CS', 'EH-ERA5-4g-NEC-CS': 'NEC-CS', 'EH-ERA5-4g-GCU-CS': 'GCU-CS',
+           'EH-ERA5-4g-GCC-CS': 'GCC-CS', 'EH-ERA5-4g-JT3-CS': 'JT3-CS'}
 scenoutfolders = {'2t': 'CS', '28': '28', '28M': '28M', 'HS1': 'HS1', 'HS2': 'HS2',
-                  'r': 'sns144-r', 't2': 'sns144-t2', 't4': 'sns144-t4'}
+                  'r': 'sns144-r', 't2': 'sns144-t2', 't4': 'sns144-t4', 't8': 'sns144-t8',
+                  '2g-CS': 'sns144-2g-CS', '4g-CS': 'sns144-4g-CS',
+                  '2g-CS-NEC': 'sns144-2g-CS-NEC', '4g-CS-NEC': 'sns144-4g-CS-NEC',
+                  'EH-ERA5-4g-NEU-CS': 'sns144-EH-ERA5-4g-NEU-CS', 'EH-ERA5-4g-NEC-CS': 'sns144-EH-ERA5-4g-NEC-CS',
+                  'EH-ERA5-4g-GCU-CS': 'sns144-EH-ERA5-4g-GCU-CS', 'EH-ERA5-4g-GCC-CS': 'sns144-EH-ERA5-4g-GCC-CS',
+                  'EH-ERA5-4g-JT3-CS': 'sns144-EH-ERA5-4g-JT3-CS'}
 
-unitdict = {'Chl': '$\mu g/l$', 'DIN': '$\mu MN$', 'DIP': '$\mu MP$', 'salt': 'PSU'}
+unitdict = {'Chl': '$\mu g/l$', 'DIN': '$\mu MN$', 'DIP': '$\mu MP$', 'salt': 'PSU', 'NPPR': 'mmol C m-2 d-1'}
+if NPPR_annual:
+    unitdict['NPPR'] = 'mg C m-2 a-1'
 prettytitle = {'Chl': 'summer mean Chl-a', 'DIP': 'winter mean DIP', 'DIN': 'winter mean DIN',
-               'salt': 'annual mean salinity'}
-par_bounds_rel = {'Chl': [-25, 30, 5], 'DIN': [-50, 60, 10], 'DIP': [-2.5, 3, 0.5], 'salt': [15, 36, 3]}
-lim_vars = {'Chl': 20, 'DIN': 100, 'DIP': 2, 'salt': 33}
-cb_interval = {'Chl': 2, 'DIN': 10, 'DIP': 0.2, 'salt': 3}
+               'salt': 'annual mean salinity', 'NPPR': 'net primary production'}
+par_bounds_rel = {'Chl': [-25, 30, 5], 'DIN': [-50, 60, 10], 'DIP': [-2.5, 3, 0.5], 'salt': [15, 36, 3], 'NPPR': [15, 36, 3]}
+lim_vars = {'Chl': 25, 'DIN': 100, 'DIP': 2, 'salt': 33, 'NPPR': 120}
+cb_interval = {'Chl': 2.5, 'DIN': 10, 'DIP': 0.2, 'salt': 3, 'NPPR': 10}
+if NPPR_annual:
+    lim_vars['NPPR'] = 500
+    cb_interval['NPPR'] = 50
 physvars = ['temp', 'salt']
 
 # Plot extent
-ext = {'SNS': {'lat': [52.5, 56.], 'lon': [4., 9.]},
-       'FSK': {'lat': [52.5, 54., ], 'lon': [5., 7.5]}}
+# ext = {'SNS': {'lat': [52.5, 56.], 'lon': [4., 9.]},
+#        'FSK': {'lat': [52.5, 54., ], 'lon': [5., 7.5]}}
+ext = {'SNS': {'lat': [52.5, 56.], 'lon': [4., 9.]}}
 
 
 def main(runid, varns, plfpath):
@@ -107,24 +124,38 @@ def main(runid, varns, plfpath):
     # open data file and create variables object
     simroot = f"sns144-{runid}"
 
-    ncfile1 = f"{dataroot}{simroot}/extract_MphysCS_{simroot}.2017-avgout.nc"
-    nc1 = netCDF4.Dataset(ncfile1)
-    ncv1 = nc1.variables
+    if 'temp' in varns or 'salt' in varns:
+        ncfile1 = f"{dataroot}{simroot}/extract_MphysCS_{simroot}.2017-avgout.nc"
+        nc1 = netCDF4.Dataset(ncfile1)
+        ncv1 = nc1.variables
+        lons = ncv1['lon'][:]
+        lats = ncv1['lat'][:]
 
-    ncfile2 = f"{dataroot}{simroot}/extract_skillCS_{simroot}.2017-avgout.nc"
-    nc2 = netCDF4.Dataset(ncfile2)
-    ncv2 = nc2.variables
+    if 'Chl' in varns or 'DIN' in varns or 'DIP' in varns:
+        ncfile2 = f"{dataroot}{simroot}/extract_skillCS_{simroot}.2017-avgout.nc"
+        nc2 = netCDF4.Dataset(ncfile2)
+        ncv2 = nc2.variables
+        lons = ncv2['lon'][:]
+        lats = ncv2['lat'][:]
 
-    lons = ncv1['lon'][:]
-    lats = ncv1['lat'][:]
+    if 'NPPR' in varns:
+        ncfile3 = f"{dataroot}{simroot}/extract_RintC_{simroot}.2017-avgout.nc"
+        nc3 = netCDF4.Dataset(ncfile3)
+        ncv3 = nc3.variables
+        lons = ncv3['lon'][:]
+        lats = ncv3['lat'][:]
+
 
     for e, coords in ext.items():
         for vari, varn in enumerate(varns):
 
             if varn in physvars:
                 ncv = ncv1
+            elif varn=='NPPR':
+                ncv = ncv3
             else:
                 ncv = ncv2
+
             print('varn: ' + varn)
             f = plt.figure(figsize=figuresize, dpi=dpi)
             spec = GridSpec(1, 1, figure=f)
@@ -160,11 +191,14 @@ def main(runid, varns, plfpath):
                 var1 = np.squeeze(ncv[varn][:, :])
             var = var1
 
+            if varn == 'NPPR' and NPPR_annual:
+                var = var*365*1.2e-2
+
             # pcf = ax1.contourf(lons, lats, var, transform=ccrs.PlateCarree(),
             #                    levels=bounds, norm=norm, cmap=cmp_new, extend=extopt)
             pcf = ax1.pcolor(lons, lats, var, transform=ccrs.PlateCarree(), cmap=cmap, norm=norm)
 
-            if runid in plotobslist:
+            if runid in plotobslist and not varn == 'NPPR':
                 # Plot Observations
                 # obs_val, obs_lat, obs_lng = get_obs(varn)
                 # ax1.scatter(obs_lng, obs_lat, c=obs_val, cmap=cmap,
@@ -179,7 +213,7 @@ def main(runid, varns, plfpath):
                 else:
                     gdfobs = get_obs_avg(varn, dir_obs, avgwindow='seasonal', avgmode='mean',
                                          years=list(range(2017, 2017 + 1)))
-                    gdfobs.plot(ax=ax1, column='value', cax=cax, linewidths=1.5, edgecolor='black', cmap=cmap,
+                    gdfobs.plot(ax=ax1, column='value', cax=cax, linewidths=1.5, edgecolor='white', cmap=cmap,
                                 norm=norm)
 
             # define extent of map
@@ -240,7 +274,10 @@ def main(runid, varns, plfpath):
             ax1.set_title(titlestr, size=11)
 
             # f.subplots_adjust(wspace=0.15, hspace=0.7)
-            plfname = f"conc_{varn}_{scenoutstr.replace('.', '_')}_{e}.png"
+            if not NPPR_annual:
+                plfname = f"conc_{varn}_{scenoutstr.replace('.', '_')}_{e}.png"
+            else:
+                plfname = f"conc_{varn}_annual_{scenoutstr.replace('.', '_')}_{e}.png"
             # if plfpath == '':
             #     plfpath = os.path.join(os.path.dirname(ncfile), 'varmap')
             # if not os.path.isdir(plfpath):
@@ -250,7 +287,7 @@ def main(runid, varns, plfpath):
                 os.makedirs(plfpath)
 
             plt.savefig(os.path.join(plfpath, plfname), dpi=dpi, bbox_inches='tight')
-            print(f'{plfname} saved!')
+            print(f'{os.path.join(plfpath, plfname)} saved!')
             plt.close(f)
 
 
@@ -266,12 +303,22 @@ if __name__ == '__main__':
         # scen = "HS1"
         # scen = "HS2"
         # runid = "r"
-        runid = "t4"
-
+        # runid = "t4"
+        runid = "t8"
+        # runid = '2g-CS'
+        # runid = '4g-CS'
+        # runid = '2g-CS-NEC'
+        # runid = '4g-CS-NEC'
+        # runid = 'EH-ERA5-4g-NEU-CS'
+        # runid = 'EH-ERA5-4g-NEC-CS'
+        # runid = 'EH-ERA5-4g-GCU-CS'
+        # runid = 'EH-ERA5-4g-GCC-CS'
+        # runid = 'EH-ERA5-4g-JT3-CS'
     if len(sys.argv) > 2:
         varns = [sys.argv[2].split(',')[0]]
     else:
-        varns = ['Chl', 'DIN', 'DIP']
+        varns = ['Chl', 'DIN', 'DIP', 'NPPR']
+        # varns = ['NPPR']
         # varns = ['salt']
 
     if len(sys.argv) > 3:

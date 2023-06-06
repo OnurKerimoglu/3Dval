@@ -22,12 +22,41 @@ import cartopy.feature as cfeature
 # functions
 def define_varlims(scen1, scen2, var):
     if 'HS' not in scen1 and 'HS' not in scen2:
-        # par_bounds_rel = {'Chl': [-25, 30, 5], 'DIN': [-50, 60, 10], 'DIP': [-2.5, 3, 0.5]}
-        # # par_bounds_rel = {'Chl': [-50, 60, 5], 'DIN': 2 * [-100, 120, 20], 'DIP': 2 * [-5, 6, 1]}
-        lim_vars = {'Chl': 100, 'DIN': 50, 'DIP': 50}
-        cb_interval_dict = {'Chl': 10, 'DIN': 5, 'DIP': 5}
+        # 2g vs 4g
+        # lim_vars = {'Chl': 60, 'DIN': 60, 'DIP': 30}
+        # cb_interval_dict = {'Chl': 10, 'DIN': 10, 'DIP': 5}
+        # cbticks_dict = {'Chl': 10, 'DIN': 10, 'DIP': 5}
+        # JT3 vs NEC
+        # lim_vars = {'Chl': 60, 'DIN': 400, 'DIP': 150, 'salt': 30, 'temp': 30}
+        # cb_interval_dict = {'Chl': 10, 'DIN': 40, 'DIP': 15, 'salt': 5, 'temp': 5}
+        # cbticks_dict = {'Chl': 10, 'DIN': 80, 'DIP': 30, 'salt': 5, 'temp': 5}
+
+        # COSMO vs ERA5
+        # lim_vars = {'Chl': 15, 'DIN': 70, 'DIP': 60, 'salt': 6, 'temp': 12}
+        # cb_interval_dict = {'Chl': 3, 'DIN': 10, 'DIP': 10, 'salt': 1, 'temp': 2}
+        # cbticks_dict = {'Chl': 3, 'DIN': 10, 'DIP': 10, 'salt': 2, 'temp': 2}
+
+        # with EHsed vs without
+        # lim_vars = {'Chl': 70, 'DIN': 800, 'DIP': 80, 'salt': 30, 'temp': 30}
+        # cb_interval_dict = {'Chl': 10, 'DIN': 100, 'DIP': 10, 'salt': 5, 'temp': 5}
+        # cbticks_dict = {'Chl': 10, 'DIN': 100, 'DIP': 20, 'salt': 5, 'temp': 5}
+
+        # SAT corrected vs uncorrected
+        # lim_vars = {'Chl': 50, 'DIN': 300, 'DIP': 100, 'NPPR': 35, 'salt': 5, 'temp': 5}
+        # cb_interval_dict = {'Chl': 5, 'DIN': 30, 'DIP': 10, 'NPPR': 5, 'salt': 1, 'temp': 1}
+        # cbticks_dict = {'Chl': 10, 'DIN': 60, 'DIP': 20, 'NPPR': 5, 'salt': 1, 'temp': 1}
+
+        # JT3 vs SAT
+        # lim_vars = {'Chl': 50, 'DIN': 200, 'DIP': 150, 'NPPR': 60, 'salt': 5, 'temp': 5}
+        # cb_interval_dict = {'Chl': 5, 'DIN': 20, 'DIP': 15, 'NPPR': 10, 'salt': 1, 'temp': 1}
+        # cbticks_dict = {'Chl': 10, 'DIN': 40, 'DIP': 30, 'NPPR': 10, 'salt': 1, 'temp': 1}
+
+        # Nechad vs GlobColour
+        lim_vars = {'Chl': 20, 'DIN': 60, 'DIP': 25, 'NPPR': 20, 'salt': 5, 'temp': 5}
+        cb_interval_dict = {'Chl': 4, 'DIN': 5, 'DIP': 2.5, 'NPPR': 4, 'salt': 1, 'temp': 1}
+        cbticks_dict = {'Chl': 4, 'DIN': 10, 'DIP': 5, 'NPPR': 4, 'salt': 1, 'temp': 1}
+
         cb_interval = int(cb_interval_dict[var])
-        cbticks_dict = {'Chl': 10, 'DIN': 10, 'DIP': 10}
         cbticks = cbticks_dict[var]
     elif ('HS' in scen1 and not 'HS' in scen2) or ('HS' not in scen1 and 'HS' in scen2):
         # par_bounds_rel = {'Chl': [-25, 30, 5], 'DIN': [-50, 60, 10], 'DIP': [-2.5, 3, 0.5]}
@@ -84,13 +113,16 @@ def get_cmap(name, bins=256):
 
 
 # central file names and folders
-# dataroot = "/work/ku0646/g260105/IR/"
-dataroot = "/home/daniel/levante_work/IR/"
+# dataroot = "/work/ku0598/g260105/"
+# dataroot = "/home/daniel/levante_work/IR/"
+dataroot = "/home/daniel/levante_work2/"
 # simroot = "sns144-GPMEH-G200124-Fnew3-PPPMZZ-vS-ICGEMO-CS-BCdcsmP-rivWS"
 
 # scenarios
 scenout = {'2t': 'CS', '28': '2.8m', '28M': '2.8o', 'HS1': 'HS1', 'HS2': 'HS2', 'r': 'r', 't4': 't4', '2g-CS': '2g-CS',
-           '4g-CS': '4g-CS', '2g-CS-NEC': '2g-CS-NEC', '4g-CS-NEC': '4g-CS-NEC'}
+           '4g-CS': '4g-CS', '2g-CS-NEC': '2g-CS-NEC', '4g-CS-NEC': '4g-CS-NEC', 'meteo-t1': 'meteo-t1', 'meteo-t2': 'meteo-t2',
+           'EH-ERA5-4g-NEC-CS': 'NEC-CS', 'EH-ERA5-4g-NEU-CS': 'NEU-CS',
+           'EH-ERA5-4g-GCU-CS': 'GCU-CS', 'EH-ERA5-4g-GCC-CS': 'GCC-CS', 'EH-ERA5-4g-JT3-CS': 'JT3-CS'}
 
 # central plotting switches (CHANGE_HERE):
 cbarorient = 'horizontal'
@@ -98,13 +130,15 @@ figuresize = (11.69, 8.27)
 dpi = 120
 
 units = "%"
-prettytitle = {'Chl': 'summer mean Chl-a', 'DIP': 'winter mean DIP', 'DIN': 'winter mean DIN'}
+prettytitle = {'Chl': 'summer mean Chl-a', 'DIP': 'winter mean DIP', 'DIN': 'winter mean DIN', 'NPPR': 'net primary production rate',
+               'salt': 'salinity', 'temp': 'temperature'}
 
 # Plot extent
-ext = {'SNS': {'lat': [52.5, 56.], 'lon': [4., 9.]},
-       'FSK': {'lat': [52.5, 54., ], 'lon': [5., 7.5]}}
+# ext = {'SNS': {'lat': [52.5, 56.], 'lon': [4., 9.]},
+#        'FSK': {'lat': [52.5, 54., ], 'lon': [5., 7.5]}}
+ext = {'SNS': {'lat': [52.5, 56.], 'lon': [4., 9.]}}
 
-
+physvars = ['salt', 'temp']
 def main(scen1, scen2, varns, plfpath):
     scen1out = scenout[scen1]
     scen2out = scenout[scen2]
@@ -122,19 +156,28 @@ def main(scen1, scen2, varns, plfpath):
     else:
         simroot2 = f'sns144-{scen2}'
 
-    ncfile1 = f"{dataroot}{simroot1}/extract_skillCS_{simroot1}.2017-avgout.nc"
-    ncfile2 = f"{dataroot}{simroot2}/extract_skillCS_{simroot2}.2017-avgout.nc"
-
-    nc1 = netCDF4.Dataset(ncfile1)
-    ncv1 = nc1.variables
-    nc2 = netCDF4.Dataset(ncfile2)
-    ncv2 = nc2.variables
-
-    lons = ncv1['lon'][:]
-    lats = ncv1['lat'][:]
 
     for e, coords in ext.items():
         for vari, varn in enumerate(varns):
+
+            if varn in physvars:
+                varset = "MphysCS"
+            elif varn == 'NPPR':
+                varset = "RintC"
+            else:
+                varset = "skillCS"
+
+            ncfile1 = f"{dataroot}{simroot1}/extract_{varset}_{simroot1}.2017-avgout.nc"
+            ncfile2 = f"{dataroot}{simroot2}/extract_{varset}_{simroot2}.2017-avgout.nc"
+
+            nc1 = netCDF4.Dataset(ncfile1)
+            ncv1 = nc1.variables
+            nc2 = netCDF4.Dataset(ncfile2)
+            ncv2 = nc2.variables
+
+            lons = ncv1['lon'][:]
+            lats = ncv1['lat'][:]
+
             print('varn: ' + varn)
             lim_vars, cb_interval, cbticks = define_varlims(scen1, scen2, varn)
             f = plt.figure(figsize=figuresize, dpi=dpi)
@@ -205,21 +248,21 @@ def main(scen1, scen2, varns, plfpath):
             # add colorbar
             cbar = add_colorbar(f, cax, plt.cm.ScalarMappable(cmap=cmp_new, norm=norm),
                                 "Difference (%)", 10, spacing='proportional',
-                                orientation='horizontal', extend='both',
+                                orientation='horizontal', extend='neither',
                                 ticks=list(np.arange(-lim_vars[varn], lim_vars[varn] + 1, cbticks)))
             # cbar = add_colorbar(f, cax, plt.cm.ScalarMappable(cmap=cmp_new, norm=norm),
             #                     "Difference (%)", 10, spacing='proportional',
             #                     orientation='horizontal', extend='both',
             #                     ticks=cbticks)
 
-            titlestr = f"{prettytitle[varn]} 100*(B-A)/A, A={scen2out}, B={scen2out}"
+            titlestr = f"{prettytitle[varn]} 100*(B-A)/A, A={scen1out}, B={scen2out}"
             ax1.set_title(titlestr, size=11)
 
             # f.subplots_adjust(wspace=0.15, hspace=0.7)
             plfname = f"diff_{varn}_{scen1out}-{scen2out}_{e}.png"
             print(plfname)
             if plfpath == '':
-                plfpath = os.path.join(os.path.dirname(ncfile1), 'figures', 'diffmaps')
+                plfpath = os.path.join(os.path.dirname(ncfile1), 'figures', 'diffmaps', f'{scen1out}-vs-{scen2out}')
             if not os.path.isdir(plfpath):
                 os.system('mkdir -p %s' % (plfpath))
 
@@ -238,22 +281,34 @@ if __name__ == '__main__':
         # scen1 = "HS1"
         # scen1 = 'r'
         # scen1 = '2g-CS'
-        scen1 = '2g-CS-NEC'
+        # scen1 = '2g-CS-NEC'
+        #scen1 = '4g-CS-NEC'
+        # scen1 = 'EH-ERA5-4g-NEU-CS'
+        scen1 = 'EH-ERA5-4g-NEC-CS'
+        # scen1 = 'EH-ERA5-4g-GCU-CS'
+        # scen1 = 'EH-ERA5-4g-GCC-CS'
+        # scen1 = 'EH-ERA5-4g-JT3-CS'
     if len(sys.argv) > 2:
         scen2 = sys.argv[2]
     else:
         # scen2 = "28"
         # scen2 = "HS1"
         # scen2 = "HS2"
-        # scen2 = 't4'
+        #scen2 = 't4'
         # scen2 = '4g-CS'
-        scen2 = '4g-CS-NEC'
+        # scen2 = '4g-CS-NEC'
+        # scen2 = 'meteo-t1'
+        # scen2 = 'EH-ERA5-4g-NEU-CS'
+        # scen2 = 'EH-ERA5-4g-NEC-CS'
+        # scen2 = 'EH-ERA5-4g-GCU-CS'
+        scen2 = 'EH-ERA5-4g-GCC-CS'
 
     if len(sys.argv) > 3:
         varns = [sys.argv[3].split(',')[0]]
     else:
-        varns = ['Chl', 'DIN', 'DIP']
+        # varns = ['Chl', 'DIN', 'DIP']
         # varns = ['Chl','DIN']
+        varns = ['Chl', 'DIN', 'DIP', 'NPPR']
 
     if len(sys.argv) > 4:
         plfpath = os.path.join(os.path.dirname(ncfile1), sys.argv[4])
